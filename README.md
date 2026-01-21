@@ -12,15 +12,28 @@ This repo builds a [bootc](https://containers.github.io/bootc/)-based system ima
 3. `bootc-image-builder` converts the container image to a qcow2 VM disk
 4. QEMU boots the resulting VM locally for testing
 
+## Included Services
+
+- **Jellyfin** - Media server accessible at `http://localhost:8096`
+- **Demo content** - Big Buck Bunny is downloaded on first boot to `/mnt/media/Movies`
+
+## Disk Architecture
+
+The VM uses two disks:
+- **Root disk** - Read-only system image (runs in snapshot mode, changes discarded on reboot)
+- **Data disk** - Persistent storage mounted at `/mnt/media` for media files and Jellyfin state
+
 ## Make Targets
 
 | Target | Description |
 |--------|-------------|
 | `build-container` | Build the container image (default target) |
-| `build-vm` | Build the qcow2 VM disk image |
+| `build-vm` | Build the qcow2 VM disk image and data disk |
 | `run-vm` | Start the VM in QEMU (detached by default) |
 | `ssh-vm` | Build, run, and SSH into the VM |
-| `clean` | Kill QEMU, remove container image, delete build artifacts |
+| `open-jellyfin` | Start VM and open Jellyfin in browser |
+| `stop-vm` | Stop the running VM |
+| `clean` | Stop VM, remove container image, delete build artifacts |
 
 Targets are composable: `make ssh-vm` will automatically run `build-container` and `build-vm` if needed.
 
@@ -33,6 +46,7 @@ Targets are composable: `make ssh-vm` will automatically run `build-container` a
 | `SSH_PORT` | `2222` | Host port forwarded to VM SSH |
 | `HTTP_PORT` | `8080` | Host port forwarded to VM port 8080 |
 | `JELLYFIN_PORT` | `8096` | Host port forwarded to Jellyfin web UI |
+| `DATA_DISK_SIZE` | `3G` | Size of the persistent data disk |
 | `DETACH` | `true` | Run QEMU in background (`false` for foreground) |
 
 Example:
