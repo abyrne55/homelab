@@ -215,3 +215,4 @@ __marimo__/
 *.log
 .env
 secrets/
+.DS_Store
