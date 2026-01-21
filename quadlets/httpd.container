@@ -1,0 +1,12 @@
+[Unit]
+Description=Run a demo webserver
+
+[Container]
+# This image happens to be multiarch and somewhat maintained
+Image=quay.io/fedora/httpd-24-micro:latest
+PublishPort=8080:8080
+AutoUpdate=registry
+#Volume=/var/lib/containers:/var/lib/containers
+
+[Install]
+WantedBy=default.target

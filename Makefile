@@ -1,7 +1,6 @@
 # Container configuration
 IMAGE_NAME ?= homelab
 TAG ?= latest
-CONTAINER_NAME ?= $(IMAGE_NAME)
 
 # Build configuration
 BUILD_DIR ?= ./build
@@ -14,7 +13,7 @@ SSH_PORT ?= 2222
 HTTP_PORT ?= 8080
 
 # Phony targets (convenience aliases and non-file targets)
-.PHONY: build-container build-vm run-vm ssh-vm run stop rm clean logs shell
+.PHONY: build-container build-vm run-vm ssh-vm clean
 
 # Default target
 .DEFAULT_GOAL := build-container
@@ -30,7 +29,7 @@ build-vm: $(BUILD_DIR)/qcow2/disk.qcow2
 #
 
 # Build the container image (sentinel file tracks build state)
-$(BUILD_DIR)/.image-built: Containerfile caddy.container
+$(BUILD_DIR)/.image-built: Containerfile $(wildcard quadlets/*)
 	mkdir -p $(BUILD_DIR)
 	podman build -t $(IMAGE_NAME):$(TAG) -f Containerfile .
 	@touch $@
@@ -121,8 +120,8 @@ ssh-vm: run-vm
 # Cleanup
 #
 
-# Stop and remove the container, then remove the image
-clean: stop rm
+# Clean up all build artifacts
+clean:
 	-pkill -f "qemu-system-aarch64.*$(BUILD_DIR)/qcow2/disk.qcow2"
 	podman rmi --ignore $(IMAGE_NAME):$(TAG)
 	rm -rf $(BUILD_DIR)
