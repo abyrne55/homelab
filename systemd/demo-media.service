@@ -1,0 +1,15 @@
+[Unit]
+Description=Download demo media content (Big Buck Bunny)
+After=network-online.target mnt-media.mount
+Wants=network-online.target
+Requires=mnt-media.mount
+ConditionPathExists=!/mnt/media/Movies/Big Buck Bunny/big_buck_bunny_1080p_h264.mov
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/mkdir -p "/mnt/media/Movies/Big Buck Bunny"
+ExecStart=/usr/bin/curl -fSL -o "/mnt/media/Movies/Big Buck Bunny/big_buck_bunny_1080p_h264.mov" "https://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_1080p_h264.mov"
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

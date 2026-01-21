@@ -1,0 +1,13 @@
+[Unit]
+Description=Jellyfin Media Server
+
+[Container]
+Image=docker.io/jellyfin/jellyfin:latest
+PublishPort=8096:8096
+Volume=/mnt/media:/media:ro,z
+Volume=/mnt/media/.jellyfin/config:/config:Z
+Volume=/mnt/media/.jellyfin/cache:/cache:Z
+AutoUpdate=registry
+
+[Install]
+WantedBy=default.target

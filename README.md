@@ -32,6 +32,7 @@ Targets are composable: `make ssh-vm` will automatically run `build-container` a
 | `TAG` | `latest` | Container image tag |
 | `SSH_PORT` | `2222` | Host port forwarded to VM SSH |
 | `HTTP_PORT` | `8080` | Host port forwarded to VM port 8080 |
+| `JELLYFIN_PORT` | `8096` | Host port forwarded to Jellyfin web UI |
 | `DETACH` | `true` | Run QEMU in background (`false` for foreground) |
 
 Example:

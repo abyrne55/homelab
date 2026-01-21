@@ -5,15 +5,17 @@ TAG ?= latest
 # Build configuration
 BUILD_DIR ?= ./build
 SSH_KEY ?= $(BUILD_DIR)/id_ed25519
+DATA_DISK_SIZE ?= 3G
 
 # QEMU configuration
 QEMU_BIOS ?= $(shell brew --prefix qemu)/share/qemu/edk2-aarch64-code.fd
 DETACH ?= true
 SSH_PORT ?= 2222
 HTTP_PORT ?= 8080
+JELLYFIN_PORT ?= 8096
 
 # Phony targets (convenience aliases and non-file targets)
-.PHONY: build-container build-vm run-vm ssh-vm clean
+.PHONY: build-container build-vm run-vm ssh-vm open-jellyfin stop-vm clean
 
 # Default target
 .DEFAULT_GOAL := build-container
@@ -22,14 +24,14 @@ HTTP_PORT ?= 8080
 # Convenience aliases
 #
 build-container: $(BUILD_DIR)/.image-built
-build-vm: $(BUILD_DIR)/qcow2/disk.qcow2
+build-vm: $(BUILD_DIR)/qcow2/disk.qcow2 $(BUILD_DIR)/data.qcow2
 
 #
 # File-based targets with dependencies
 #
 
 # Build the container image (sentinel file tracks build state)
-$(BUILD_DIR)/.image-built: Containerfile $(wildcard quadlets/*)
+$(BUILD_DIR)/.image-built: Containerfile $(wildcard quadlets/*) $(wildcard systemd/*)
 	mkdir -p $(BUILD_DIR)
 	podman build -t $(IMAGE_NAME):$(TAG) -f Containerfile .
 	@touch $@
@@ -63,12 +65,17 @@ $(BUILD_DIR)/qcow2/disk.qcow2: $(BUILD_DIR)/.image-built $(BUILD_DIR)/config.tom
 		localhost/$(IMAGE_NAME):$(TAG) \
 		--rootfs btrfs
 
+# Create data disk for media storage (formatted on first boot)
+$(BUILD_DIR)/data.qcow2:
+	mkdir -p $(BUILD_DIR)
+	qemu-img create -f qcow2 $@ $(DATA_DISK_SIZE)
+
 #
 # Runtime targets
 #
 
 # Run the qcow2 image in QEMU (checks if already running)
-run-vm: $(BUILD_DIR)/qcow2/disk.qcow2
+run-vm: $(BUILD_DIR)/qcow2/disk.qcow2 $(BUILD_DIR)/data.qcow2
 	@if pgrep -f "qemu-system-aarch64.*$(BUILD_DIR)/qcow2/disk.qcow2" > /dev/null; then \
 		echo "QEMU is already running"; \
 	else \
@@ -88,8 +95,9 @@ ifeq ($(DETACH),true)
 		-serial file:$(BUILD_DIR)/serial.log \
 		-display none \
 		-machine virt \
-		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::$(HTTP_PORT)-:8080 \
-		-snapshot $(BUILD_DIR)/qcow2/disk.qcow2 &
+		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::$(HTTP_PORT)-:8080,hostfwd=tcp::$(JELLYFIN_PORT)-:8096 \
+		-drive if=virtio,file=$(BUILD_DIR)/qcow2/disk.qcow2,snapshot=on \
+		-drive if=virtio,file=$(BUILD_DIR)/data.qcow2 &
 	@echo "QEMU running in background. Serial output: $(BUILD_DIR)/serial.log"
 else
 	qemu-system-aarch64 \
@@ -101,8 +109,9 @@ else
 		-serial stdio \
 		-display none \
 		-machine virt \
-		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::$(HTTP_PORT)-:8080 \
-		-snapshot $(BUILD_DIR)/qcow2/disk.qcow2
+		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::$(HTTP_PORT)-:8080,hostfwd=tcp::$(JELLYFIN_PORT)-:8096 \
+		-drive if=virtio,file=$(BUILD_DIR)/qcow2/disk.qcow2,snapshot=on \
+		-drive if=virtio,file=$(BUILD_DIR)/data.qcow2
 endif
 
 # SSH options
@@ -116,12 +125,23 @@ ssh-vm: run-vm
 	done
 	ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost
 
+# Open Jellyfin web UI in default browser
+open-jellyfin: run-vm
+	@if [ "$$(uname)" = "Darwin" ]; then \
+		open "http://localhost:$(JELLYFIN_PORT)"; \
+	else \
+		xdg-open "http://localhost:$(JELLYFIN_PORT)"; \
+	fi
+
 #
 # Cleanup
 #
 
-# Clean up all build artifacts
-clean:
+# Stop the VM
+stop-vm:
 	-pkill -f "qemu-system-aarch64.*$(BUILD_DIR)/qcow2/disk.qcow2"
+
+# Clean up all build artifacts
+clean: stop-vm
 	podman rmi --ignore $(IMAGE_NAME):$(TAG)
 	rm -rf $(BUILD_DIR)

@@ -1,0 +1,18 @@
+[Unit]
+Description=Initialize data disk with ext4 filesystem
+DefaultDependencies=no
+Before=mnt-media.mount
+After=systemd-udevd.service
+ConditionPathExists=!/dev/disk/by-label/media-data
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/mkfs.ext4 -L media-data /dev/vdb
+ExecStart=/usr/bin/mkdir -p /mnt/media
+ExecStart=/usr/bin/mount /dev/vdb /mnt/media
+ExecStart=/usr/bin/mkdir -p /mnt/media/Movies /mnt/media/TV /mnt/media/.jellyfin/config /mnt/media/.jellyfin/cache
+ExecStart=/usr/bin/umount /mnt/media
+RemainAfterExit=yes
+
+[Install]
+WantedBy=mnt-media.mount
