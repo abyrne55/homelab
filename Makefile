@@ -1,49 +1,128 @@
-.PHONY: all ignition qcow2 start clean
+# Container configuration
+IMAGE_NAME ?= homelab
+TAG ?= latest
+CONTAINER_NAME ?= $(IMAGE_NAME)
 
-BUILD_DIR := build
-IGNITION_DIR := ignition
+# Build configuration
+BUILD_DIR ?= ./build
+SSH_KEY ?= $(BUILD_DIR)/id_ed25519
 
-# Source files
-BU_FILES := $(wildcard $(IGNITION_DIR)/*.bu)
-IGN_FILES := $(patsubst $(IGNITION_DIR)/%.bu,$(BUILD_DIR)/%.ign,$(BU_FILES))
+# QEMU configuration
+QEMU_BIOS ?= $(shell brew --prefix qemu)/share/qemu/edk2-aarch64-code.fd
+DETACH ?= true
+SSH_PORT ?= 2222
+HTTP_PORT ?= 8080
 
-# VM artifacts
-VM_NAME := homelab-staging
-VM_DISK := $(BUILD_DIR)/$(VM_NAME).qcow2
-START_SCRIPT := $(BUILD_DIR)/start-$(VM_NAME).sh
+# Phony targets (convenience aliases and non-file targets)
+.PHONY: build-container build-vm run-vm ssh-vm run stop rm clean logs shell
 
-all: qcow2
+# Default target
+.DEFAULT_GOAL := build-container
 
-# Compile butane files to ignition
-ignition: $(IGN_FILES)
+#
+# Convenience aliases
+#
+build-container: $(BUILD_DIR)/.image-built
+build-vm: $(BUILD_DIR)/qcow2/disk.qcow2
 
-$(BUILD_DIR)/%.ign: $(IGNITION_DIR)/%.bu | $(BUILD_DIR)
-	butane --pretty --strict $< > $@
+#
+# File-based targets with dependencies
+#
 
-# Create VM disk (depends on ignition config)
-qcow2: $(VM_DISK)
-
-$(VM_DISK): $(IGN_FILES) | $(BUILD_DIR)
-	cd $(BUILD_DIR) && ../scripts/create-vm.sh
-
-# Start the VM
-start: $(VM_DISK)
-	cd $(BUILD_DIR) && ./start-$(VM_NAME).sh
-
-# Ensure build directory exists
-$(BUILD_DIR):
+# Build the container image (sentinel file tracks build state)
+$(BUILD_DIR)/.image-built: Containerfile caddy.container
 	mkdir -p $(BUILD_DIR)
+	podman build -t $(IMAGE_NAME):$(TAG) -f Containerfile .
+	@touch $@
 
-# Clean build artifacts
-clean:
-	rm -f $(BUILD_DIR)/*.ign
-	rm -f $(BUILD_DIR)/*.qcow2
-	rm -f $(BUILD_DIR)/start-*.sh
-	rm -f $(BUILD_DIR)/*.raw
-	rm -f $(BUILD_DIR)/*.raw.xz
-	rm -f $(BUILD_DIR)/*-CHECKSUM
-	rm -f $(BUILD_DIR)/fedora.gpg
+# Generate SSH key
+$(BUILD_DIR)/id_ed25519:
+	mkdir -p $(BUILD_DIR)
+	ssh-keygen -t ed25519 -f $@ -N "" -C "homelab-vm" -q
 
-# SSH into the running VM
-ssh:
-	ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2222 core@localhost
+# Generate config.toml with SSH public key
+$(BUILD_DIR)/config.toml: $(BUILD_DIR)/id_ed25519
+	@echo '[[customizations.user]]' > $@
+	@echo 'name = "core"' >> $@
+	@echo 'key = "$(shell cat $(BUILD_DIR)/id_ed25519.pub)"' >> $@
+	@echo 'groups = ["wheel"]' >> $@
+
+# Build qcow2 image using bootc-image-builder
+$(BUILD_DIR)/qcow2/disk.qcow2: $(BUILD_DIR)/.image-built $(BUILD_DIR)/config.toml
+	podman run \
+		--rm \
+		-it \
+		--privileged \
+		--pull=newer \
+		--security-opt label=type:unconfined_t \
+		-v $(BUILD_DIR)/config.toml:/config.toml:ro \
+		-v $(BUILD_DIR):/output \
+		-v /var/lib/containers/storage:/var/lib/containers/storage \
+		quay.io/centos-bootc/bootc-image-builder:latest \
+		--type qcow2 \
+		--use-librepo=True \
+		localhost/$(IMAGE_NAME):$(TAG) \
+		--rootfs btrfs
+
+#
+# Runtime targets
+#
+
+# Run the qcow2 image in QEMU (checks if already running)
+run-vm: $(BUILD_DIR)/qcow2/disk.qcow2
+	@if pgrep -f "qemu-system-aarch64.*$(BUILD_DIR)/qcow2/disk.qcow2" > /dev/null; then \
+		echo "QEMU is already running"; \
+	else \
+		$(MAKE) _start-qemu; \
+	fi
+
+# Internal target to actually start QEMU
+.PHONY: _start-qemu
+_start-qemu:
+ifeq ($(DETACH),true)
+	qemu-system-aarch64 \
+		-M accel=hvf \
+		-cpu host \
+		-smp 2 \
+		-m 4096 \
+		-bios $(QEMU_BIOS) \
+		-serial file:$(BUILD_DIR)/serial.log \
+		-display none \
+		-machine virt \
+		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::$(HTTP_PORT)-:8080 \
+		-snapshot $(BUILD_DIR)/qcow2/disk.qcow2 &
+	@echo "QEMU running in background. Serial output: $(BUILD_DIR)/serial.log"
+else
+	qemu-system-aarch64 \
+		-M accel=hvf \
+		-cpu host \
+		-smp 2 \
+		-m 4096 \
+		-bios $(QEMU_BIOS) \
+		-serial stdio \
+		-display none \
+		-machine virt \
+		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::$(HTTP_PORT)-:8080 \
+		-snapshot $(BUILD_DIR)/qcow2/disk.qcow2
+endif
+
+# SSH options
+SSH_OPTS := -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o PreferredAuthentications=publickey
+
+# SSH into the running VM (waits for SSH to become available)
+ssh-vm: run-vm
+	@echo "Waiting for SSH to become available..."
+	@until ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) -o ConnectTimeout=2 core@localhost exit 2>/dev/null; do \
+		sleep 1; \
+	done
+	ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost
+
+#
+# Cleanup
+#
+
+# Stop and remove the container, then remove the image
+clean: stop rm
+	-pkill -f "qemu-system-aarch64.*$(BUILD_DIR)/qcow2/disk.qcow2"
+	podman rmi --ignore $(IMAGE_NAME):$(TAG)
+	rm -rf $(BUILD_DIR)
