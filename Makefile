@@ -13,6 +13,7 @@ DETACH ?= true
 SSH_PORT ?= 2222
 HTTP_PORT ?= 8080
 JELLYFIN_PORT ?= 8096
+CADDY_PORT ?= 80
 
 # Phony targets (convenience aliases and non-file targets)
 .PHONY: build-container build-vm run-vm ssh-vm open-jellyfin stop-vm clean
@@ -31,7 +32,7 @@ build-vm: $(BUILD_DIR)/qcow2/disk.qcow2 $(BUILD_DIR)/data.qcow2
 #
 
 # Build the container image (sentinel file tracks build state)
-$(BUILD_DIR)/.image-built: Containerfile $(wildcard quadlets/*) $(wildcard systemd/*)
+$(BUILD_DIR)/.image-built: Containerfile $(wildcard quadlets/*) $(wildcard systemd/*) $(wildcard caddy/*)
 	mkdir -p $(BUILD_DIR)
 	podman build -t $(IMAGE_NAME):$(TAG) -f Containerfile .
 	@touch $@
@@ -95,7 +96,7 @@ ifeq ($(DETACH),true)
 		-serial file:$(BUILD_DIR)/serial.log \
 		-display none \
 		-machine virt \
-		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::$(HTTP_PORT)-:8080,hostfwd=tcp::$(JELLYFIN_PORT)-:8096 \
+		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::$(HTTP_PORT)-:8080,hostfwd=tcp::$(JELLYFIN_PORT)-:8096,hostfwd=tcp::$(CADDY_PORT)-:80 \
 		-drive if=virtio,file=$(BUILD_DIR)/qcow2/disk.qcow2,snapshot=on \
 		-drive if=virtio,file=$(BUILD_DIR)/data.qcow2 &
 	@echo "QEMU running in background. Serial output: $(BUILD_DIR)/serial.log"
@@ -109,7 +110,7 @@ else
 		-serial stdio \
 		-display none \
 		-machine virt \
-		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::$(HTTP_PORT)-:8080,hostfwd=tcp::$(JELLYFIN_PORT)-:8096 \
+		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::$(HTTP_PORT)-:8080,hostfwd=tcp::$(JELLYFIN_PORT)-:8096,hostfwd=tcp::$(CADDY_PORT)-:80 \
 		-drive if=virtio,file=$(BUILD_DIR)/qcow2/disk.qcow2,snapshot=on \
 		-drive if=virtio,file=$(BUILD_DIR)/data.qcow2
 endif

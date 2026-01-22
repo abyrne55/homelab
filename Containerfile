@@ -13,6 +13,9 @@ COPY quadlets/ /usr/share/containers/systemd
 # Copy systemd services
 COPY systemd/ /etc/systemd/system
 
+# Copy Caddy configuration
+COPY caddy/Caddyfile /etc/caddy/Caddyfile
+
 # Enable services
 RUN systemctl enable podman-auto-update.timer \
     && systemctl enable init-data-disk.service \
