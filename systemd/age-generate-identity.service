@@ -1,0 +1,16 @@
+[Unit]
+Description=Generate age keypair
+ConditionPathExists=!/etc/age/identity.txt
+After=local-fs.target
+
+[Service]
+Type=oneshot
+
+ExecStartPre=/usr/bin/install -d -m 0700 /etc/age
+ExecStart=/usr/bin/age-keygen -pq -o /etc/age/identity.txt
+ExecStartPost=/usr/bin/age-keygen -y -o /etc/age/identity.pub /etc/age/identity.txt
+ExecStartPost=/usr/bin/chmod 400 /etc/age/identity.txt
+ExecStartPost=/usr/bin/chmod 444 /etc/age/identity.pub
+
+[Install]
+WantedBy=multi-user.target

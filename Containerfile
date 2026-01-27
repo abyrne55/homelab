@@ -16,8 +16,8 @@ COPY systemd/ /etc/systemd/system
 # Copy Caddy configuration
 COPY caddy/Caddyfile /etc/caddy/Caddyfile
 
+# Install dependencies
+RUN dnf -y install age git
+
 # Enable services
-RUN systemctl enable podman-auto-update.timer \
-    && systemctl enable init-data-disk.service \
-    && systemctl enable mnt-media.mount \
-    && systemctl enable demo-media.service
+RUN systemctl enable podman-auto-update.timer ssh-generate-identity.service age-generate-identity.service init-data-disk.service mnt-media.mount demo-media.service

@@ -1,0 +1,16 @@
+[Unit]
+Description=Generate SSH keypair for Git pulls
+ConditionPathExists=!/var/lib/git-ssh/id_ed25519
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+
+ExecStartPre=/usr/bin/install -d -m 0700 /etc/git-ssh
+ExecStart=/usr/bin/ssh-keygen -t ed25519 -N "" -C "homelab-git-pull" -f /etc/git-ssh/id_ed25519
+ExecStartPost=/usr/bin/chmod 400 /etc/git-ssh/id_ed25519
+ExecStartPost=/usr/bin/chmod 444 /etc/git-ssh/id_ed25519.pub
+
+[Install]
+WantedBy=multi-user.target
