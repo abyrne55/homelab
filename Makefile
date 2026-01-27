@@ -16,7 +16,7 @@ JELLYFIN_PORT ?= 8096
 CADDY_PORT ?= 80
 
 # Phony targets (convenience aliases and non-file targets)
-.PHONY: build-container build-vm run-vm ssh-vm open-jellyfin stop-vm clean
+.PHONY: build-container build-vm run-vm ssh-vm open-jellyfin stop-vm reboot-vm clean
 
 # Default target
 .DEFAULT_GOAL := build-container
@@ -141,6 +141,12 @@ open-jellyfin: run-vm
 # Stop the VM
 stop-vm:
 	-pkill -f "qemu-system-aarch64.*$(BUILD_DIR)/qcow2/disk.qcow2"
+
+# Reboot the VM
+reboot-vm: stop-vm
+	@echo "Rebooting VM..."
+	@sleep 1
+	$(MAKE) run-vm
 
 # Clean up all build artifacts
 clean: stop-vm
