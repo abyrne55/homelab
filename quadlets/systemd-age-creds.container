@@ -1,0 +1,22 @@
+[Unit]
+Description=systemd-age-creds container
+Requires=systemd-age-creds.socket
+After=systemd-age-creds.socket
+
+[Container]
+Image=ghcr.io/abyrne55/systemd-age-creds:latest
+SocketActivated=true
+Network=none
+ReadOnly=true
+NoNewPrivileges=true
+Volume=/etc/age/identity.txt:/identity/key.txt:ro,Z
+Volume=/etc/age/credentials:/credentials:ro,Z
+Environment=AGE_BIN=/usr/bin/age
+Environment=AGE_IDENTITY=/identity/key.txt
+Environment=AGE_DIR=/credentials
+
+[Service]
+PassEnvironment=LISTEN_FDS LISTEN_PID LISTEN_FDNAMES
+
+[Install]
+WantedBy=default.target

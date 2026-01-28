@@ -20,4 +20,4 @@ COPY caddy/Caddyfile /etc/caddy/Caddyfile
 RUN dnf -y install age git
 
 # Enable services
-RUN systemctl enable podman-auto-update.timer secrets-inject.service ssh-generate-identity.service age-generate-identity.service init-data-disk.service mnt-media.mount demo-media.service
+RUN systemctl enable podman-auto-update.timer secrets-inject.service ssh-generate-identity.service age-generate-identity.service init-data-disk.service mnt-media.mount demo-media.service systemd-age-creds.socket github-known-hosts.service homelab-secrets-sync.service homelab-secrets-sync.timer
