@@ -48,6 +48,11 @@ $(BUILD_DIR)/config.toml: $(BUILD_DIR)/id_ed25519
 	@echo 'name = "core"' >> $@
 	@echo 'key = "$(shell cat $(BUILD_DIR)/id_ed25519.pub)"' >> $@
 	@echo 'groups = ["wheel"]' >> $@
+	@echo '' >> $@
+	@echo '[[customizations.files]]' >> $@
+	@echo 'path = "/etc/sudoers.d/wheel-nopasswd"' >> $@
+	@echo 'data = "%wheel ALL=(ALL) NOPASSWD: ALL"' >> $@
+	@echo 'mode = "0440"' >> $@
 
 # Build qcow2 image using bootc-image-builder
 $(BUILD_DIR)/qcow2/disk.qcow2: $(BUILD_DIR)/.image-built $(BUILD_DIR)/config.toml
