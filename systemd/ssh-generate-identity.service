@@ -1,6 +1,6 @@
 [Unit]
 Description=Generate SSH keypair for Git pulls
-ConditionPathExists=!/var/lib/git-ssh/id_ed25519
+ConditionPathExists=!/etc/git-ssh/id_ed25519
 Wants=network-online.target
 After=network-online.target
 

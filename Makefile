@@ -25,7 +25,7 @@ CADDY_PORT ?= 80
 # Convenience aliases
 #
 build-container: $(BUILD_DIR)/.image-built
-build-vm: $(BUILD_DIR)/qcow2/disk.qcow2 $(BUILD_DIR)/data.qcow2
+build-vm: $(BUILD_DIR)/qcow2/disk.qcow2 $(BUILD_DIR)/data.qcow2 $(BUILD_DIR)/secrets.iso
 
 #
 # File-based targets with dependencies
@@ -71,12 +71,30 @@ $(BUILD_DIR)/data.qcow2:
 	mkdir -p $(BUILD_DIR)
 	qemu-img create -f qcow2 $@ $(DATA_DISK_SIZE)
 
+# Build secrets ISO if secrets exist (optional)
+$(BUILD_DIR)/secrets.iso:
+	@if [ -d secrets ] && [ -f secrets/age.key ] && [ -f secrets/ssh.key ]; then \
+		echo "Creating secrets ISO..."; \
+		mkdir -p $(BUILD_DIR)/secrets-temp; \
+		cp secrets/age.key $(BUILD_DIR)/secrets-temp/; \
+		cp secrets/age.key.pub $(BUILD_DIR)/secrets-temp/; \
+		cp secrets/ssh.key $(BUILD_DIR)/secrets-temp/; \
+		cp secrets/ssh.key.pub $(BUILD_DIR)/secrets-temp/; \
+		xorrisofs -V SECRETS -J -R -o $@ $(BUILD_DIR)/secrets-temp; \
+		rm -rf $(BUILD_DIR)/secrets-temp; \
+		echo "Secrets ISO created successfully."; \
+	else \
+		echo "Secrets not found - skipping secrets ISO creation."; \
+		echo "VM will use auto-generated keys from systemd services."; \
+		touch $@; \
+	fi
+
 #
 # Runtime targets
 #
 
 # Run the qcow2 image in QEMU (checks if already running)
-run-vm: $(BUILD_DIR)/qcow2/disk.qcow2 $(BUILD_DIR)/data.qcow2
+run-vm: $(BUILD_DIR)/qcow2/disk.qcow2 $(BUILD_DIR)/data.qcow2 $(BUILD_DIR)/secrets.iso
 	@if pgrep -f "qemu-system-aarch64.*$(BUILD_DIR)/qcow2/disk.qcow2" > /dev/null; then \
 		echo "QEMU is already running"; \
 	else \
@@ -98,7 +116,8 @@ ifeq ($(DETACH),true)
 		-machine virt \
 		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::$(HTTP_PORT)-:8080,hostfwd=tcp::$(JELLYFIN_PORT)-:8096,hostfwd=tcp::$(CADDY_PORT)-:80 \
 		-drive if=virtio,file=$(BUILD_DIR)/qcow2/disk.qcow2,snapshot=on \
-		-drive if=virtio,file=$(BUILD_DIR)/data.qcow2 &
+		-drive if=virtio,file=$(BUILD_DIR)/data.qcow2 \
+		$(shell [ -s $(BUILD_DIR)/secrets.iso ] && echo "-drive file=$(BUILD_DIR)/secrets.iso,format=raw,if=virtio,readonly=on,media=cdrom,id=secrets") &
 	@echo "QEMU running in background. Serial output: $(BUILD_DIR)/serial.log"
 else
 	qemu-system-aarch64 \
@@ -112,7 +131,8 @@ else
 		-machine virt \
 		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::$(HTTP_PORT)-:8080,hostfwd=tcp::$(JELLYFIN_PORT)-:8096,hostfwd=tcp::$(CADDY_PORT)-:80 \
 		-drive if=virtio,file=$(BUILD_DIR)/qcow2/disk.qcow2,snapshot=on \
-		-drive if=virtio,file=$(BUILD_DIR)/data.qcow2
+		-drive if=virtio,file=$(BUILD_DIR)/data.qcow2 \
+		$(shell [ -s $(BUILD_DIR)/secrets.iso ] && echo "-drive file=$(BUILD_DIR)/secrets.iso,format=raw,if=virtio,readonly=on,media=cdrom,id=secrets")
 endif
 
 # SSH options
@@ -150,5 +170,4 @@ reboot-vm: stop-vm
 
 # Clean up all build artifacts
 clean: stop-vm
-	podman rmi --ignore $(IMAGE_NAME):$(TAG)
 	rm -rf $(BUILD_DIR)
