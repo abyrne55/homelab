@@ -1,0 +1,21 @@
+[Unit]
+Description=Test systemd-age-creds credential loading
+Requires=systemd-age-creds.socket
+After=systemd-age-creds.socket
+
+[Service]
+Type=oneshot
+LoadCredential=example-api-key:%t/systemd-age-creds.sock
+
+# Test that the credential file exists and print its value
+ExecStart=/bin/bash -c '\
+  if [ -r "$CREDENTIALS_DIRECTORY/example-api-key" ]; then \
+    echo "Credential loaded:"; \
+    cat "$CREDENTIALS_DIRECTORY/example-api-key"; \
+  else \
+    echo "Failed to load credential"; \
+    exit 1; \
+  fi'
+
+[Install]
+WantedBy=multi-user.target
