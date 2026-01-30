@@ -11,13 +11,15 @@ Note that none of the software referenced/defined in this repo is meant to be ru
 ## Architecture
 
 **Immutable OS Pattern:**
+
 - Root filesystem read-only (bootc), mutable state only in `/var/` and `/etc/`
 - Changes via container image updates, not manual system modifications
 - `/etc` persists across updates with 3-way merge
 
 **Three-Repository Pattern (in progress):**
+
 1. `homelab` (public) - OS structure, no secrets
-  * contains systemd jobs for auto-pulling the next two repos to the system at runtime
+   - contains systemd jobs for auto-pulling the next two repos to the system at runtime
 2. `homelab-config` (private) - Identity-bearing config
 3. `homelab-secrets` (private) - `age`-encrypted credentials
 
@@ -33,6 +35,7 @@ Note that none of the software referenced/defined in this repo is meant to be ru
 ## Secrets Management
 
 Secrets are encrypted with `age` and decrypted on-demand by `systemd` and `systemd-age-creds`:
+
 - Place keys in `./secrets/` to inject via ISO at boot, or auto-generate on first boot
 - Credentials available at `/run/credentials/service-name/credential-name`
 - Use `LoadCredential=name:%t/systemd-age-creds.sock` in systemd units
@@ -42,18 +45,30 @@ Secrets are encrypted with `age` and decrypted on-demand by `systemd` and `syste
 All operations go through the Makefile:
 
 ```bash
+make clean            # Remove all build artifacts and stop VM
 make build-container  # Build the container image (default target)
 make build-vm         # Build qcow2 VM disk + data disk
-make ssh-vm           # Build, run, and SSH into VM
+make run-vm           # Start QEMU vm
+make ssh-vm           # Build, run, and open an interactive SSH session into VM
 make open-jellyfin    # Start VM and open Jellyfin web UI
 make stop-vm          # Stop running QEMU instance
 make reboot-vm        # Stop and restart VM
-make clean            # Remove all build artifacts
 ```
 
-When asked to interact with the the running VM via SSH, use the following command format:
+Note that `ssh-vm` and `open-jellyfin` both depend on `run-vm`, which depends on `build-vm`, which depends on `build-container`. So after most changes to the files in this repo, all you need to run is `make clean run-vm &> ./build/log` (output redirection because the build process is quite verbose) for a fresh VM with your changes in-effect to boot. The full build will take several minutes. To more-quickly test out small changes, you can try interacting with the already-running VM via SSH (see below) before rebuilding.
+
+Once the VM is running, you can interact with it using the following command format:
+
 ```bash
-ssh -i build/id_ed25519 -p 2222 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o PreferredAuthentications=publickey core@localhost -- <your command here>
+ssh -i build/id_ed25519 -p 2222 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o PreferredAuthentications=publickey core@localhost -- "<your command here>" || true
+```
+
+(the `|| true` is to prevent exit statuses from interrupting sibling tool calls)
+
+Use the following command to check on the status of rootless quadlets:
+
+```bash
+sudo systemctl --user -M $QUADLET_USERNAME@.host status $QUADLET_NAME.service
 ```
 
 ## Adding New Software
