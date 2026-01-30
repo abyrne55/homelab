@@ -1,0 +1,33 @@
+[Unit]
+Description=Test rootless credential loading from systemd-age-creds
+# Note: Cannot use Requires/After with system services from user services
+
+[Container]
+Image=quay.io/fedora/fedora:43
+# Mount credentials directory into container
+Volume=%d:/run/credentials:ro
+# Disable SELinux labeling for credentials volume
+SecurityLabelDisable=true
+Exec=/bin/bash -c '\
+  echo "Testing rootless credential loading..."; \
+  echo "Credentials directory contents:"; \
+  ls -la /run/credentials/ || echo "Cannot list credentials"; \
+  if [ -r "/run/credentials/example-api-key" ]; then \
+    echo "SUCCESS: Rootless credential loaded successfully"; \
+    echo "Credential value:"; \
+    cat /run/credentials/example-api-key; \
+    sleep 5; \
+  else \
+    echo "FAILED: Cannot read credential in rootless context"; \
+    exit 1; \
+  fi'
+
+[Service]
+# Load credential from rootful systemd-age-creds socket
+# Note: Must use absolute path since %t expands to /run/user/1001 in user services
+LoadCredential=example-api-key:/run/systemd-age-creds.sock
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
