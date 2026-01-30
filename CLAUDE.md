@@ -55,7 +55,14 @@ make stop-vm          # Stop running QEMU instance
 make reboot-vm        # Stop and restart VM
 ```
 
-Note that `ssh-vm` and `open-jellyfin` both depend on `run-vm`, which depends on `build-vm`, which depends on `build-container`. So after most changes to the files in this repo, all you need to run is `make clean run-vm &> ./build/log` (output redirection because the build process is quite verbose) for a fresh VM with your changes in-effect to boot. The full build will take several minutes. To more-quickly test out small changes, you can try interacting with the already-running VM via SSH (see below) before rebuilding.
+Note that `ssh-vm` and `open-jellyfin` both depend on `run-vm`, which depends on `build-vm`, which depends on `build-container`. So after most changes to the files in this repo, all you need to run is the following command in order to rebuild/boot a fresh VM with your changes in-effect.
+```bash
+make clean && make run-vm > ./build/log
+# Do NOT background this command. Run it as a BLOCKING tool call with a 5 minute timeout
+# It uses output redirection because the build process is quite verbose
+```
+
+The full build will take several minutes. To more-quickly test out small changes, you can try interacting with the already-running VM via SSH (see below) before rebuilding.
 
 Once the VM is running, you can interact with it using the following command format:
 

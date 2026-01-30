@@ -5,7 +5,7 @@
 FROM quay.io/fedora/fedora-bootc:43
 
 # Install dependencies
-RUN curl -LO https://github.com/abyrne55/systemd-age-creds/releases/download/v1.4.3/systemd-age-creds-1.4.3-1.aarch64.rpm && \
+RUN curl -LO https://github.com/abyrne55/systemd-age-creds/releases/download/v1.4.4/systemd-age-creds-1.4.4-1.aarch64.rpm && \
     dnf -y install age git ./systemd-age-creds-*.rpm && \
     dnf clean all && \
     rm -f /var/cache/dnf systemd-age-creds-*.rpm
