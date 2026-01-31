@@ -6,7 +6,7 @@ FROM quay.io/fedora/fedora-bootc:43
 
 # Install dependencies
 RUN curl -LO https://github.com/abyrne55/systemd-age-creds/releases/download/v1.4.4/systemd-age-creds-1.4.4-1.aarch64.rpm && \
-    dnf -y install age git ./systemd-age-creds-*.rpm && \
+    dnf -y install age git firewalld ./systemd-age-creds-*.rpm && \
     dnf clean all && \
     rm -f /var/cache/dnf systemd-age-creds-*.rpm
 
@@ -48,9 +48,10 @@ COPY systemd/ /etc/systemd/system
 COPY selinux/systemd_age_creds.cil /tmp/systemd_age_creds.cil
 RUN semodule -i /tmp/systemd_age_creds.cil && rm /tmp/systemd_age_creds.cil
 
-# Configure unprivileged port access for rootless containers
-RUN echo "net.ipv4.ip_unprivileged_port_start=80" > /etc/sysctl.d/80-rootless-ports.conf
+# Copy firewalld configuration files
+COPY firewalld/firewalld.conf /etc/firewalld/firewalld.conf
+COPY firewalld/zones/public.xml /etc/firewalld/zones/public.xml
 
 # Enable services
-RUN systemctl enable podman-auto-update.timer secrets-inject.service ssh-generate-identity.service age-generate-identity.service init-data-disk.service mnt-media.mount demo-media.service github-known-hosts.service homelab-secrets-sync.service homelab-secrets-sync.timer systemd-age-creds.socket test-systemd-age-creds.service && \
+RUN systemctl enable firewalld podman-auto-update.timer secrets-inject.service ssh-generate-identity.service age-generate-identity.service init-data-disk.service mnt-media.mount demo-media.service github-known-hosts.service homelab-secrets-sync.service homelab-secrets-sync.timer systemd-age-creds.socket test-systemd-age-creds.service && \
     systemctl --global enable caddy.socket
