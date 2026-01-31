@@ -5,13 +5,25 @@
 FROM quay.io/fedora/fedora-bootc:43
 
 # Install dependencies
-RUN curl -LO https://github.com/abyrne55/systemd-age-creds/releases/download/v1.4.3/systemd-age-creds-1.4.3-1.aarch64.rpm && \
+RUN curl -LO https://github.com/abyrne55/systemd-age-creds/releases/download/v1.4.4/systemd-age-creds-1.4.4-1.aarch64.rpm && \
     dnf -y install age git ./systemd-age-creds-*.rpm && \
     dnf clean all && \
     rm -f /var/cache/dnf systemd-age-creds-*.rpm
 
-# Create mount point for external data volume
-RUN rm -rf /mnt && mkdir -p /mnt/media
+# Create mount point for external data volume and systemd-age-creds group
+RUN rm -rf /mnt && \
+    mkdir -p /mnt/media && \
+    groupadd -r systemd-age-creds-users
+
+# Create test users and configure for rootless podman
+RUN mkdir -p /var/home/testuser/.local/share/containers /var/home/testuser/.config/containers && \
+    mkdir -p /var/home/testuser2/.local/share/containers /var/home/testuser2/.config/containers && \
+    useradd -u 1001 -m -d /var/home/testuser -s /sbin/nologin -c "Rootless quadlet test user" -G systemd-age-creds-users testuser && \
+    useradd -u 1002 -m -d /var/home/testuser2 -s /sbin/nologin -c "Second rootless quadlet test user" -G systemd-age-creds-users testuser2 && \
+    chown -R testuser:testuser /var/home/testuser && \
+    chown -R testuser2:testuser2 /var/home/testuser2 && \
+    mkdir -p /var/lib/systemd/linger && \
+    touch /var/lib/systemd/linger/testuser /var/lib/systemd/linger/testuser2
 
 # Copy Caddy configuration
 COPY caddy/Caddyfile /etc/caddy/Caddyfile
@@ -19,11 +31,14 @@ COPY caddy/Caddyfile /etc/caddy/Caddyfile
 # Copy quadlets (container definitions)
 COPY quadlets/ /usr/share/containers/systemd
 
-# Copy systemd services
-COPY systemd/ /etc/systemd/system
+# Create directories and copy rootless quadlets
+RUN mkdir -p /etc/containers/systemd/users/1001 /etc/containers/systemd/users/1002
+COPY quadlets/rootless/testuser/ /etc/containers/systemd/users/1001/
+COPY quadlets/rootless/testuser2/ /etc/containers/systemd/users/1002/
 
-# Install SELinux policy for systemd-age-creds
-COPY selinux/systemd_age_creds.cil /tmp/
+# Copy systemd services and SELinux policy
+COPY systemd/ /etc/systemd/system
+COPY selinux/systemd_age_creds.cil /tmp/systemd_age_creds.cil
 RUN semodule -i /tmp/systemd_age_creds.cil && rm /tmp/systemd_age_creds.cil
 
 # Enable services
