@@ -17,29 +17,21 @@ RUN rm -rf /mnt && mkdir -p /mnt/media
 RUN groupadd -r systemd-age-creds-users
 
 # Create test user for rootless quadlet testing
-RUN useradd -r -u 1001 -m -d /var/home/testuser -s /sbin/nologin -c "Rootless quadlet test user" -G systemd-age-creds-users testuser
+RUN useradd -u 1001 -m -d /var/home/testuser -s /sbin/nologin -c "Rootless quadlet test user" -G systemd-age-creds-users testuser
 
 # Create required directories for rootless podman
 RUN mkdir -p /var/home/testuser/.local/share/containers /var/home/testuser/.config/containers && \
     chown -R testuser:testuser /var/home/testuser
 
-# Configure subuid/subgid ranges for rootless containers
-RUN echo "testuser:100000:65536" >> /etc/subuid && \
-    echo "testuser:100000:65536" >> /etc/subgid
-
 # Enable lingering for testuser to allow user services to run without login
 RUN mkdir -p /var/lib/systemd/linger && touch /var/lib/systemd/linger/testuser
 
 # Create second test user for credential isolation testing
-RUN useradd -r -u 1002 -m -d /var/home/testuser2 -s /sbin/nologin -c "Second rootless quadlet test user" -G systemd-age-creds-users testuser2
+RUN useradd -u 1002 -m -d /var/home/testuser2 -s /sbin/nologin -c "Second rootless quadlet test user" -G systemd-age-creds-users testuser2
 
 # Create required directories for rootless podman
 RUN mkdir -p /var/home/testuser2/.local/share/containers /var/home/testuser2/.config/containers && \
     chown -R testuser2:testuser2 /var/home/testuser2
-
-# Configure subuid/subgid ranges for rootless containers
-RUN echo "testuser2:165536:65536" >> /etc/subuid && \
-    echo "testuser2:165536:65536" >> /etc/subgid
 
 # Enable lingering for testuser2 to allow user services to run without login
 RUN touch /var/lib/systemd/linger/testuser2
