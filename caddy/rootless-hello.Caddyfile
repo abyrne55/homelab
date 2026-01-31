@@ -1,0 +1,13 @@
+# Rootless Caddy with socket activation
+# Simple Hello World on port 80
+{
+	admin unix//run/admin.sock
+}
+
+http://localhost {
+	bind fd/3 {
+		protocols h1
+	}
+	log
+	respond "Hello World from rootless Caddy with socket activation!"
+}
