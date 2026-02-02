@@ -15,18 +15,20 @@ RUN rm -rf /mnt && \
     mkdir -p /mnt/media && \
     groupadd -r systemd-age-creds-users
 
-# Create test users and configure for rootless podman
-RUN useradd -u 1001 -m -d /var/home/testuser -s /sbin/nologin -c "Rootless quadlet test user" -G systemd-age-creds-users testuser && \
-    useradd -u 1002 -m -d /var/home/testuser2 -s /sbin/nologin -c "Second rootless quadlet test user" -G systemd-age-creds-users testuser2 && \
-    useradd -u 1051 -m -d /var/home/caddy -s /sbin/nologin -c "Caddy web server" -G systemd-age-creds-users caddy && \
-    mkdir -p /var/home/testuser/.local/share/containers /var/home/testuser/.config/containers && \
-    mkdir -p /var/home/testuser2/.local/share/containers /var/home/testuser2/.config/containers && \
-    mkdir -p /var/home/caddy/.local/share/containers /var/home/caddy/.config/containers /var/home/caddy/caddy_etc && \
-    chown -R testuser:testuser /var/home/testuser && \
-    chown -R testuser2:testuser2 /var/home/testuser2 && \
-    chown -R caddy:caddy /var/home/caddy && \
-    mkdir -p /var/lib/systemd/linger && \
-    touch /var/lib/systemd/linger/testuser /var/lib/systemd/linger/testuser2 /var/lib/systemd/linger/caddy
+# Set up /etc/skel with standard podman directories for new users
+RUN mkdir -p /etc/skel/.local/share/containers /etc/skel/.config/containers
+
+# Create quadlet users (standard podman dirs come from /etc/skel)
+COPY scripts/create-quadlet-user.sh /tmp/
+RUN chmod +x /tmp/create-quadlet-user.sh && \
+    /tmp/create-quadlet-user.sh testuser 1001 "Rootless quadlet test user" && \
+    /tmp/create-quadlet-user.sh testuser2 1002 "Second rootless quadlet test user" && \
+    /tmp/create-quadlet-user.sh caddy 1051 "Caddy web server" && \
+    rm /tmp/create-quadlet-user.sh
+
+# Create service-specific directories
+RUN mkdir -p /var/home/caddy/caddy_etc && \
+    chown -R caddy:caddy /var/home/caddy/caddy_etc
 
 # Copy Caddy configuration
 COPY caddy/Caddyfile /etc/caddy/Caddyfile
