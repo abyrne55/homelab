@@ -6,7 +6,7 @@ FROM quay.io/fedora/fedora-bootc:43
 
 # Install dependencies
 RUN curl -LO https://github.com/abyrne55/systemd-age-creds/releases/download/v1.4.4/systemd-age-creds-1.4.4-1.aarch64.rpm && \
-    dnf -y install age git firewalld ./systemd-age-creds-*.rpm && \
+    dnf -y install jq age git firewalld ./systemd-age-creds-*.rpm && \
     dnf clean all && \
     rm -f /var/cache/dnf systemd-age-creds-*.rpm
 
@@ -17,6 +17,22 @@ RUN rm -rf /mnt && \
 
 # Set up /etc/skel with standard podman directories for new users
 RUN mkdir -p /etc/skel/.local/share/containers /etc/skel/.config/containers
+
+# Download Sigstore trust materials during build
+RUN mkdir -p /etc/pki/containers && \
+    curl -fsSL https://fulcio.sigstore.dev/api/v2/trustBundle | \
+    jq -r '.chains[0].certificates | join("")' > /etc/pki/containers/fulcio_v1.crt.pem && \
+    curl -fsSL https://rekor.sigstore.dev/api/v1/log/publicKey > /etc/pki/containers/rekor.pub
+
+# Create global container policy for system-level containers
+RUN mkdir -p /etc/containers /etc/containers/registries.d
+COPY containers/policy.json /etc/containers/policy.json
+COPY containers/registries.d/default.yaml /etc/containers/registries.d/default.yaml
+
+# Copy policy to /etc/skel for rootless containers
+COPY containers/policy.json /etc/skel/.config/containers/policy.json
+RUN mkdir -p /etc/skel/.config/containers/registries.d
+COPY containers/registries.d/default.yaml /etc/skel/.config/containers/registries.d/default.yaml
 
 # Create quadlet users (standard podman dirs come from /etc/skel)
 COPY scripts/create-quadlet-user.sh /tmp/
