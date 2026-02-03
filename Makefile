@@ -1,6 +1,7 @@
 # Container configuration
 IMAGE_NAME ?= homelab
 TAG ?= latest
+REMOTE_IMAGE ?= ghcr.io/abyrne55/homelab:pr-4
 
 # Build configuration
 BUILD_DIR ?= ./build
@@ -16,7 +17,7 @@ JELLYFIN_PORT ?= 8096
 CADDY_PORT ?= 80
 
 # Phony targets (convenience aliases and non-file targets)
-.PHONY: build-container build-vm run-vm ssh-vm open-jellyfin stop-vm reboot-vm clean verify-systemd
+.PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm open-jellyfin stop-vm reboot-vm clean verify-systemd
 
 # Default target
 .DEFAULT_GOAL := build-container
@@ -26,6 +27,7 @@ CADDY_PORT ?= 80
 #
 build-container: $(BUILD_DIR)/.image-built
 build-vm: $(BUILD_DIR)/qcow2/disk.qcow2 $(BUILD_DIR)/data.qcow2 $(BUILD_DIR)/secrets.iso
+build-vm-from-ghcr: $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2 $(BUILD_DIR)/data.qcow2 $(BUILD_DIR)/secrets.iso
 
 #
 # Verification targets
@@ -119,6 +121,25 @@ $(BUILD_DIR)/qcow2/disk.qcow2: $(BUILD_DIR)/.image-built $(BUILD_DIR)/config.tom
 		localhost/$(IMAGE_NAME):$(TAG) \
 		--rootfs btrfs
 
+# Build qcow2 image from GHCR (skips local container build)
+$(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2: $(BUILD_DIR)/config.toml
+	podman run \
+		--rm \
+		-it \
+		--privileged \
+		--pull=newer \
+		--security-opt label=type:unconfined_t \
+		-v $(BUILD_DIR)/config.toml:/config.toml:ro \
+		-v $(BUILD_DIR):/output \
+		-v /var/lib/containers/storage:/var/lib/containers/storage \
+		quay.io/centos-bootc/bootc-image-builder:latest \
+		--type qcow2 \
+		--use-librepo=True \
+		$(REMOTE_IMAGE) \
+		--rootfs btrfs
+	@# Create a symlink so run-vm can use the same disk path
+	@ln -sf qcow2/disk-from-ghcr.qcow2 $(BUILD_DIR)/qcow2/disk.qcow2
+
 # Create data disk for media storage (formatted on first boot)
 $(BUILD_DIR)/data.qcow2:
 	mkdir -p $(BUILD_DIR)
@@ -148,6 +169,14 @@ $(BUILD_DIR)/secrets.iso:
 
 # Run the qcow2 image in QEMU (checks if already running)
 run-vm: $(BUILD_DIR)/qcow2/disk.qcow2 $(BUILD_DIR)/data.qcow2 $(BUILD_DIR)/secrets.iso
+	@if pgrep -f "qemu-system-aarch64.*$(BUILD_DIR)/qcow2/disk.qcow2" > /dev/null; then \
+		echo "QEMU is already running"; \
+	else \
+		$(MAKE) _start-qemu; \
+	fi
+
+# Run VM built from GHCR image (faster than local build)
+run-vm-from-ghcr: $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2 $(BUILD_DIR)/data.qcow2 $(BUILD_DIR)/secrets.iso
 	@if pgrep -f "qemu-system-aarch64.*$(BUILD_DIR)/qcow2/disk.qcow2" > /dev/null; then \
 		echo "QEMU is already running"; \
 	else \
