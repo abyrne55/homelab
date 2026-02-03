@@ -16,7 +16,7 @@ JELLYFIN_PORT ?= 8096
 CADDY_PORT ?= 80
 
 # Phony targets (convenience aliases and non-file targets)
-.PHONY: build-container build-vm run-vm ssh-vm open-jellyfin stop-vm reboot-vm clean
+.PHONY: build-container build-vm run-vm ssh-vm open-jellyfin stop-vm reboot-vm clean verify-systemd
 
 # Default target
 .DEFAULT_GOAL := build-container
@@ -26,6 +26,54 @@ CADDY_PORT ?= 80
 #
 build-container: $(BUILD_DIR)/.image-built
 build-vm: $(BUILD_DIR)/qcow2/disk.qcow2 $(BUILD_DIR)/data.qcow2 $(BUILD_DIR)/secrets.iso
+
+#
+# Verification targets
+#
+
+# Verify all systemd unit files using systemd-analyze inside the container
+# Note: Quadlet files (.container) are not verified as they are converted to systemd units at runtime
+verify-systemd: $(BUILD_DIR)/.image-built
+	@echo "Verifying custom systemd unit files from this repo..."
+	@podman run --rm $(IMAGE_NAME):$(TAG) /bin/bash -c ' \
+		EXIT_CODE=0; \
+		echo "=== System units (/etc/systemd/system) ==="; \
+		for unit in $$(find /etc/systemd/system -maxdepth 1 -type f \( -name "*.service" -o -name "*.socket" -o -name "*.timer" -o -name "*.mount" -o -name "*.path" \) 2>/dev/null); do \
+			echo "Verifying $$unit"; \
+			OUTPUT=$$(systemd-analyze verify "$$unit" 2>&1); \
+			VERIFY_EXIT=$$?; \
+			if [ $$VERIFY_EXIT -ne 0 ]; then \
+				FILTERED=$$(echo "$$OUTPUT" | grep -v "Command .man.*failed with code"); \
+				if [ -n "$$FILTERED" ]; then \
+					echo "$$FILTERED"; \
+					EXIT_CODE=1; \
+				fi; \
+			fi; \
+		done; \
+		echo ""; \
+		echo "=== User units (custom only) ==="; \
+		if [ -f /usr/lib/systemd/user/caddy.socket ]; then \
+			echo "Verifying /usr/lib/systemd/user/caddy.socket"; \
+			OUTPUT=$$(systemd-analyze verify /usr/lib/systemd/user/caddy.socket 2>&1); \
+			VERIFY_EXIT=$$?; \
+			if [ $$VERIFY_EXIT -ne 0 ]; then \
+				FILTERED=$$(echo "$$OUTPUT" | grep -v "Command .man.*failed with code" | grep -v "service caddy.service not loaded"); \
+				if [ -n "$$FILTERED" ]; then \
+					echo "$$FILTERED"; \
+					EXIT_CODE=1; \
+				fi; \
+			fi; \
+		fi; \
+		echo ""; \
+		echo "=== Drop-in configs ==="; \
+		for conf in $$(find /etc/systemd/system -type f -name "*.conf" 2>/dev/null); do \
+			echo "Found: $$conf"; \
+		done; \
+		exit $$EXIT_CODE'
+	@echo ""
+	@echo "Systemd unit verification complete"
+	@echo "Note: Quadlet files (.container) are not verified - they are converted to systemd units at runtime by podman-systemd-generator"
+	@echo "Note: Drop-in configs (.conf) are listed but validated with their parent units at runtime"
 
 #
 # File-based targets with dependencies
