@@ -19,12 +19,6 @@ RUN rm -rf /mnt && \
 # Set up /etc/skel with standard podman directories for new users
 RUN mkdir -p /etc/skel/.local/share/containers /etc/skel/.config/containers
 
-# Download Sigstore trust materials during build for cosign verification
-RUN mkdir -p /etc/pki/containers && \
-    curl -fsSL https://fulcio.sigstore.dev/api/v2/trustBundle | \
-    jq -r '.chains[0].certificates | join("")' > /etc/pki/containers/fulcio_v1.crt.pem && \
-    curl -fsSL https://rekor.sigstore.dev/api/v1/log/publicKey > /etc/pki/containers/rekor.pub
-
 # Create quadlet users (standard podman dirs come from /etc/skel)
 COPY scripts/create-quadlet-user.sh /tmp/
 RUN chmod +x /tmp/create-quadlet-user.sh && \
