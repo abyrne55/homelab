@@ -11,12 +11,12 @@ if [ $# -ne 3 ]; then
 fi
 
 USERNAME="$1"
-UID="$2"
+USER_ID="$2"
 DESCRIPTION="$3"
 
 # Create user with systemd-age-creds group membership
 # The -m flag copies /etc/skel to the new home directory
-useradd -u "$UID" -m -d "/var/home/$USERNAME" -s /sbin/nologin \
+useradd -u "$USER_ID" -m -d "/var/home/$USERNAME" -s /sbin/nologin \
     -c "$DESCRIPTION" -G systemd-age-creds-users "$USERNAME"
 
 # Set ownership (useradd should handle this, but being explicit)
@@ -26,4 +26,4 @@ chown -R "$USERNAME:$USERNAME" "/var/home/$USERNAME"
 mkdir -p /var/lib/systemd/linger
 touch "/var/lib/systemd/linger/$USERNAME"
 
-echo "Created quadlet user: $USERNAME (UID $UID)"
+echo "Created quadlet user: $USERNAME (UID $USER_ID)"
