@@ -137,8 +137,10 @@ $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2: $(BUILD_DIR)/config.toml
 		--use-librepo=True \
 		$(REMOTE_IMAGE) \
 		--rootfs btrfs
+	@# Rename the created disk to disk-from-ghcr.qcow2
+	@mv $(BUILD_DIR)/qcow2/disk.qcow2 $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2
 	@# Create a symlink so run-vm can use the same disk path
-	@ln -sf qcow2/disk-from-ghcr.qcow2 $(BUILD_DIR)/qcow2/disk.qcow2
+	@ln -sf disk-from-ghcr.qcow2 $(BUILD_DIR)/qcow2/disk.qcow2
 
 # Create data disk for media storage (formatted on first boot)
 $(BUILD_DIR)/data.qcow2:
