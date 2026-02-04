@@ -58,7 +58,7 @@ make reboot-vm        # Stop and restart VM
 Note that `ssh-vm` and `open-jellyfin` both depend on `run-vm`, which depends on `build-vm`, which depends on `build-container`. So after most changes to the files in this repo, all you need to run is the following command in order to rebuild/boot a fresh VM with your changes in-effect.
 ```bash
 make clean && make run-vm > ./build/log
-# Do NOT background this command. Run it as a BLOCKING tool call with a 5 minute timeout
+# Do NOT background this command. Run it as a BLOCKING tool call with a 10 minute timeout
 # It uses output redirection because the build process is quite verbose
 ```
 

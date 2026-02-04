@@ -6,9 +6,10 @@ FROM quay.io/fedora/fedora-bootc:43
 
 # Install dependencies
 RUN curl -LO https://github.com/abyrne55/systemd-age-creds/releases/download/v1.4.4/systemd-age-creds-1.4.4-1.aarch64.rpm && \
-    dnf -y install age git firewalld ./systemd-age-creds-*.rpm && \
+    curl -LO https://github.com/sigstore/cosign/releases/download/v3.0.4/cosign-3.0.4-1.aarch64.rpm && \
+    dnf -y install jq age git firewalld ./systemd-age-creds-*.rpm ./cosign-*.rpm && \
     dnf clean all && \
-    rm -f /var/cache/dnf systemd-age-creds-*.rpm
+    rm -f /var/cache/dnf systemd-age-creds-*.rpm cosign-*.rpm
 
 # Create mount point for external data volume and systemd-age-creds group
 RUN rm -rf /mnt && \
