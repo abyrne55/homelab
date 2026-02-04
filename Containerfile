@@ -32,7 +32,6 @@ RUN mkdir -p /var/home/caddy/caddy_etc && \
     chown -R caddy:caddy /var/home/caddy/caddy_etc
 
 # Copy Caddy configuration
-COPY caddy/Caddyfile /etc/caddy/Caddyfile
 COPY caddy/rootless-hello.Caddyfile /var/home/caddy/caddy_etc/Caddyfile
 RUN chown caddy:caddy /var/home/caddy/caddy_etc/Caddyfile
 

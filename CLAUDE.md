@@ -25,7 +25,8 @@ Note that none of the software referenced/defined in this repo is meant to be ru
 
 ## Key Directories
 
-- `quadlets/` - Podman container definitions (e.g., jellyfin.container, caddy.container)
+- `quadlets/` - Podman container definitions (e.g., jellyfin.container)
+  - `quadlets/rootless/` - Rootless quadlets for specific users (e.g., caddy, testuser)
 - `systemd/` - Service units for boot orchestration and secrets management
 - `selinux/` - SELinux policy for systemd-age-creds socket access
 - `build/` - Generated artifacts (.gitignored and deleted upon `make clean`)
