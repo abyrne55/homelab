@@ -1,7 +1,7 @@
 # Rootless Caddy with socket activation
 # Simple Hello World on port 80
 {
-	admin unix//run/admin.sock
+	admin unix//tmp/admin.sock
 }
 
 http://localhost {

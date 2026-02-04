@@ -4,15 +4,16 @@ AssertPathExists=%h/caddy_etc/Caddyfile
 
 [Service]
 ExecStartPre=/usr/bin/cosign verify --certificate-identity-regexp='https://github.com/abyrne55/caddy-homelab/.*' --certificate-oidc-issuer='https://token.actions.githubusercontent.com' ghcr.io/abyrne55/caddy-homelab:main
-ExecReload=podman exec caddy /usr/bin/caddy reload --config /etc/caddy/Caddyfile --address unix//run/admin.sock --force
 
 [Container]
 ContainerName=caddy
 Exec=/usr/bin/caddy run --config /etc/caddy/Caddyfile
+ReloadCmd=/usr/bin/caddy reload --config /etc/caddy/Caddyfile
 Image=ghcr.io/abyrne55/caddy-homelab:main
 AutoUpdate=registry
 Network=none
 NoNewPrivileges=true
 Notify=true
 ReadOnly=true
+ReadOnlyTmpfs=true
 Volume=%h/caddy_etc:/etc/caddy:Z

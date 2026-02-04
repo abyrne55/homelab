@@ -236,7 +236,7 @@ ssh-vm: _check-vm-running
 	@until ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) -o ConnectTimeout=2 core@localhost exit 2>/dev/null; do \
 		sleep 1; \
 	done
-	ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost
+	ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost || true
 
 # Open Jellyfin web UI in default browser
 open-jellyfin: _check-vm-running
@@ -253,7 +253,7 @@ vm-switch: _check-vm-running
 		sleep 1; \
 	done
 	@echo "Switching to ghcr.io/abyrne55/homelab:$$(git branch --show-current)..."
-	ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost -- "sudo bootc switch --apply ghcr.io/abyrne55/homelab:$$(git branch --show-current)" || true
+	ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost -- "sudo bootc switch --apply ghcr.io/abyrne55/homelab:$$(git branch --show-current) && sudo bootc upgrade --apply" || true
 
 #
 # Cleanup
