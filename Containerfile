@@ -38,7 +38,6 @@ RUN mkdir -p /etc/containers/systemd/users/1001 /etc/containers/systemd/users/10
 COPY quadlets/rootless/testuser/ /etc/containers/systemd/users/1001/
 COPY quadlets/rootless/testuser2/ /etc/containers/systemd/users/1002/
 COPY quadlets/rootless/caddy/caddy.container /etc/containers/systemd/users/1051/
-COPY quadlets/rootless/caddy/caddy.socket /usr/lib/systemd/user/
 COPY quadlets/rootless/jellyfin/ /etc/containers/systemd/users/1052/
 
 # Copy systemd services and SELinux policy

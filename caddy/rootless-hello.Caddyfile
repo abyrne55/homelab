@@ -1,13 +1,10 @@
-# Rootless Caddy with socket activation
+# Rootless Caddy reverse proxy
 # Reverse proxy to Jellyfin media server
 {
 	admin unix//tmp/admin.sock
 }
 
-http://localhost {
-	bind fd/3 {
-		protocols h1
-	}
+:8080 {
 	log
 
 	# Reverse proxy all traffic to Jellyfin
