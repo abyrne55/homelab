@@ -5,7 +5,7 @@ Requires=init-data-disk.service
 
 [Mount]
 What=/dev/disk/by-label/media-data
-Where=/mnt/media
+Where=/var/mnt/media
 Type=ext4
 Options=defaults
 
