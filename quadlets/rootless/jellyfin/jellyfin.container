@@ -6,7 +6,7 @@ Requires=var-mnt-media.mount
 [Container]
 Image=docker.io/jellyfin/jellyfin:latest
 PublishPort=8096:8096
-Volume=/var/mnt/media:/media:ro,z
+Volume=/var/mnt/media:/media:ro
 Volume=/var/mnt/media/.jellyfin/config:/config:Z
 Volume=/var/mnt/media/.jellyfin/cache:/cache:Z
 AutoUpdate=registry
