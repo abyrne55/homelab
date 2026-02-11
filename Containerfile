@@ -4,6 +4,11 @@
 
 FROM quay.io/fedora/fedora-bootc:43
 
+# Enable transient /etc - disallows machine-local config state except kernel args and /var
+# See: https://github.com/ostreedev/ostree/blob/main/man/ostree-prepare-root.xml
+RUN echo -e '[etc]\ntransient=true' >> /usr/lib/ostree/prepare-root.conf && \
+    set -x; kver=$(cd /usr/lib/modules && echo *); dracut -vf /usr/lib/modules/$kver/initramfs.img $kver
+
 # Install dependencies
 RUN curl -LO https://github.com/abyrne55/systemd-age-creds/releases/download/v1.4.4/systemd-age-creds-1.4.4-1.aarch64.rpm && \
     curl -LO https://github.com/sigstore/cosign/releases/download/v3.0.4/cosign-3.0.4-1.aarch64.rpm && \
