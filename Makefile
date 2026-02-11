@@ -1,7 +1,7 @@
 # Container configuration
 IMAGE_NAME ?= homelab
 TAG ?= latest
-REMOTE_IMAGE ?= ghcr.io/abyrne55/homelab:pr-4
+REMOTE_IMAGE ?= ghcr.io/abyrne55/homelab:main
 
 # Build configuration
 BUILD_DIR ?= ./build
