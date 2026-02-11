@@ -1,7 +1,7 @@
 # Container configuration
 IMAGE_NAME ?= homelab
 TAG ?= latest
-REMOTE_IMAGE ?= ghcr.io/abyrne55/homelab:main
+REMOTE_IMAGE ?= ghcr.io/abyrne55/homelab:$(shell git branch --show-current)
 
 # Build configuration
 BUILD_DIR ?= ./build
@@ -123,6 +123,7 @@ $(BUILD_DIR)/qcow2/disk.qcow2: $(BUILD_DIR)/.image-built $(BUILD_DIR)/config.tom
 
 # Build qcow2 image from GHCR (skips local container build)
 $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2: $(BUILD_DIR)/config.toml
+	podman pull $(REMOTE_IMAGE)
 	podman run \
 		--rm \
 		-it \
@@ -220,7 +221,7 @@ else
 endif
 
 # SSH options
-SSH_OPTS := -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o PreferredAuthentications=publickey
+SSH_OPTS := -o LogLevel=QUIET -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o PreferredAuthentications=publickey
 
 # Internal target to check if VM is running
 .PHONY: _check-vm-running
@@ -252,8 +253,8 @@ vm-switch: _check-vm-running
 	@until ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) -o ConnectTimeout=2 core@localhost exit 2>/dev/null; do \
 		sleep 1; \
 	done
-	@echo "Switching to ghcr.io/abyrne55/homelab:$$(git branch --show-current)..."
-	ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost -- "sudo bootc switch --apply ghcr.io/abyrne55/homelab:$$(git branch --show-current) && sudo bootc upgrade --apply" || true
+	@echo "Switching to $(REMOTE_IMAGE)..."
+	ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost -- "sudo bootc switch --apply $(REMOTE_IMAGE) && sudo bootc upgrade --apply" || true
 
 #
 # Cleanup
@@ -264,10 +265,12 @@ stop-vm:
 	-pkill -f "qemu-system-aarch64.*$(BUILD_DIR)/qcow2/disk.qcow2"
 
 # Reboot the VM
-reboot-vm: stop-vm
-	@echo "Rebooting VM..."
-	@sleep 1
-	$(MAKE) run-vm
+reboot-vm: _check-vm-running
+	@echo "Waiting for SSH to become available..."
+	@until ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) -o ConnectTimeout=2 core@localhost exit 2>/dev/null; do \
+		sleep 1; \
+	done
+	ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost -- "sudo reboot" || true
 
 # Clean up all build artifacts
 clean: stop-vm

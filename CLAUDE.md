@@ -61,7 +61,7 @@ make vm-switch             # Switch running VM to current branch image from GHCR
 
 The Makefile allows you to build container images locally or via GitHub actions — **prefer GitHub Actions (`from-ghcr` targets)**, as GitHub can build container images much more quickly than the user's machine can. This means for each change you need to test, commit your changes to a non-main branch, push that branch, and then wait until the build completes using the following command.
 ```bash
-gh run watch --exit-status $(gh run list --commit $(git rev-parse HEAD) --limit 1 --json databaseId --jq '.[] | .databaseId')
+gh run watch --compact --exit-status $(gh run list --commit $(git rev-parse HEAD) --limit 1 --json databaseId --jq '.[] | .databaseId')
 ```
 While you wait for the container image to build, ensure that QEMU is running:
 ```bash
@@ -80,7 +80,7 @@ To more-quickly test small changes, try interacting with the already-running VM 
 Once the VM is running, you can interact with it using the following command format:
 
 ```bash
-ssh -i build/id_ed25519 -p 2222 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o PreferredAuthentications=publickey core@localhost -- "<your command here>" || true
+ssh -i build/id_ed25519 -p 2222 -o LogLevel=QUIET -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o PreferredAuthentications=publickey core@localhost -- "<your command here>" || true
 ```
 
 (the `|| true` is to prevent exit statuses from interrupting sibling tool calls)
