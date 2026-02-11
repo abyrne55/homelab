@@ -17,3 +17,6 @@ ReadOnly=true
 ReadOnlyTmpfs=true
 Volume=%h/caddy_etc:/etc/caddy:Z
 PublishPort=8080:8080
+
+[Install]
+WantedBy=default.target
