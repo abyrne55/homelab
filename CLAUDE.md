@@ -46,24 +46,36 @@ Secrets are encrypted with `age` and decrypted on-demand by `systemd` and `syste
 All operations go through the Makefile:
 
 ```bash
-make clean            # Remove all build artifacts and stop VM
-make build-container  # Build the container image (default target)
-make build-vm         # Build qcow2 VM disk + data disk
-make run-vm           # Start QEMU vm
-make ssh-vm           # Build, run, and open an interactive SSH session into VM
-make open-jellyfin    # Start VM and open Jellyfin web UI
-make stop-vm          # Stop running QEMU instance
-make reboot-vm        # Stop and restart VM
+make clean                 # Remove all build artifacts and stop VM
+make build-container       # Build the container image (default target)
+make build-vm-from-ghcr    # Build qcow2 VM from GHCR (faster, recommended)
+make build-vm              # Build qcow2 VM from local container
+make run-vm-from-ghcr      # Start QEMU VM from GHCR image (faster, recommended)
+make run-vm                # Start QEMU VM from local build
+make ssh-vm                # Open an interactive SSH session into VM
+make open-jellyfin         # Open Jellyfin web UI
+make stop-vm               # Stop running QEMU instance
+make reboot-vm             # Stop and restart VM
+make vm-switch             # Switch running VM to current branch image from GHCR
 ```
 
-Note that `ssh-vm` and `open-jellyfin` both depend on `run-vm`, which depends on `build-vm`, which depends on `build-container`. So after most changes to the files in this repo, all you need to run is the following command in order to rebuild/boot a fresh VM with your changes in-effect.
+The Makefile allows you to build container images locally or via GitHub actions — **prefer GitHub Actions (`from-ghcr` targets)**, as GitHub can build container images much more quickly than the user's machine can. This means for each change you need to test, commit your changes to a non-main branch, push that branch, and then wait until the build completes using the following command.
 ```bash
-make clean && make run-vm > ./build/log
-# Do NOT background this command. Run it as a BLOCKING tool call with a 10 minute timeout
-# It uses output redirection because the build process is quite verbose
+gh run watch --exit-status $(gh run list --commit $(git rev-parse HEAD) --limit 1 --json databaseId --jq '.[] | .databaseId')
+```
+While you wait for the container image to build, ensure that QEMU is running:
+```bash
+make _check-vm-running
+# Returns no output if QEMU is running, otherwise returns "ERROR: VM is not running..."
+```
+If the VM isn't running, run `make run-vm-from-ghcr`. You can do this regardless of the container image build status because we will just `bootc switch` into the latest image when the time comes.
+
+Once the GitHub Action completes (i.e., the container image at `ghcr.io/abyrne55/homelab:<branch_name>` represents the `HEAD` of `<branch_name>`), instruct the VM to `bootc switch` and reboot into the latest image:
+```bash
+make vm-switch
 ```
 
-The full build will take several minutes. To more-quickly test out small changes, you can try interacting with the already-running VM via SSH (see below) before rebuilding.
+To more-quickly test small changes, try interacting with the already-running VM via SSH (see below) before rebuilding.
 
 Once the VM is running, you can interact with it using the following command format:
 
