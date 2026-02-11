@@ -27,12 +27,9 @@ RUN mkdir -p /var/home/caddy/caddy_etc
 
 # Copy Caddy configuration and set ownership by numeric UID
 # (User 'caddy' doesn't exist at build time, created at boot)
+# (Permissions are set by tmpfiles.d/quadlet-users-homedirs.conf at boot)
 COPY caddy/rootless-hello.Caddyfile /var/home/caddy/caddy_etc/Caddyfile
 RUN chown -R 1051:1051 /var/home/caddy/caddy_etc
-
-# Set permissions to allow rootless container to traverse and read config
-# The rootless container runs with mapped UIDs that need execute permission on parent directories
-RUN chmod 755 /var/home/caddy && chmod -R 755 /var/home/caddy/caddy_etc
 
 # Copy quadlets (container definitions) - exclude rootless directory
 COPY quadlets/*.container /usr/share/containers/systemd/
