@@ -11,7 +11,7 @@ ExecStart=/usr/sbin/mkfs.ext4 -L media-data /dev/vdb
 ExecStart=/usr/bin/mkdir -p /var/mnt/media
 ExecStart=/usr/bin/mount /dev/vdb /var/mnt/media
 ExecStart=/usr/bin/mkdir -p /var/mnt/media/Movies /var/mnt/media/TV /var/mnt/media/.jellyfin/config /var/mnt/media/.jellyfin/cache
-ExecStart=/usr/bin/chown -R 1052:1052 /var/mnt/media/.jellyfin
+ExecStart=/usr/bin/chown -R 1052:1052 /var/mnt/media
 ExecStart=/usr/bin/umount /var/mnt/media
 RemainAfterExit=yes
 
