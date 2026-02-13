@@ -9,7 +9,7 @@ RUN curl -LO https://github.com/abyrne55/systemd-age-creds/releases/download/v1.
     curl -LO https://github.com/sigstore/cosign/releases/download/v3.0.4/cosign-3.0.4-1.aarch64.rpm && \
     dnf -y install jq age git firewalld ./systemd-age-creds-*.rpm ./cosign-*.rpm && \
     dnf clean all && \
-    rm -rf /var/cache/*dnf* /var/lib/dnf /var/log/dnf*.log systemd-age-creds-*.rpm cosign-*.rpm
+    rm -rf /var/cache/*dnf* /var/cache/ldconfig/* /var/lib/dnf /var/log/dnf*.log systemd-age-creds-*.rpm cosign-*.rpm
 
 # Create mount point for external data volume
 RUN rm -rf /mnt && \
@@ -53,4 +53,8 @@ COPY firewalld/zones/public.xml /etc/firewalld/zones/public.xml
 # Enable services
 RUN systemctl enable firewalld podman-auto-update.timer secrets-inject.service ssh-generate-identity.service age-generate-identity.service init-data-disk.service var-mnt-media.mount demo-media.service github-known-hosts.service homelab-secrets-sync.service homelab-secrets-sync.timer systemd-age-creds.socket test-systemd-age-creds.service
 
+# Lint
 RUN bootc container lint --fatal-warnings --no-truncate
+
+# It's recommended for bootc containers to set CMD /sbin/init
+CMD /sbin/init
