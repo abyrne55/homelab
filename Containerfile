@@ -52,3 +52,5 @@ COPY firewalld/zones/public.xml /etc/firewalld/zones/public.xml
 
 # Enable services
 RUN systemctl enable firewalld podman-auto-update.timer secrets-inject.service ssh-generate-identity.service age-generate-identity.service init-data-disk.service var-mnt-media.mount demo-media.service github-known-hosts.service homelab-secrets-sync.service homelab-secrets-sync.timer systemd-age-creds.socket test-systemd-age-creds.service
+
+RUN bootc container lint --fatal-warnings
