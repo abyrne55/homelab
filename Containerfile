@@ -11,40 +11,35 @@ RUN curl -LO https://github.com/abyrne55/systemd-age-creds/releases/download/v1.
     dnf clean all && \
     rm -f /var/cache/dnf systemd-age-creds-*.rpm cosign-*.rpm
 
-# Create mount point for external data volume and systemd-age-creds group
+# Create mount point for external data volume
 RUN rm -rf /mnt && \
-    mkdir -p /mnt/media && \
-    groupadd -r systemd-age-creds-users
+    mkdir -p /var/mnt/media
 
-# Set up /etc/skel with standard podman directories for new users
-RUN mkdir -p /etc/skel/.local/share/containers /etc/skel/.config/containers
+# Copy systemd-sysusers and tmpfiles.d configurations
+# Users/groups created at boot by systemd-sysusers.service
+# Home directories created at boot by systemd-tmpfiles-setup.service
+COPY sysusers/*.conf /usr/lib/sysusers.d/
+COPY tmpfiles/*.conf /usr/lib/tmpfiles.d/
 
-# Create quadlet users (standard podman dirs come from /etc/skel)
-COPY scripts/create-quadlet-user.sh /tmp/
-RUN chmod +x /tmp/create-quadlet-user.sh && \
-    /tmp/create-quadlet-user.sh testuser 1001 "Rootless quadlet test user" && \
-    /tmp/create-quadlet-user.sh testuser2 1002 "Second rootless quadlet test user" && \
-    /tmp/create-quadlet-user.sh caddy 1051 "Caddy web server" && \
-    rm /tmp/create-quadlet-user.sh
+# Pre-create Caddy configuration directory at build time
+# (Needed because we COPY Caddyfile before users exist at boot)
+RUN mkdir -p /var/home/caddy/caddy_etc
 
-# Create service-specific directories
-RUN mkdir -p /var/home/caddy/caddy_etc && \
-    chown -R caddy:caddy /var/home/caddy/caddy_etc
-
-# Copy Caddy configuration
-COPY caddy/Caddyfile /etc/caddy/Caddyfile
+# Copy Caddy configuration and set ownership by numeric UID
+# (User 'caddy' doesn't exist at build time, created at boot)
+# (Permissions are set by tmpfiles.d/quadlet-users-homedirs.conf at boot)
 COPY caddy/rootless-hello.Caddyfile /var/home/caddy/caddy_etc/Caddyfile
-RUN chown caddy:caddy /var/home/caddy/caddy_etc/Caddyfile
+RUN chown -R 1051:1051 /var/home/caddy/caddy_etc
 
-# Copy quadlets (container definitions)
-COPY quadlets/ /usr/share/containers/systemd
+# Copy quadlets (container definitions) - exclude rootless directory
+COPY quadlets/*.container /usr/share/containers/systemd/
 
 # Create directories and copy rootless quadlets
-RUN mkdir -p /etc/containers/systemd/users/1001 /etc/containers/systemd/users/1002 /etc/containers/systemd/users/1051
+RUN mkdir -p /etc/containers/systemd/users/1001 /etc/containers/systemd/users/1002 /etc/containers/systemd/users/1051 /etc/containers/systemd/users/1052
 COPY quadlets/rootless/testuser/ /etc/containers/systemd/users/1001/
 COPY quadlets/rootless/testuser2/ /etc/containers/systemd/users/1002/
 COPY quadlets/rootless/caddy/caddy.container /etc/containers/systemd/users/1051/
-COPY quadlets/rootless/caddy/caddy.socket /usr/lib/systemd/user/
+COPY quadlets/rootless/jellyfin/ /etc/containers/systemd/users/1052/
 
 # Copy systemd services and SELinux policy
 COPY systemd/ /etc/systemd/system
@@ -56,5 +51,4 @@ COPY firewalld/firewalld.conf /etc/firewalld/firewalld.conf
 COPY firewalld/zones/public.xml /etc/firewalld/zones/public.xml
 
 # Enable services
-RUN systemctl enable firewalld podman-auto-update.timer secrets-inject.service ssh-generate-identity.service age-generate-identity.service init-data-disk.service mnt-media.mount demo-media.service github-known-hosts.service homelab-secrets-sync.service homelab-secrets-sync.timer systemd-age-creds.socket test-systemd-age-creds.service && \
-    systemctl --global enable caddy.socket
+RUN systemctl enable firewalld podman-auto-update.timer secrets-inject.service ssh-generate-identity.service age-generate-identity.service init-data-disk.service var-mnt-media.mount demo-media.service github-known-hosts.service homelab-secrets-sync.service homelab-secrets-sync.timer systemd-age-creds.socket test-systemd-age-creds.service

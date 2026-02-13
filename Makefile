@@ -1,7 +1,7 @@
 # Container configuration
 IMAGE_NAME ?= homelab
 TAG ?= latest
-REMOTE_IMAGE ?= ghcr.io/abyrne55/homelab:pr-4
+REMOTE_IMAGE ?= ghcr.io/abyrne55/homelab:$(shell git branch --show-current)
 
 # Build configuration
 BUILD_DIR ?= ./build
@@ -17,7 +17,7 @@ JELLYFIN_PORT ?= 8096
 CADDY_PORT ?= 80
 
 # Phony targets (convenience aliases and non-file targets)
-.PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm open-jellyfin stop-vm reboot-vm clean verify-systemd
+.PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm open-jellyfin vm-switch stop-vm reboot-vm clean verify-systemd
 
 # Default target
 .DEFAULT_GOAL := build-container
@@ -123,6 +123,7 @@ $(BUILD_DIR)/qcow2/disk.qcow2: $(BUILD_DIR)/.image-built $(BUILD_DIR)/config.tom
 
 # Build qcow2 image from GHCR (skips local container build)
 $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2: $(BUILD_DIR)/config.toml
+	podman pull $(REMOTE_IMAGE)
 	podman run \
 		--rm \
 		-it \
@@ -220,23 +221,40 @@ else
 endif
 
 # SSH options
-SSH_OPTS := -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o PreferredAuthentications=publickey
+SSH_OPTS := -o LogLevel=QUIET -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o PreferredAuthentications=publickey
+
+# Internal target to check if VM is running
+.PHONY: _check-vm-running
+_check-vm-running:
+	@if ! pgrep -f "qemu-system-aarch64.*$(BUILD_DIR)/qcow2/disk.qcow2" > /dev/null; then \
+		echo "ERROR: VM is not running. Start it with 'make run-vm' or 'make run-vm-from-ghcr' first."; \
+		exit 1; \
+	fi
 
 # SSH into the running VM (waits for SSH to become available)
-ssh-vm: run-vm
+ssh-vm: _check-vm-running
 	@echo "Waiting for SSH to become available..."
 	@until ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) -o ConnectTimeout=2 core@localhost exit 2>/dev/null; do \
 		sleep 1; \
 	done
-	ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost
+	ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost || true
 
 # Open Jellyfin web UI in default browser
-open-jellyfin: run-vm
+open-jellyfin: _check-vm-running
 	@if [ "$$(uname)" = "Darwin" ]; then \
 		open "http://localhost:$(JELLYFIN_PORT)"; \
 	else \
 		xdg-open "http://localhost:$(JELLYFIN_PORT)"; \
 	fi
+
+# Switch VM to container image for current git branch
+vm-switch: _check-vm-running
+	@echo "Waiting for SSH to become available..."
+	@until ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) -o ConnectTimeout=2 core@localhost exit 2>/dev/null; do \
+		sleep 1; \
+	done
+	@echo "Switching to $(REMOTE_IMAGE)..."
+	ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost -- "sudo bootc switch --apply $(REMOTE_IMAGE) && sudo bootc upgrade --apply" || true
 
 #
 # Cleanup
@@ -247,10 +265,12 @@ stop-vm:
 	-pkill -f "qemu-system-aarch64.*$(BUILD_DIR)/qcow2/disk.qcow2"
 
 # Reboot the VM
-reboot-vm: stop-vm
-	@echo "Rebooting VM..."
-	@sleep 1
-	$(MAKE) run-vm
+reboot-vm: _check-vm-running
+	@echo "Waiting for SSH to become available..."
+	@until ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) -o ConnectTimeout=2 core@localhost exit 2>/dev/null; do \
+		sleep 1; \
+	done
+	ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost -- "sudo reboot" || true
 
 # Clean up all build artifacts
 clean: stop-vm
