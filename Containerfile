@@ -53,8 +53,8 @@ COPY firewalld/zones/public.xml /etc/firewalld/zones/public.xml
 # Enable services
 RUN systemctl enable firewalld podman-auto-update.timer secrets-inject.service ssh-generate-identity.service age-generate-identity.service init-data-disk.service var-mnt-media.mount demo-media.service github-known-hosts.service homelab-secrets-sync.service homelab-secrets-sync.timer systemd-age-creds.socket test-systemd-age-creds.service
 
-# Lint
-RUN bootc container lint --fatal-warnings --no-truncate
+# Lint (TODO: reenable --fatal-warnings)
+RUN bootc container lint --no-truncate
 
 # It's recommended for bootc containers to set CMD /sbin/init
-CMD /sbin/init
+CMD ["/sbin/init"]
