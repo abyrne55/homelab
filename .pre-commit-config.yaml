@@ -9,11 +9,11 @@ repos:
     -   id: check-yaml
     -   id: check-json
         types: [file]
-        files: \.(json|user)$
+        files: \.(json|user.*|group.*)$
     -   id: pretty-format-json
         args: ['--autofix', '--indent=2']
         types: [file]
-        files: \.(json|user)$
+        files: \.(json|user.*|group.*)$
     -   id: check-added-large-files
     -   id: check-executables-have-shebangs
     -   id: check-case-conflict
