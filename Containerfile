@@ -19,6 +19,9 @@ COPY etc/ /etc/
 # Ensure userdb files are world-readable for nss-systemd
 RUN chmod 755 /etc/userdb && chmod 644 /etc/userdb/*.user*
 
+# Enable systemd-homed feature for PAM/sudo to work with userdb
+RUN authselect enable-feature with-systemd-homed
+
 # Create directories and copy rootless quadlets
 RUN mkdir -p /etc/containers/systemd/users/1001 /etc/containers/systemd/users/1002 /etc/containers/systemd/users/1051 /etc/containers/systemd/users/1052
 COPY quadlets/rootless/testuser/ /etc/containers/systemd/users/1001/
