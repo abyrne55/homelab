@@ -105,6 +105,7 @@ $(BUILD_DIR)/qcow2/disk.qcow2: $(BUILD_DIR)/.image-built
 
 # Build qcow2 image from GHCR (skips local container build)
 $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2:
+	mkdir -p $(BUILD_DIR)
 	podman pull $(REMOTE_IMAGE)
 	podman run \
 		--rm \
