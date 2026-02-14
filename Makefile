@@ -259,7 +259,24 @@ await-ghcr:
 		echo "WARNING: There are untracked files."; \
 	fi
 	@echo "Waiting for GitHub Actions build to complete..."
-	@gh run watch --compact --exit-status $$(gh run list --commit $$(git rev-parse HEAD) --limit 1 --json databaseId --jq '.[] | .databaseId')
+	@COMMIT_SHA=$$(git rev-parse HEAD); \
+	MAX_RETRIES=12; \
+	RETRY_DELAY=5; \
+	for i in $$(seq 1 $$MAX_RETRIES); do \
+		RUN_ID=$$(gh run list --commit $$COMMIT_SHA --limit 1 --json databaseId --jq '.[] | .databaseId' 2>/dev/null); \
+		if [ -n "$$RUN_ID" ]; then \
+			echo "Found workflow run $$RUN_ID"; \
+			gh run watch --compact --exit-status $$RUN_ID; \
+			exit 0; \
+		fi; \
+		if [ $$i -lt $$MAX_RETRIES ]; then \
+			echo "No workflow run found for commit $$COMMIT_SHA (attempt $$i/$$MAX_RETRIES), retrying in $$RETRY_DELAY seconds..."; \
+			sleep $$RETRY_DELAY; \
+		fi; \
+	done; \
+	echo "ERROR: No workflow run found for commit $$COMMIT_SHA after $$MAX_RETRIES attempts."; \
+	echo "Check that GitHub Actions is enabled and the workflow was triggered."; \
+	exit 1
 
 #
 # Cleanup
