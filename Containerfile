@@ -33,5 +33,11 @@ RUN systemctl enable firewalld podman-auto-update.timer secrets-inject.service s
 # Lint (TODO: reenable --fatal-warnings)
 RUN bootc container lint --no-truncate
 
+# Enable transient /etc (reset on every boot, config comes from image)
+RUN mkdir -p /usr/lib/ostree && \
+    echo -e '[etc]\ntransient = true' >> /usr/lib/ostree/prepare-root.conf && \
+    kver=$(cd /usr/lib/modules && echo *) && \
+    dracut -vf /usr/lib/modules/$kver/initramfs.img $kver
+
 # It's recommended for bootc containers to set CMD /sbin/init
 CMD ["/sbin/init"]
