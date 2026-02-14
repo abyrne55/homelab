@@ -26,8 +26,7 @@ COPY quadlets/rootless/testuser2/ /etc/containers/systemd/users/1002/
 COPY quadlets/rootless/caddy/caddy.container /etc/containers/systemd/users/1051/
 COPY quadlets/rootless/jellyfin/ /etc/containers/systemd/users/1052/
 
-# Copy systemd services and SELinux policy
-COPY systemd/ /etc/systemd/system
+# Copy SELinux policy
 COPY selinux/systemd_age_creds.cil /tmp/systemd_age_creds.cil
 RUN semodule -i /tmp/systemd_age_creds.cil && rm /tmp/systemd_age_creds.cil
 
