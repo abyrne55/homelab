@@ -25,9 +25,14 @@ Note that none of the software referenced/defined in this repo is meant to be ru
 
 ## Key Directories
 
+- `etc/` - System configuration files (mirrors target `/etc` filesystem)
+  - `etc/systemd/system/` - Service units for boot orchestration and secrets management
+  - `etc/sysusers.d/` - User/group definitions created at boot
+  - `etc/tmpfiles.d/` - Temporary file/directory creation rules
+  - `etc/firewalld/` - Firewall configuration
+  - `etc/caddy/` - Caddy web server configuration
 - `quadlets/` - Podman container definitions (e.g., jellyfin.container)
   - `quadlets/rootless/` - Rootless quadlets for specific users (e.g., caddy, testuser)
-- `systemd/` - Service units for boot orchestration and secrets management
 - `selinux/` - SELinux policy for systemd-age-creds socket access
 - `build/` - Generated artifacts (.gitignored and deleted upon `make clean`)
 - `secrets/` - Pre-generated keys for injection into QEMU VM (.gitignored)
@@ -99,4 +104,4 @@ Simply create `./quadlets/<name>.container` in the Podman quadlet format. If the
 
 ### Systemd Services
 
-Create unit file(s) (e.g., `name.service`, `name.socket`, `name.path`) in `./systemd/` and update `./Containerfile` with any required dependencies or additions to the `RUN systemd enable` line
+Create unit file(s) (e.g., `name.service`, `name.socket`, `name.path`) in `./etc/systemd/system/` and update `./Containerfile` with any required dependencies or additions to the `RUN systemctl enable` line
