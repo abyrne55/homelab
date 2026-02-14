@@ -87,8 +87,16 @@ $(BUILD_DIR)/.image-built: Containerfile $(wildcard quadlets/*) $(wildcard syste
 	podman build -t $(IMAGE_NAME):$(TAG) -f Containerfile .
 	@touch $@
 
+# Generate config.toml for bootc-image-builder (creates core user with SSH key)
+$(BUILD_DIR)/config.toml:
+	mkdir -p $(BUILD_DIR)
+	@echo '[[customizations.user]]' > $@
+	@echo 'name = "core"' >> $@
+	@echo 'key = "$(shell cat ./secrets/core/id_ed25519.pub)"' >> $@
+	@echo 'groups = ["wheel"]' >> $@
+
 # Build qcow2 image using bootc-image-builder
-$(BUILD_DIR)/qcow2/disk.qcow2: $(BUILD_DIR)/.image-built
+$(BUILD_DIR)/qcow2/disk.qcow2: $(BUILD_DIR)/.image-built $(BUILD_DIR)/config.toml
 	podman run \
 		--rm \
 		-it \
@@ -96,6 +104,7 @@ $(BUILD_DIR)/qcow2/disk.qcow2: $(BUILD_DIR)/.image-built
 		--pull=newer \
 		--security-opt label=type:unconfined_t \
 		-v $(BUILD_DIR):/output \
+		-v $(BUILD_DIR)/config.toml:/config.toml:ro \
 		-v /var/lib/containers/storage:/var/lib/containers/storage \
 		quay.io/centos-bootc/bootc-image-builder:latest \
 		--type qcow2 \
@@ -104,7 +113,7 @@ $(BUILD_DIR)/qcow2/disk.qcow2: $(BUILD_DIR)/.image-built
 		--rootfs btrfs
 
 # Build qcow2 image from GHCR (skips local container build)
-$(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2:
+$(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2: $(BUILD_DIR)/config.toml
 	mkdir -p $(BUILD_DIR)
 	podman pull $(REMOTE_IMAGE)
 	podman run \
@@ -114,6 +123,7 @@ $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2:
 		--pull=newer \
 		--security-opt label=type:unconfined_t \
 		-v $(BUILD_DIR):/output \
+		-v $(BUILD_DIR)/config.toml:/config.toml:ro \
 		-v /var/lib/containers/storage:/var/lib/containers/storage \
 		quay.io/centos-bootc/bootc-image-builder:latest \
 		--type qcow2 \
