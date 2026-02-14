@@ -1,13 +1,17 @@
 {
-  "userName" : "core",
-  "uid" : 1000,
-  "gid" : 1000,
-  "homeDirectory" : "/var/home/core",
-  "disposition" : "regular",
-  "shell" : "/bin/bash",
-  "memberOf" : ["wheel"],
-  "storage" : "classic",
-  "privileged" : {
-  	"sshAuthorizedKeys" : ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHoASMXza4rIu3OFaVxOOGzPZeKhDCgOWia8A66LaEQP abyrne55/homelab"]
-  }
+  "disposition": "regular",
+  "gid": 1000,
+  "homeDirectory": "/var/home/core",
+  "memberOf": [
+    "wheel"
+  ],
+  "privileged": {
+    "sshAuthorizedKeys": [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHoASMXza4rIu3OFaVxOOGzPZeKhDCgOWia8A66LaEQP abyrne55/homelab"
+    ]
+  },
+  "shell": "/bin/bash",
+  "storage": "classic",
+  "uid": 1000,
+  "userName": "core"
 }
