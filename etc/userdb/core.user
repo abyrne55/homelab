@@ -1,0 +1,10 @@
+{
+  "userName" : "core",
+  "disposition" : "regular",
+  "shell" : "/bin/bash",
+  "memberOf" : ["wheel"],
+  "storage" : "classic",
+  "privileged" : {
+  	"sshAuthorizedKeys" : ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHoASMXza4rIu3OFaVxOOGzPZeKhDCgOWia8A66LaEQP abyrne55/homelab"]
+  }
+}

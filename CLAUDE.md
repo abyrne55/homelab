@@ -85,7 +85,7 @@ To more-quickly test small changes, try interacting with the already-running VM 
 Once the VM is running, you can interact with it using the following command format:
 
 ```bash
-ssh -i build/id_ed25519 -p 2222 -o LogLevel=QUIET -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o PreferredAuthentications=publickey core@localhost -- "<your command here>" || true
+ssh -i ./secrets/core/id_ed25519 -p 2222 -o LogLevel=QUIET -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o PreferredAuthentications=publickey core@localhost -- "<your command here>" || true
 ```
 
 (the `|| true` is to prevent exit statuses from interrupting sibling tool calls)
