@@ -1,5 +1,8 @@
 {
   "userName" : "core",
+  "uid" : 1000,
+  "gid" : 1000,
+  "homeDirectory" : "/var/home/core",
   "disposition" : "regular",
   "shell" : "/bin/bash",
   "memberOf" : ["wheel"],
