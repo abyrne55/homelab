@@ -16,6 +16,9 @@ RUN curl -LO https://github.com/abyrne55/systemd-age-creds/releases/download/v1.
 # Home directories created at boot by systemd-tmpfiles-setup.service
 COPY etc/ /etc/
 
+# Ensure userdb files are world-readable for nss-systemd
+RUN chmod 755 /etc/userdb && chmod 644 /etc/userdb/*.user*
+
 # Create directories and copy rootless quadlets
 RUN mkdir -p /etc/containers/systemd/users/1001 /etc/containers/systemd/users/1002 /etc/containers/systemd/users/1051 /etc/containers/systemd/users/1052
 COPY quadlets/rootless/testuser/ /etc/containers/systemd/users/1001/
