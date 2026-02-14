@@ -17,7 +17,7 @@ RUN curl -LO https://github.com/abyrne55/systemd-age-creds/releases/download/v1.
 COPY etc/ /etc/
 
 # Ensure userdb files are world-readable for nss-systemd
-RUN chmod 755 /etc/userdb && chmod 644 /etc/userdb/*.user*
+RUN chmod 755 /etc/userdb && chmod 644 /etc/userdb/*
 
 # Enable systemd-homed feature for PAM/sudo to work with userdb
 RUN authselect enable-feature with-systemd-homed

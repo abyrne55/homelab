@@ -1,9 +1,10 @@
 {
   "disposition": "regular",
-  "gid": 1000,
+  "gid": 60001,
   "homeDirectory": "/var/home/core",
   "memberOf": [
-    "wheel"
+    "wheel",
+    "core"
   ],
   "privileged": {
     "sshAuthorizedKeys": [
@@ -12,6 +13,6 @@
   },
   "shell": "/bin/bash",
   "storage": "classic",
-  "uid": 1000,
+  "uid": 60001,
   "userName": "core"
 }
