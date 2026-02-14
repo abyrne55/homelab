@@ -17,7 +17,7 @@ JELLYFIN_PORT ?= 8096
 CADDY_PORT ?= 80
 
 # Phony targets (convenience aliases and non-file targets)
-.PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm open-jellyfin vm-switch stop-vm reboot-vm clean verify-systemd
+.PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm open-jellyfin vm-switch await-ghcr stop-vm reboot-vm clean verify-systemd
 
 # Default target
 .DEFAULT_GOAL := build-container
@@ -255,6 +255,29 @@ vm-switch: _check-vm-running
 	done
 	@echo "Switching to $(REMOTE_IMAGE)..."
 	ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost -- "sudo bootc switch --apply $(REMOTE_IMAGE) && sudo bootc upgrade --apply" || true
+
+# Wait for GitHub Actions to build container image for current commit
+await-ghcr:
+	@echo "Checking git status..."
+	@# Fail if there are staged changes
+	@if ! git diff --cached --quiet; then \
+		echo "ERROR: There are staged changes. Commit or unstage them before running."; \
+		exit 1; \
+	fi
+	@# Fail if there are unpushed commits
+	@if [ -n "$$(git rev-list @{u}..HEAD 2>/dev/null)" ]; then \
+		echo "ERROR: There are unpushed commits. Push to origin before running."; \
+		exit 1; \
+	fi
+	@# Warn if there are unstaged or untracked files
+	@if ! git diff --quiet 2>/dev/null; then \
+		echo "WARNING: There are unstaged changes."; \
+	fi
+	@if [ -n "$$(git ls-files --others --exclude-standard)" ]; then \
+		echo "WARNING: There are untracked files."; \
+	fi
+	@echo "Waiting for GitHub Actions build to complete..."
+	@gh run watch --compact --exit-status $$(gh run list --commit $$(git rev-parse HEAD) --limit 1 --json databaseId --jq '.[] | .databaseId')
 
 #
 # Cleanup

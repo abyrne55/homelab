@@ -61,23 +61,23 @@ make ssh-vm                # Open an interactive SSH session into VM
 make open-jellyfin         # Open Jellyfin web UI
 make stop-vm               # Stop running QEMU instance
 make reboot-vm             # Stop and restart VM
+make await-ghcr            # Wait for GitHub Actions to build current commit
 make vm-switch             # Switch running VM to current branch image from GHCR
 ```
 
-The Makefile allows you to build container images locally or via GitHub actions — **prefer GitHub Actions (`from-ghcr` targets)**, as GitHub can build container images much more quickly than the user's machine can. This means for each change you need to test, commit your changes to a non-main branch, push that branch, and then wait until the build completes using the following command.
-```bash
-gh run watch --compact --exit-status $(gh run list --commit $(git rev-parse HEAD) --limit 1 --json databaseId --jq '.[] | .databaseId')
-```
-While you wait for the container image to build, ensure that QEMU is running:
-```bash
-make _check-vm-running
-# Returns no output if QEMU is running, otherwise returns "ERROR: VM is not running..."
-```
-If the VM isn't running, run `make run-vm-from-ghcr`. You can do this regardless of the container image build status because we will just `bootc switch` into the latest image when the time comes.
+The Makefile allows you to build container images locally or via GitHub Actions — **prefer GitHub Actions (`from-ghcr` targets)**, as GitHub can build container images much more quickly than the user's machine can.
 
-Once the GitHub Action completes (i.e., the container image at `ghcr.io/abyrne55/homelab:<branch_name>` represents the `HEAD` of `<branch_name>`), instruct the VM to `bootc switch` and reboot into the latest image:
+**Testing workflow:**
+
+1. Commit your changes to a non-main branch and push to origin
+2. Wait for the build to complete and then trigger a bootc upgrade inside the running VM
+   ```bash
+   make await-ghcr vm-switch
+   ```
+
+If the VM isn't running or if you're testing changes that affect persistent/mutable parts of the container's filesystem (e.g., /var/), rebuild from scratch instead of doing a bootc upgrade:
 ```bash
-make vm-switch
+make await-ghcr clean run-vm-from-ghcr
 ```
 
 To more-quickly test small changes, try interacting with the already-running VM via SSH (see below) before rebuilding.
