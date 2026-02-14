@@ -15,7 +15,7 @@ NoNewPrivileges=true
 Notify=true
 ReadOnly=true
 ReadOnlyTmpfs=true
-Volume=/etc/caddy:/etc/caddy:Z
+Volume=/etc/caddy:/etc/caddy:ro
 PublishPort=8080:8080
 
 [Install]
