@@ -1,6 +1,6 @@
 {
   "disposition": "regular",
-  "gid": 60001,
+  "gid": 1000,
   "homeDirectory": "/var/home/core",
   "memberOf": [
     "wheel",
@@ -13,6 +13,6 @@
   },
   "shell": "/bin/bash",
   "storage": "classic",
-  "uid": 60001,
+  "uid": 1000,
   "userName": "core"
 }
