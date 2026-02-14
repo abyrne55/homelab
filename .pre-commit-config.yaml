@@ -7,6 +7,11 @@ repos:
     -   id: trailing-whitespace
     -   id: end-of-file-fixer
     -   id: check-yaml
+    -   id: check-json
+        files: \.(json|user)$
+    -   id: pretty-format-json
+        args: ['--autofix', '--indent=2']
+        files: \.(json|user)$
     -   id: check-added-large-files
     -   id: check-executables-have-shebangs
     -   id: check-case-conflict
