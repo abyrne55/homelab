@@ -28,7 +28,7 @@ COPY selinux/systemd_age_creds.cil /tmp/systemd_age_creds.cil
 RUN semodule -i /tmp/systemd_age_creds.cil && rm /tmp/systemd_age_creds.cil
 
 # Enable services
-RUN systemctl enable firewalld podman-auto-update.timer secrets-inject.service ssh-generate-identity.service age-generate-identity.service init-data-disk.service var-mnt-media.mount demo-media.service github-known-hosts.service homelab-secrets-sync.service homelab-secrets-sync.timer systemd-age-creds.socket test-systemd-age-creds.service
+RUN systemctl enable firewalld podman-auto-update.timer secrets-inject.service ssh-generate-identity.service age-generate-identity.service init-data-disk.service var-mnt-media.mount demo-media.service homelab-secrets-sync.service homelab-secrets-sync.timer systemd-age-creds.socket test-systemd-age-creds.service
 
 # Lint (TODO: reenable --fatal-warnings)
 RUN bootc container lint --no-truncate
