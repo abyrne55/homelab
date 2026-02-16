@@ -5,7 +5,7 @@ REMOTE_IMAGE ?= ghcr.io/abyrne55/homelab:$(shell git branch --show-current)
 
 # Build configuration
 BUILD_DIR ?= ./build
-SSH_KEY ?= $(BUILD_DIR)/id_ed25519
+CORE_SSH_KEY ?= ./secrets/core/id_ed25519
 DATA_DISK_SIZE ?= 3G
 
 # QEMU configuration
@@ -17,7 +17,7 @@ JELLYFIN_PORT ?= 8096
 CADDY_PORT ?= 80
 
 # Phony targets (convenience aliases and non-file targets)
-.PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm open-jellyfin vm-switch stop-vm reboot-vm clean verify-systemd
+.PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm open-jellyfin vm-switch await-ghcr stop-vm reboot-vm clean verify-systemd
 
 # Default target
 .DEFAULT_GOAL := build-container
@@ -87,32 +87,14 @@ $(BUILD_DIR)/.image-built: Containerfile $(wildcard quadlets/*) $(wildcard syste
 	podman build -t $(IMAGE_NAME):$(TAG) -f Containerfile .
 	@touch $@
 
-# Generate SSH key
-$(BUILD_DIR)/id_ed25519:
-	mkdir -p $(BUILD_DIR)
-	ssh-keygen -t ed25519 -f $@ -N "" -C "homelab-vm" -q
-
-# Generate config.toml with SSH public key
-$(BUILD_DIR)/config.toml: $(BUILD_DIR)/id_ed25519
-	@echo '[[customizations.user]]' > $@
-	@echo 'name = "core"' >> $@
-	@echo 'key = "$(shell cat $(BUILD_DIR)/id_ed25519.pub)"' >> $@
-	@echo 'groups = ["wheel"]' >> $@
-	@echo '' >> $@
-	@echo '[[customizations.files]]' >> $@
-	@echo 'path = "/etc/sudoers.d/wheel-nopasswd"' >> $@
-	@echo 'data = "%wheel ALL=(ALL) NOPASSWD: ALL"' >> $@
-	@echo 'mode = "0440"' >> $@
-
 # Build qcow2 image using bootc-image-builder
-$(BUILD_DIR)/qcow2/disk.qcow2: $(BUILD_DIR)/.image-built $(BUILD_DIR)/config.toml
+$(BUILD_DIR)/qcow2/disk.qcow2: $(BUILD_DIR)/.image-built
 	podman run \
 		--rm \
 		-it \
 		--privileged \
 		--pull=newer \
 		--security-opt label=type:unconfined_t \
-		-v $(BUILD_DIR)/config.toml:/config.toml:ro \
 		-v $(BUILD_DIR):/output \
 		-v /var/lib/containers/storage:/var/lib/containers/storage \
 		quay.io/centos-bootc/bootc-image-builder:latest \
@@ -122,7 +104,8 @@ $(BUILD_DIR)/qcow2/disk.qcow2: $(BUILD_DIR)/.image-built $(BUILD_DIR)/config.tom
 		--rootfs btrfs
 
 # Build qcow2 image from GHCR (skips local container build)
-$(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2: $(BUILD_DIR)/config.toml
+$(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2:
+	mkdir -p $(BUILD_DIR)
 	podman pull $(REMOTE_IMAGE)
 	podman run \
 		--rm \
@@ -130,7 +113,6 @@ $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2: $(BUILD_DIR)/config.toml
 		--privileged \
 		--pull=newer \
 		--security-opt label=type:unconfined_t \
-		-v $(BUILD_DIR)/config.toml:/config.toml:ro \
 		-v $(BUILD_DIR):/output \
 		-v /var/lib/containers/storage:/var/lib/containers/storage \
 		quay.io/centos-bootc/bootc-image-builder:latest \
@@ -234,10 +216,10 @@ _check-vm-running:
 # SSH into the running VM (waits for SSH to become available)
 ssh-vm: _check-vm-running
 	@echo "Waiting for SSH to become available..."
-	@until ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) -o ConnectTimeout=2 core@localhost exit 2>/dev/null; do \
+	@until ssh -i $(CORE_SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) -o ConnectTimeout=2 core@localhost exit 2>/dev/null; do \
 		sleep 1; \
 	done
-	ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost || true
+	ssh -i $(CORE_SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost || true
 
 # Open Jellyfin web UI in default browser
 open-jellyfin: _check-vm-running
@@ -250,11 +232,51 @@ open-jellyfin: _check-vm-running
 # Switch VM to container image for current git branch
 vm-switch: _check-vm-running
 	@echo "Waiting for SSH to become available..."
-	@until ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) -o ConnectTimeout=2 core@localhost exit 2>/dev/null; do \
+	@until ssh -i $(CORE_SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) -o ConnectTimeout=2 core@localhost exit 2>/dev/null; do \
 		sleep 1; \
 	done
 	@echo "Switching to $(REMOTE_IMAGE)..."
-	ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost -- "sudo bootc switch --apply $(REMOTE_IMAGE) && sudo bootc upgrade --apply" || true
+	ssh -i $(CORE_SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost -- "sudo bootc switch --apply $(REMOTE_IMAGE) && sudo bootc upgrade --apply" || true
+
+# Wait for GitHub Actions to build container image for current commit
+await-ghcr:
+	@echo "Checking git status..."
+	@# Fail if there are staged changes
+	@if ! git diff --cached --quiet; then \
+		echo "ERROR: There are staged changes. Commit or unstage them before running."; \
+		exit 1; \
+	fi
+	@# Fail if there are unpushed commits
+	@if [ -n "$$(git rev-list @{u}..HEAD 2>/dev/null)" ]; then \
+		echo "ERROR: There are unpushed commits. Push to origin before running."; \
+		exit 1; \
+	fi
+	@# Warn if there are unstaged or untracked files
+	@if ! git diff --quiet 2>/dev/null; then \
+		echo "WARNING: There are unstaged changes."; \
+	fi
+	@if [ -n "$$(git ls-files --others --exclude-standard)" ]; then \
+		echo "WARNING: There are untracked files."; \
+	fi
+	@echo "Waiting for GitHub Actions build to complete..."
+	@COMMIT_SHA=$$(git rev-parse HEAD); \
+	MAX_RETRIES=12; \
+	RETRY_DELAY=5; \
+	for i in $$(seq 1 $$MAX_RETRIES); do \
+		RUN_ID=$$(gh run list --commit $$COMMIT_SHA --limit 1 --json databaseId --jq '.[] | .databaseId' 2>/dev/null); \
+		if [ -n "$$RUN_ID" ]; then \
+			echo "Found workflow run $$RUN_ID"; \
+			gh run watch --compact --exit-status $$RUN_ID; \
+			exit 0; \
+		fi; \
+		if [ $$i -lt $$MAX_RETRIES ]; then \
+			echo "No workflow run found for commit $$COMMIT_SHA (attempt $$i/$$MAX_RETRIES), retrying in $$RETRY_DELAY seconds..."; \
+			sleep $$RETRY_DELAY; \
+		fi; \
+	done; \
+	echo "ERROR: No workflow run found for commit $$COMMIT_SHA after $$MAX_RETRIES attempts."; \
+	echo "Check that GitHub Actions is enabled and the workflow was triggered."; \
+	exit 1
 
 #
 # Cleanup
@@ -267,10 +289,10 @@ stop-vm:
 # Reboot the VM
 reboot-vm: _check-vm-running
 	@echo "Waiting for SSH to become available..."
-	@until ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) -o ConnectTimeout=2 core@localhost exit 2>/dev/null; do \
+	@until ssh -i $(CORE_SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) -o ConnectTimeout=2 core@localhost exit 2>/dev/null; do \
 		sleep 1; \
 	done
-	ssh -i $(SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost -- "sudo reboot" || true
+	ssh -i $(CORE_SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost -- "sudo reboot" || true
 
 # Clean up all build artifacts
 clean: stop-vm
