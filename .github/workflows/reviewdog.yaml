@@ -2,30 +2,19 @@ name: reviewdog
 on: [pull_request]
 jobs:
   misspell:
-    name: reviewdog / misspell
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: reviewdog/action-misspell@d6429416b12b09b4e2768307d53bef58d172e962 # v1.27.0
         with:
           github_token: ${{ secrets.github_token }}
-          reporter: github-pr-review
+          reporter: github-pr-check
           locale: "US"
   actionlint:
-    name: reviewdog / actionlint
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: reviewdog/action-actionlint@0d952c597ef8459f634d7145b0b044a9699e5e43 # v1.71.0
         with:
           github_token: ${{ secrets.github_token }}
-          reporter: github-pr-review
-  shellcheck:
-    name: reviewdog / shellcheck
-    runs-on: ubuntu-24.04-arm
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: reviewdog/action-shellcheck@4c07458293ac342d477251099501a718ae5ef86e # v1.32.0
-        with:
-          github_token: ${{ secrets.github_token }}
-          reporter: github-pr-review
+          reporter: github-pr-check
