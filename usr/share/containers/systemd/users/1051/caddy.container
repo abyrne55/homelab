@@ -1,6 +1,6 @@
 [Unit]
-AssertPathIsDirectory=/etc/caddy
-AssertPathExists=/etc/caddy/Caddyfile
+AssertPathIsDirectory=/usr/lib/caddy
+AssertPathExists=/usr/lib/caddy/Caddyfile
 
 [Service]
 ExecStartPre=/usr/bin/cosign verify --certificate-identity-regexp='https://github.com/abyrne55/caddy-homelab/.*' --certificate-oidc-issuer='https://token.actions.githubusercontent.com' ghcr.io/abyrne55/caddy-homelab:main
@@ -15,7 +15,7 @@ NoNewPrivileges=true
 Notify=true
 ReadOnly=true
 ReadOnlyTmpfs=true
-Volume=/etc/caddy:/etc/caddy:ro
+Volume=/usr/lib/caddy:/etc/caddy:ro
 PublishPort=8080:8080
 
 [Install]

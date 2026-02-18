@@ -11,17 +11,8 @@ RUN curl -LO https://github.com/abyrne55/systemd-age-creds/releases/download/v1.
     dnf clean all && \
     rm -rf /var/cache/*dnf* /var/cache/ldconfig/* /var/lib/dnf /var/log/dnf*.log systemd-age-creds-*.rpm cosign-*.rpm
 
-# Copy systemd-sysusers and tmpfiles.d configurations
-# Users/groups created at boot by systemd-sysusers.service
-# Home directories created at boot by systemd-tmpfiles-setup.service
 COPY etc/ /etc/
-
-# Create directories and copy rootless quadlets
-RUN mkdir -p /etc/containers/systemd/users/1001 /etc/containers/systemd/users/1002 /etc/containers/systemd/users/1051 /etc/containers/systemd/users/1052
-COPY quadlets/rootless/testuser/ /etc/containers/systemd/users/1001/
-COPY quadlets/rootless/testuser2/ /etc/containers/systemd/users/1002/
-COPY quadlets/rootless/caddy/caddy.container /etc/containers/systemd/users/1051/
-COPY quadlets/rootless/jellyfin/ /etc/containers/systemd/users/1052/
+COPY usr/ /usr/
 
 # Copy SELinux policy
 COPY selinux/systemd_age_creds.cil /tmp/systemd_age_creds.cil
