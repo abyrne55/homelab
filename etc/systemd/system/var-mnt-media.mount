@@ -1,7 +1,6 @@
 [Unit]
 Description=Mount external media data volume
 After=init-data-disk.service
-Requires=init-data-disk.service
 
 [Mount]
 What=/dev/disk/by-label/media-data

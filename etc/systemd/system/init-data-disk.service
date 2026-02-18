@@ -7,12 +7,13 @@ ConditionPathExists=!/dev/disk/by-label/media-data
 
 [Service]
 Type=oneshot
+ExecStart=/usr/bin/mkdir -p /var/mnt/media /var/mnt/.media-init
 ExecStart=/usr/sbin/mkfs.ext4 -L media-data /dev/vdb
-ExecStart=/usr/bin/mkdir -p /var/mnt/media
-ExecStart=/usr/bin/mount /dev/vdb /var/mnt/media
-ExecStart=/usr/bin/mkdir -p /var/mnt/media/Movies /var/mnt/media/TV /var/mnt/media/.jellyfin/config /var/mnt/media/.jellyfin/cache
-ExecStart=/usr/bin/chown -R 1052:1052 /var/mnt/media
-ExecStart=/usr/bin/umount /var/mnt/media
+ExecStart=/usr/bin/mount /dev/vdb /var/mnt/.media-init
+ExecStart=/usr/bin/mkdir -p /var/mnt/.media-init/Movies /var/mnt/.media-init/TV /var/mnt/.media-init/.jellyfin/config /var/mnt/.media-init/.jellyfin/cache
+ExecStart=/usr/bin/chown -R 1052:1052 /var/mnt/.media-init
+ExecStart=/usr/bin/umount /var/mnt/.media-init
+ExecStart=/usr/bin/rmdir /var/mnt/.media-init
 RemainAfterExit=yes
 
 [Install]
