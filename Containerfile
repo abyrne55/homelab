@@ -30,6 +30,14 @@ RUN semodule -i /tmp/systemd_age_creds.cil && rm /tmp/systemd_age_creds.cil
 # Enable services
 RUN systemctl enable firewalld podman-auto-update.timer secrets-inject.service ssh-generate-identity.service age-generate-identity.service init-data-disk.service var-mnt-media.mount demo-media.service homelab-secrets-sync.service homelab-secrets-sync.timer systemd-age-creds.socket test-systemd-age-creds.service
 
+# Suppress upstream services that don't apply to our setup:
+# - bootloader-update.service: bootupd has no components in our image (we don't manage the
+#   bootloader via bootupd), and /boot is never mounted in the running system
+# - rpm-ostree-fix-shadow-mode.service: pre-create its stamp file so it knows the fix is
+#   already applied; with transient /etc the stamp would otherwise be reset every boot
+RUN systemctl mask bootloader-update.service && \
+    touch /etc/.rpm-ostree-shadow-mode-fixed2.stamp
+
 # Lint (TODO: reenable --fatal-warnings)
 RUN bootc container lint --no-truncate
 
