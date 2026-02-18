@@ -2,7 +2,7 @@
 Description=Initialize data disk with ext4 filesystem
 DefaultDependencies=no
 Before=var-mnt-media.mount
-After=systemd-udevd.service
+After=systemd-udevd.service var.mount
 ConditionPathExists=!/dev/disk/by-label/media-data
 
 [Service]
