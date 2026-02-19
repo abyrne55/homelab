@@ -1,5 +1,5 @@
 version: 1
-base_url: "http://localhost:8096"
+base_url: "http://host.containers.internal:8096"
 system: {}
 startup:
   completeStartupWizard: true
