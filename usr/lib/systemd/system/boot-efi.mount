@@ -1,0 +1,13 @@
+[Unit]
+Description=EFI System Partition
+DefaultDependencies=no
+After=boot.mount
+
+[Mount]
+What=LABEL=EFI-SYSTEM
+Where=/boot/efi
+Type=vfat
+Options=ro,umask=0077,shortname=winnt
+
+[Install]
+WantedBy=local-fs.target
