@@ -10,4 +10,9 @@ library:
       libraryOptions:
         pathInfos:
           - path: "/media/Movies"
-# users, encoding, plugins, branding — add as needed
+users:
+  - name: "abyrne55"
+    passwordFile: /run/credentials/abyrne55-jellyfin-password
+    policy:
+      isAdministrator: true
+# encoding, plugins, branding — add as needed
