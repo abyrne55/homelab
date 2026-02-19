@@ -1,5 +1,13 @@
 version: 1
 base_url: "http://localhost:8096"
+system: {}
 startup:
   completeStartupWizard: true
-# users, system, encoding, library, plugins, branding — add as needed
+library:
+  virtualFolders:
+    - name: "Movies"
+      collectionType: "movies"
+      libraryOptions:
+        pathInfos:
+          - path: "/media/Movies"
+# users, encoding, plugins, branding — add as needed
