@@ -2,10 +2,12 @@
 Description=Bootstrap Jellarr API key into Jellyfin database
 ConditionUser=jellyfin
 OnSuccess=jellarr.service
+# Note: RemainAfterExit=yes cannot be used here — it holds the unit in
+# active (exited) state, which prevents OnSuccess= from firing (OnSuccess=
+# requires the unit to enter the inactive state).
 
 [Service]
 Type=oneshot
-RemainAfterExit=yes
 Restart=on-failure
 RestartSec=30
 LoadCredential=jellarr-api-key:/run/systemd-age-creds.sock
