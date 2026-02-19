@@ -1,7 +1,5 @@
 [Unit]
 Description=Jellyfin Media Server
-After=var-mnt-media.mount
-Requires=var-mnt-media.mount
 
 [Container]
 Image=docker.io/jellyfin/jellyfin:latest
@@ -11,6 +9,10 @@ Volume=/var/mnt/media/.jellyfin/config:/config:Z
 Volume=/var/mnt/media/.jellyfin/cache:/cache:Z
 AutoUpdate=registry
 NoNewPrivileges=true
+
+[Service]
+Restart=on-failure
+RestartSec=5
 
 [Install]
 WantedBy=default.target
