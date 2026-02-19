@@ -1,6 +1,6 @@
 [Unit]
 Description=Jellarr - Jellyfin declarative configuration manager
-After=jellarr-bootstrap.service
+After=jellarr-bootstrap.service jellyfin.service
 
 [Container]
 Image=ghcr.io/venkyr77/jellarr:v0.1.0
