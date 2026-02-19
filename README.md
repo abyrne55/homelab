@@ -45,15 +45,19 @@ Pre-generated secrets can be injected into the VM via an optional ISO image:
 
 | Target | Description |
 |--------|-------------|
-| `build-container` | Build the container image (default target) |
-| `build-vm` | Build the qcow2 VM disk image and data disk |
+| `build-container` | Build the container image locally (default target) |
+| `build-vm` | Build the qcow2 VM disk image from a local container build |
+| `build-vm-from-ghcr` | Build the qcow2 VM disk image from GHCR (faster, recommended) |
 | `run-vm` | Start the VM in QEMU (optionally with ./secrets/ injected; see above) |
-| `ssh-vm` | Build, run, and SSH into the VM |
-| `open-jellyfin` | Start VM and open Jellyfin in browser |
+| `run-vm-from-ghcr` | Build from GHCR and start the VM in QEMU |
+| `ssh-vm` | Open an interactive SSH session into the running VM |
+| `open-jellyfin` | Open Jellyfin in browser (VM must be running) |
+| `vm-switch` | Switch running VM to the container image for the current git branch |
+| `await-ghcr` | Wait for GitHub Actions to finish building the current commit |
+| `reboot-vm` | Reboot the running VM |
 | `stop-vm` | Stop the running VM |
-| `clean` | Stop VM, remove container image, delete build artifacts |
-
-Targets are composable: `make ssh-vm` will automatically run `build-container` and `build-vm` if needed.
+| `verify-systemd` | Verify all systemd unit files inside the container |
+| `clean` | Stop VM and delete all build artifacts |
 
 ## Configuration
 
@@ -64,6 +68,7 @@ Targets are composable: `make ssh-vm` will automatically run `build-container` a
 | `SSH_PORT` | `2222` | Host port forwarded to VM SSH |
 | `HTTP_PORT` | `8080` | Host port forwarded to VM port 8080 |
 | `JELLYFIN_PORT` | `8096` | Host port forwarded to Jellyfin web UI |
+| `CADDY_PORT` | `80` | Host port forwarded to Caddy reverse proxy |
 | `DATA_DISK_SIZE` | `3G` | Size of the persistent data disk |
 | `DETACH` | `true` | Run QEMU in background (`false` for foreground) |
 

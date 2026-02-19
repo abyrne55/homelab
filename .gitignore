@@ -19,6 +19,9 @@ ENV/
 .envrc
 secrets/
 
+# Local docs (not checked in)
+docs/
+
 # Logs
 *.log
 
