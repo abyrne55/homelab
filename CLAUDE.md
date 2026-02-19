@@ -25,11 +25,14 @@ Note that none of the software referenced/defined in this repo is meant to be ru
 
 ## Key Directories
 
-- `etc/` - System configuration files (mirrors target `/etc` filesystem)
+Two top-level directories mirror their target filesystem counterparts, with a deliberate split:
+
+- **`etc/`** — Application-specific configuration (mirrors target `/etc/`). Use this for config files that belong to a specific service (e.g. Caddy, Jellarr, Transmission). Both `etc/` and `usr/` are image-owned and reset on every boot (transient `/etc`); the distinction is conventional — `/etc` is the traditional home for application config.
   - `etc/caddy/` - Caddy web server configuration
   - `etc/containers/systemd/users/<uid>/` - Rootless Podman quadlet definitions, organized by user UID
   - `etc/firewalld/` - Firewall configuration
-- `usr/` - OS-image-owned configuration (mirrors target `/usr` filesystem)
+
+- **`usr/`** — OS-image-owned infrastructure (mirrors target `/usr/`). Use this for systemd units, sysusers, tmpfiles, and other OS-level plumbing that belongs to the system rather than any one application.
   - `usr/lib/systemd/system/` - Service units for boot orchestration and secrets management
   - `usr/lib/sysusers.d/` - User/group definitions created at boot
   - `usr/lib/tmpfiles.d/` - Temporary file/directory creation rules
