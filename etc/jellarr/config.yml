@@ -1,0 +1,5 @@
+version: 1
+base_url: "http://localhost:8096"
+startup:
+  completeStartupWizard: true
+# users, system, encoding, library, plugins, branding — add as needed

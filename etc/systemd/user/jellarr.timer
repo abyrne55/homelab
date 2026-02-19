@@ -1,0 +1,11 @@
+[Unit]
+Description=Schedule jellarr configuration run
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=5m
+Unit=jellarr.service
+
+[Install]
+WantedBy=timers.target

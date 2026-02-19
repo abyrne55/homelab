@@ -1,0 +1,15 @@
+[Unit]
+Description=Bootstrap Jellarr API key into Jellyfin database
+ConditionUser=jellyfin
+OnSuccess=jellarr.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+Restart=on-failure
+RestartSec=30
+LoadCredential=jellarr-api-key:/run/systemd-age-creds.sock
+ExecStart=/bin/bash /etc/jellarr/jellarr-bootstrap.sh
+
+[Install]
+WantedBy=default.target
