@@ -26,13 +26,13 @@ Note that none of the software referenced/defined in this repo is meant to be ru
 ## Key Directories
 
 - `etc/` - System configuration files (mirrors target `/etc` filesystem)
-  - `etc/systemd/system/` - Service units for boot orchestration and secrets management
-  - `etc/sysusers.d/` - User/group definitions created at boot
-  - `etc/tmpfiles.d/` - Temporary file/directory creation rules
-  - `etc/firewalld/` - Firewall configuration
   - `etc/caddy/` - Caddy web server configuration
-- `quadlets/` - Podman container definitions (e.g., jellyfin.container)
-  - `quadlets/rootless/` - Rootless quadlets for specific users (e.g., caddy, testuser)
+  - `etc/containers/systemd/users/<uid>/` - Rootless Podman quadlet definitions, organized by user UID
+  - `etc/firewalld/` - Firewall configuration
+- `usr/` - OS-image-owned configuration (mirrors target `/usr` filesystem)
+  - `usr/lib/systemd/system/` - Service units for boot orchestration and secrets management
+  - `usr/lib/sysusers.d/` - User/group definitions created at boot
+  - `usr/lib/tmpfiles.d/` - Temporary file/directory creation rules
 - `selinux/` - SELinux policy for systemd-age-creds socket access
 - `build/` - Generated artifacts (.gitignored and deleted upon `make clean`)
 - `secrets/` - Pre-generated keys for injection into QEMU VM (.gitignored)
@@ -100,8 +100,8 @@ sudo systemctl --user -M $QUADLET_USERNAME@.host status $QUADLET_NAME.service
 
 ### Quadlets (preferred)
 
-Simply create `./quadlets/<name>.container` in the Podman quadlet format. If the quadlet requires a secret to be loaded from the homelab-secrets repo (separate), add `LoadCredential=credential-name:%t/systemd-age-creds.sock` to the `[Service]` section
+Create `./etc/containers/systemd/users/<uid>/<name>.container` in the Podman quadlet format, where `<uid>` is the numeric UID of the service user (defined in `usr/lib/sysusers.d/`). If the quadlet requires a secret to be loaded from the homelab-secrets repo (separate), add `LoadCredential=credential-name:%t/systemd-age-creds.sock` to the `[Service]` section
 
 ### Systemd Services
 
-Create unit file(s) (e.g., `name.service`, `name.socket`, `name.path`) in `./etc/systemd/system/` and update `./Containerfile` with any required dependencies or additions to the `RUN systemctl enable` line
+Create unit file(s) (e.g., `name.service`, `name.socket`, `name.path`) in `./usr/lib/systemd/system/` and update `./Containerfile` with any required dependencies or additions to the `RUN systemctl enable` line
