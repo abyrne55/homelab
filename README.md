@@ -15,8 +15,8 @@ This repo builds a [bootc](https://containers.github.io/bootc/)-based system ima
 
 ## Included Services
 
-- **Jellyfin** - Media server accessible at `http://localhost:8096`
-- **Demo content** - Big Buck Bunny is downloaded on first boot to `/mnt/media/Movies`
+- **Jellyfin** - Media server accessible at `http://localhost:8096`. Runs as a rootless Podman quadlet under a dedicated `jellyfin` user (UID 1052). State and media live on a persistent data disk at `/var/mnt/media`.
+- **Jellarr** - Declarative Jellyfin configuration manager. Bootstraps an API key into Jellyfin's SQLite database on first boot, then applies `etc/jellarr/config.yml` (users, libraries, startup settings) via the Jellyfin API. Re-runs daily via a systemd timer.
 
 ## Disk Architecture
 

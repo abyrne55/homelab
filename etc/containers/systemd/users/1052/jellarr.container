@@ -1,0 +1,17 @@
+[Unit]
+Description=Jellarr - Jellyfin declarative configuration manager
+After=jellarr-bootstrap.service jellyfin.service
+
+[Container]
+Image=ghcr.io/venkyr77/jellarr:v0.1.0
+AutoUpdate=registry
+Volume=/etc/jellarr:/config:ro
+Volume=%d:/run/credentials:ro,z
+EnvironmentFile=%t/jellarr/jellarr.env
+
+[Service]
+Type=oneshot
+LoadCredential=jellarr-api-key:/run/systemd-age-creds.sock
+LoadCredential=abyrne55-jellyfin-password:/run/systemd-age-creds.sock
+RuntimeDirectory=jellarr
+ExecStartPre=/bin/bash -c 'printf "JELLARR_API_KEY=%%s\n" "$(tr -d "[:space:]" < "${CREDENTIALS_DIRECTORY}/jellarr-api-key")" > "${RUNTIME_DIRECTORY}/jellarr.env"'

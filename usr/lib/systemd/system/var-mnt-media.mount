@@ -6,7 +6,7 @@ After=init-data-disk.service
 What=/dev/disk/by-label/media-data
 Where=/var/mnt/media
 Type=ext4
-Options=defaults
+Options=defaults,context=system_u:object_r:container_file_t:s0
 
 [Install]
 WantedBy=multi-user.target
