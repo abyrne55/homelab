@@ -8,6 +8,10 @@ Network=jellynet.network
 Network=proxynet.network
 Volume=/etc/tinyproxy/tinyproxy.conf:/etc/tinyproxy/tinyproxy.conf:ro
 Volume=/etc/tinyproxy/filter:/etc/tinyproxy/filter:ro
+HealthCmd=curl -sf -H "Host: tinyproxy.stats" http://127.0.0.1:8888
+HealthStartPeriod=5s
+HealthInterval=30s
+HealthRetries=3
 
 [Service]
 ExecStartPre=/usr/bin/cosign verify --certificate-identity-regexp='https://github.com/abyrne55/tinyproxy-homelab/.*' --certificate-oidc-issuer='https://token.actions.githubusercontent.com' ghcr.io/abyrne55/tinyproxy-homelab:main
