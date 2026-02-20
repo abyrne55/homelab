@@ -2,7 +2,7 @@
 Description=Tinyproxy forward proxy (internet bridge for jellynet)
 
 [Container]
-Image=docker.io/tangentsoft/tinyproxy:latest
+Image=ghcr.io/abyrne55/tinyproxy-homelab:main
 AutoUpdate=registry
 Network=jellynet
 Network=proxynet
@@ -10,6 +10,7 @@ Volume=/etc/tinyproxy/tinyproxy.conf:/etc/tinyproxy/tinyproxy.conf:ro
 Volume=/etc/tinyproxy/filter:/etc/tinyproxy/filter:ro
 
 [Service]
+ExecStartPre=/usr/bin/cosign verify --certificate-identity-regexp='https://github.com/abyrne55/tinyproxy-homelab/.*' --certificate-oidc-issuer='https://token.actions.githubusercontent.com' ghcr.io/abyrne55/tinyproxy-homelab:main
 Restart=on-failure
 RestartSec=5
 
