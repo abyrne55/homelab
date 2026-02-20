@@ -4,8 +4,8 @@ Description=Tinyproxy forward proxy (internet bridge for jellynet)
 [Container]
 Image=ghcr.io/abyrne55/tinyproxy-homelab:main
 AutoUpdate=registry
-Network=jellynet
-Network=proxynet
+Network=jellynet.network
+Network=proxynet.network
 Volume=/etc/tinyproxy/tinyproxy.conf:/etc/tinyproxy/tinyproxy.conf:ro
 Volume=/etc/tinyproxy/filter:/etc/tinyproxy/filter:ro
 

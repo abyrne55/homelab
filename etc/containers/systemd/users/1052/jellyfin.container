@@ -5,7 +5,7 @@ After=tinyproxy.service
 [Container]
 Image=docker.io/jellyfin/jellyfin:latest
 PublishPort=8096:8096
-Network=jellynet
+Network=jellynet.network
 Volume=/var/mnt/media:/media:ro
 Volume=/var/mnt/media/.jellyfin/config:/config:Z
 Volume=/var/mnt/media/.jellyfin/cache:/cache:Z
