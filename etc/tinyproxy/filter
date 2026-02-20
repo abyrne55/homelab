@@ -1,3 +1,6 @@
+# Internal tinyproxy stats endpoint (required for health checks)
+tinyproxy\.stats$
+
 # Jellyfin metadata, artwork, and plugin sources
 .*\.jellyfin\.org$
 
