@@ -5,6 +5,7 @@ After=jellarr-bootstrap.service jellyfin.service
 [Container]
 Image=ghcr.io/venkyr77/jellarr:v0.1.0
 AutoUpdate=registry
+Network=jellynet
 Volume=/etc/jellarr:/config:ro
 Volume=%d:/run/credentials:ro,z
 EnvironmentFile=%t/jellarr/jellarr.env

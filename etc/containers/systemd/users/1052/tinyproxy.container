@@ -1,0 +1,17 @@
+[Unit]
+Description=Tinyproxy forward proxy (internet bridge for jellynet)
+
+[Container]
+Image=docker.io/tangentsoft/tinyproxy:latest
+AutoUpdate=registry
+Network=jellynet
+Network=proxynet
+Volume=/etc/tinyproxy/tinyproxy.conf:/etc/tinyproxy/tinyproxy.conf:ro
+Volume=/etc/tinyproxy/filter:/etc/tinyproxy/filter:ro
+
+[Service]
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

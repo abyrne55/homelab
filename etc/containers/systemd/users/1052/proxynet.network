@@ -1,0 +1,2 @@
+[Network]
+# Internet-facing — no special options; NAT provided by netavark by default
