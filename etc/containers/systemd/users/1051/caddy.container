@@ -7,8 +7,7 @@ ExecStartPre=/usr/bin/cosign verify --certificate-identity-regexp='https://githu
 
 [Container]
 ContainerName=caddy
-Entrypoint=/usr/bin/caddy
-Exec=run --config /etc/caddy/Caddyfile
+Exec=/usr/bin/caddy run --config /etc/caddy/Caddyfile
 ReloadCmd=/usr/bin/caddy reload --config /etc/caddy/Caddyfile
 Image=ghcr.io/abyrne55/caddy-homelab:main
 AutoUpdate=registry
@@ -16,7 +15,6 @@ NoNewPrivileges=true
 HealthCmd=CMD /usr/bin/curl -sf --unix-socket /tmp/admin.sock http://localhost/
 HealthStartPeriod=10s
 HealthInterval=30s
-Notify=healthy
 ReadOnly=true
 ReadOnlyTmpfs=true
 Volume=/etc/caddy:/etc/caddy:ro
