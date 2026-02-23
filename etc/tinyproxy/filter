@@ -1,0 +1,14 @@
+# Internal tinyproxy stats endpoint (required for health checks)
+tinyproxy\.stats$
+
+# Jellyfin metadata, artwork, and plugin sources
+.*\.jellyfin\.org$
+
+# Jellyfin metadata & artwork sources
+.*\.themoviedb\.org$
+.*\.thetvdb\.com$
+.*\.fanart\.tv$
+.*\.musicbrainz\.org$
+.*\.acoustid\.org$
+
+# Add other domains here as needed
