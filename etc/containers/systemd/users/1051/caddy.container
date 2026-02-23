@@ -7,7 +7,6 @@ ExecStartPre=/usr/bin/cosign verify --certificate-identity-regexp='https://githu
 
 [Container]
 ContainerName=caddy
-Exec=/usr/bin/caddy run --config /etc/caddy/Caddyfile
 ReloadCmd=/usr/bin/caddy reload --config /etc/caddy/Caddyfile
 Image=ghcr.io/abyrne55/caddy-homelab:main
 AutoUpdate=registry
