@@ -16,6 +16,9 @@ ExecStartPre=-/usr/bin/git clone git@github.com:abyrne55/homelab-config.git /var
 # The pull will always happen regardless
 ExecStart=/usr/bin/git -C /var/lib/homelab-config/ pull --ff-only
 
+# Relabel repo contents so rootless containers can read them (var_lib_t → container_file_t)
+ExecStartPost=/usr/bin/chcon -Rt container_file_t /var/lib/homelab-config/
+
 # Reload Caddy live (hot reload via admin socket)
 ExecStartPost=-/usr/bin/systemctl --user -M caddy@.host reload caddy.service
 # Reload Tinyproxy via SIGUSR1 (no restart needed; ReloadSignal=SIGUSR1 in quadlet)
