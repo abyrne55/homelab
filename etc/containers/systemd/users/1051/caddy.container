@@ -1,9 +1,11 @@
 [Unit]
-AssertPathIsDirectory=/etc/caddy
-AssertPathExists=/etc/caddy/Caddyfile
+ConditionPathIsDirectory=/var/lib/homelab-config/caddy
+ConditionPathExists=/var/lib/homelab-config/caddy/Caddyfile
 
 [Service]
 ExecStartPre=/usr/bin/cosign verify --certificate-identity-regexp='https://github.com/abyrne55/caddy-homelab/.*' --certificate-oidc-issuer='https://token.actions.githubusercontent.com' ghcr.io/abyrne55/caddy-homelab:main
+Restart=on-failure
+RestartSec=30
 
 [Container]
 ContainerName=caddy
@@ -16,7 +18,7 @@ HealthStartPeriod=10s
 HealthInterval=30s
 ReadOnly=true
 ReadOnlyTmpfs=true
-Volume=/etc/caddy:/etc/caddy:ro
+Volume=/var/lib/homelab-config/caddy:/etc/caddy:ro
 PublishPort=8080:8080
 
 [Install]
