@@ -16,21 +16,21 @@ Note that none of the software referenced/defined in this repo is meant to be ru
 - Changes via container image updates, not manual system modifications
 - `/etc` is image-owned and reset on every boot (transient `/etc`)
 
-**Three-Repository Pattern (in progress):**
+**Three-Repository Pattern:**
 
-1. `homelab` (public) - OS structure, no secrets
+1. `homelab` (public) - OS structure, no secrets or identity
    - contains systemd jobs for auto-pulling the next two repos to the system at runtime
-2. `homelab-config` (private) - Identity-bearing config
-3. `homelab-secrets` (private) - `age`-encrypted credentials
+2. `homelab-config` (private) - Identity-bearing application config (synced at runtime by `homelab-config-sync.service`)
+3. `homelab-secrets` (private) - `age`-encrypted credentials (synced at runtime by `homelab-secrets-sync.service`)
 
 ## Key Directories
 
 Two top-level directories mirror their target filesystem counterparts, with a deliberate split:
 
-- **`etc/`** — Application-specific configuration (mirrors target `/etc/`). Use this for config files that belong to a specific service (e.g. Caddy, Jellarr, Transmission). Both `etc/` and `usr/` are image-owned and reset on every boot (transient `/etc`); the distinction is conventional — `/etc` is the traditional home for application config.
-  - `etc/caddy/` - Caddy web server configuration
+- **`etc/`** — OS-image-owned configuration (mirrors target `/etc/`). Both `etc/` and `usr/` are image-owned and reset on every boot (transient `/etc`). Application config files (Caddyfile, tinyproxy.conf, jellarr config) live in the private `homelab-config` repo, not here — they are synced at runtime to `/var/lib/homelab-config/`.
   - `etc/containers/systemd/users/<uid>/` - Rootless Podman quadlet definitions, organized by user UID
   - `etc/firewalld/` - Firewall configuration
+  - `etc/jellarr/` - Jellarr bootstrap script (OS plumbing, not config — stays in image)
 
 - **`usr/`** — OS-image-owned infrastructure (mirrors target `/usr/`). Use this for systemd units, sysusers, tmpfiles, and other OS-level plumbing that belongs to the system rather than any one application.
   - `usr/lib/systemd/system/` - Service units for boot orchestration and secrets management

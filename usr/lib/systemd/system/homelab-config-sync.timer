@@ -1,0 +1,10 @@
+[Unit]
+Description=Sync homelab-config repository every 15 minutes
+Requires=homelab-config-sync.service
+
+[Timer]
+OnUnitActiveSec=15min
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target
