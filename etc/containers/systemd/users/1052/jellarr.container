@@ -5,6 +5,10 @@ After=jellarr-bootstrap.service jellyfin.service
 [Container]
 Image=ghcr.io/venkyr77/jellarr:v0.1.0
 AutoUpdate=registry
+NoNewPrivileges=true
+ReadOnly=true
+ReadOnlyTmpfs=true
+DropCapability=all
 Network=jellynet.network
 Volume=/var/lib/homelab-config/jellarr:/config:ro,z
 Volume=%d:/run/credentials:ro,z
