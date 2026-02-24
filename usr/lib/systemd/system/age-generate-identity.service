@@ -5,6 +5,14 @@ After=local-fs.target
 
 [Service]
 Type=oneshot
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+LockPersonality=yes
+RestrictRealtime=yes
 
 ExecStartPre=/usr/bin/install -d -m 0700 /var/lib/age
 ExecStart=/usr/bin/age-keygen -pq -o /var/lib/age/identity.txt

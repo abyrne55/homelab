@@ -1,5 +1,6 @@
 [Unit]
 Description=Schedule jellarr configuration run
+ConditionUser=jellyfin
 
 [Timer]
 OnCalendar=daily
