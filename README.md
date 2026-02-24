@@ -15,6 +15,7 @@ This repo builds a [bootc](https://containers.github.io/bootc/)-based system ima
 
 ## Included Services
 
+- **Caddy** - Reverse proxy accessible at `http://localhost:80`. Runs as a rootless Podman quadlet under a dedicated `caddy` user (UID 1051). Forwards traffic to Jellyfin; firewalld redirects port 80 → Caddy's internal port 8080.
 - **Jellyfin** - Media server accessible at `http://localhost:8096`. Runs as a rootless Podman quadlet under a dedicated `jellyfin` user (UID 1052). State and media live on a persistent data disk at `/var/mnt/media`.
 - **Jellarr** - Declarative Jellyfin configuration manager. Bootstraps an API key into Jellyfin's SQLite database on first boot, then applies `etc/jellarr/config.yml` (users, libraries, startup settings) via the Jellyfin API. Re-runs daily via a systemd timer.
 
@@ -23,7 +24,7 @@ This repo builds a [bootc](https://containers.github.io/bootc/)-based system ima
 The VM uses two disks:
 
 - **Root disk** - Read-only system image (runs in snapshot mode, changes discarded on reboot)
-- **Data disk** - Persistent storage mounted at `/mnt/media` for media files and Jellyfin state
+- **Data disk** - Persistent storage mounted at `/var/mnt/media` for media files and Jellyfin state
 
 ## Secrets Management
 
@@ -33,6 +34,7 @@ Pre-generated secrets can be injected into the VM via an optional ISO image:
 
 - `age.key` and `age.key.pub` - Age encryption keys
 - `ssh.key` and `ssh.key.pub` - SSH keypair for Git pull operations
+- `core/id_ed25519` - SSH private key for the `core` login user (used by `make ssh-vm` and related targets; the matching public key is baked into the image)
 
 **How it works:**
 
