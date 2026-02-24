@@ -12,9 +12,9 @@ Note that none of the software referenced/defined in this repo is meant to be ru
 
 **Immutable OS Pattern:**
 
-- Root filesystem read-only (bootc), mutable state only in `/var/` and `/etc/`
+- Root filesystem read-only (bootc), mutable persistent state only in `/var/`
 - Changes via container image updates, not manual system modifications
-- `/etc` persists across updates with 3-way merge
+- `/etc` is image-owned and reset on every boot (transient `/etc`)
 
 **Three-Repository Pattern (in progress):**
 
