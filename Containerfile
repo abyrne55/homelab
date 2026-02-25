@@ -16,7 +16,8 @@ COPY usr/ /usr/
 
 # Copy SELinux policy
 COPY selinux/systemd_age_creds.cil /tmp/systemd_age_creds.cil
-RUN semodule -i /tmp/systemd_age_creds.cil && rm /tmp/systemd_age_creds.cil
+COPY selinux/container_tun.cil /tmp/container_tun.cil
+RUN semodule -i /tmp/systemd_age_creds.cil /tmp/container_tun.cil && rm /tmp/systemd_age_creds.cil /tmp/container_tun.cil
 
 # Enable services
 RUN systemctl enable firewalld podman-auto-update.timer secrets-inject.service ssh-generate-identity.service age-generate-identity.service init-data-disk.service boot.mount boot-efi.mount var-mnt-media.mount demo-media.service homelab-secrets-sync.service homelab-secrets-sync.timer homelab-config-sync.service homelab-config-sync.timer systemd-age-creds.socket test-systemd-age-creds.service
