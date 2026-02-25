@@ -16,6 +16,7 @@ Volume=/var/mnt/media/Downloads:/downloads:Z
 HealthCmd=curl -f http://localhost:8090/
 HealthStartPeriod=30s
 HealthInterval=30s
+Notify=healthy
 
 [Service]
 Restart=on-failure
