@@ -15,6 +15,7 @@ SSH_PORT ?= 2222
 HTTP_PORT ?= 8080
 JELLYFIN_PORT ?= 8096
 CADDY_PORT ?= 80
+QBITTORRENT_PORT ?= 8090
 
 # Phony targets (convenience aliases and non-file targets)
 .PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm open-jellyfin vm-switch await-ghcr stop-vm reboot-vm clean verify-systemd
@@ -181,7 +182,7 @@ ifeq ($(DETACH),true)
 		-serial file:$(BUILD_DIR)/serial.log \
 		-display none \
 		-machine virt \
-		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::$(HTTP_PORT)-:8080,hostfwd=tcp::$(JELLYFIN_PORT)-:8096,hostfwd=tcp::$(CADDY_PORT)-:80 \
+		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::$(HTTP_PORT)-:8080,hostfwd=tcp::$(JELLYFIN_PORT)-:8096,hostfwd=tcp::$(CADDY_PORT)-:80,hostfwd=tcp::$(QBITTORRENT_PORT)-:8090 \
 		-drive if=virtio,file=$(BUILD_DIR)/qcow2/disk.qcow2,snapshot=on \
 		-drive if=virtio,file=$(BUILD_DIR)/data.qcow2 \
 		$(shell [ -s $(BUILD_DIR)/secrets.iso ] && echo "-drive file=$(BUILD_DIR)/secrets.iso,format=raw,if=virtio,readonly=on,media=cdrom,id=secrets") & disown
@@ -196,7 +197,7 @@ else
 		-serial stdio \
 		-display none \
 		-machine virt \
-		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::$(HTTP_PORT)-:8080,hostfwd=tcp::$(JELLYFIN_PORT)-:8096,hostfwd=tcp::$(CADDY_PORT)-:80 \
+		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::$(HTTP_PORT)-:8080,hostfwd=tcp::$(JELLYFIN_PORT)-:8096,hostfwd=tcp::$(CADDY_PORT)-:80,hostfwd=tcp::$(QBITTORRENT_PORT)-:8090 \
 		-drive if=virtio,file=$(BUILD_DIR)/qcow2/disk.qcow2,snapshot=on \
 		-drive if=virtio,file=$(BUILD_DIR)/data.qcow2 \
 		$(shell [ -s $(BUILD_DIR)/secrets.iso ] && echo "-drive file=$(BUILD_DIR)/secrets.iso,format=raw,if=virtio,readonly=on,media=cdrom,id=secrets")
