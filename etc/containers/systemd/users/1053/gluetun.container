@@ -14,7 +14,7 @@ AddDevice=/dev/net/tun
 Sysctl=net.ipv4.conf.all.src_valid_mark=1
 Environment=VPN_SERVICE_PROVIDER=mullvad
 Environment=VPN_TYPE=wireguard
-PassEnvironment=SERVER_CITIES
+EnvironmentFile=/etc/gluetun/settings.env
 Environment=WIREGUARD_PRIVATE_KEY_SECRETFILE=/run/credentials/mullvad-wireguard-private-key
 Environment=WIREGUARD_ADDRESSES_SECRETFILE=/run/credentials/mullvad-wireguard-address
 # Mount host credentials directory into the container so SECRETFILE paths resolve
@@ -27,8 +27,6 @@ Notify=healthy
 [Service]
 Restart=on-failure
 RestartSec=10
-# Systemd correctly handles quoted env values with spaces; quadlet splits on spaces in [Container] Environment=
-Environment="SERVER_CITIES=Boston MA"
 LoadCredential=mullvad-wireguard-private-key:/run/systemd-age-creds.sock
 LoadCredential=mullvad-wireguard-address:/run/systemd-age-creds.sock
 
