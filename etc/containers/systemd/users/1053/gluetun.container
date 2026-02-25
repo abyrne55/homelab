@@ -14,8 +14,10 @@ AddDevice=/dev/net/tun
 Sysctl=net.ipv4.conf.all.src_valid_mark=1
 Environment=VPN_SERVICE_PROVIDER=mullvad
 Environment=VPN_TYPE=wireguard
-Environment=WIREGUARD_PRIVATE_KEY_SECRETFILE=%d/mullvad-wireguard-private-key
-Environment=WIREGUARD_ADDRESSES_SECRETFILE=%d/mullvad-wireguard-address
+Environment=WIREGUARD_PRIVATE_KEY_SECRETFILE=/run/credentials/mullvad-wireguard-private-key
+Environment=WIREGUARD_ADDRESSES_SECRETFILE=/run/credentials/mullvad-wireguard-address
+# Mount host credentials directory into the container so SECRETFILE paths resolve
+Volume=%d:/run/credentials:ro,z
 HealthCmd=/gluetun-entrypoint healthcheck
 HealthStartPeriod=60s
 HealthInterval=10s
