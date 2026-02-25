@@ -6,7 +6,8 @@ Image=docker.io/qmcgaw/gluetun:v3
 AutoUpdate=registry
 Pod=torrent.pod
 # WireGuard requires NET_ADMIN to create tunnel interface in user namespace
-AddCapability=NET_ADMIN
+# NET_RAW required for ICMP-based healthchecks
+AddCapability=NET_ADMIN NET_RAW
 # TUN device required for WireGuard
 AddDevice=/dev/net/tun
 # Required for WireGuard routing rules in rootless containers
