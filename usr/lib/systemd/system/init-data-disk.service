@@ -15,15 +15,18 @@ ExecStart=/usr/bin/mkdir -p \
   /var/mnt/.media-init/media/tv \
   /var/mnt/.media-init/media/music \
   /var/mnt/.media-init/media/books \
+  /var/mnt/.media-init/media/other \
   /var/mnt/.media-init/torrents/movies \
   /var/mnt/.media-init/torrents/tv \
   /var/mnt/.media-init/torrents/music \
   /var/mnt/.media-init/torrents/books \
+  /var/mnt/.media-init/torrents/other \
   /var/mnt/.media-init/usenet/incomplete \
   /var/mnt/.media-init/usenet/complete/movies \
   /var/mnt/.media-init/usenet/complete/tv \
   /var/mnt/.media-init/usenet/complete/music \
   /var/mnt/.media-init/usenet/complete/books \
+  /var/mnt/.media-init/usenet/complete/other \
   /var/mnt/.media-init/.jellyfin/config \
   /var/mnt/.media-init/.jellyfin/cache \
   /var/mnt/.media-init/.qbittorrent/config
