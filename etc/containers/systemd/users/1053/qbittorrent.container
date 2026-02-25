@@ -12,7 +12,7 @@ Environment=PGID=1053
 Environment=TZ=UTC
 Environment=WEBUI_PORT=8090
 Volume=/var/mnt/media/.qbittorrent/config:/config:Z
-Volume=/var/mnt/media/Downloads:/downloads:Z
+Volume=/var/mnt/media/torrents:/downloads:Z
 HealthCmd=curl -f http://localhost:8090/
 HealthStartPeriod=30s
 HealthInterval=30s

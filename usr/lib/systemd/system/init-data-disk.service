@@ -10,9 +10,25 @@ Type=oneshot
 ExecStart=/usr/bin/mkdir -p /var/mnt/media /var/mnt/.media-init
 ExecStart=/usr/sbin/mkfs.ext4 -L media-data /dev/vdb
 ExecStart=/usr/bin/mount /dev/vdb /var/mnt/.media-init
-ExecStart=/usr/bin/mkdir -p /var/mnt/.media-init/Movies /var/mnt/.media-init/TV /var/mnt/.media-init/.jellyfin/config /var/mnt/.media-init/.jellyfin/cache /var/mnt/.media-init/.qbittorrent/config /var/mnt/.media-init/Downloads
-ExecStart=/usr/bin/chown -R 1052:1052 /var/mnt/.media-init/.jellyfin /var/mnt/.media-init/Movies /var/mnt/.media-init/TV
-ExecStart=/usr/bin/chown -R 1053:1053 /var/mnt/.media-init/.qbittorrent /var/mnt/.media-init/Downloads
+ExecStart=/usr/bin/mkdir -p \
+  /var/mnt/.media-init/media/movies \
+  /var/mnt/.media-init/media/tv \
+  /var/mnt/.media-init/media/music \
+  /var/mnt/.media-init/media/books \
+  /var/mnt/.media-init/torrents/movies \
+  /var/mnt/.media-init/torrents/tv \
+  /var/mnt/.media-init/torrents/music \
+  /var/mnt/.media-init/torrents/books \
+  /var/mnt/.media-init/usenet/incomplete \
+  /var/mnt/.media-init/usenet/complete/movies \
+  /var/mnt/.media-init/usenet/complete/tv \
+  /var/mnt/.media-init/usenet/complete/music \
+  /var/mnt/.media-init/usenet/complete/books \
+  /var/mnt/.media-init/.jellyfin/config \
+  /var/mnt/.media-init/.jellyfin/cache \
+  /var/mnt/.media-init/.qbittorrent/config
+ExecStart=/usr/bin/chown -R 1052:1052 /var/mnt/.media-init/.jellyfin /var/mnt/.media-init/media
+ExecStart=/usr/bin/chown -R 1053:1053 /var/mnt/.media-init/.qbittorrent /var/mnt/.media-init/torrents
 ExecStart=/usr/bin/umount /var/mnt/.media-init
 ExecStart=/usr/bin/rmdir /var/mnt/.media-init
 RemainAfterExit=yes

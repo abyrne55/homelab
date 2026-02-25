@@ -3,12 +3,12 @@ Description=Download demo media content (Big Buck Bunny)
 After=network-online.target var-mnt-media.mount
 Wants=network-online.target
 Requires=var-mnt-media.mount
-ConditionPathExists=!/var/mnt/media/Movies/Big Buck Bunny/BigBuckBunny_320x180.mp4
+ConditionPathExists=!/var/mnt/media/media/movies/Big Buck Bunny/BigBuckBunny_320x180.mp4
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/mkdir -p "/var/mnt/media/Movies/Big Buck Bunny"
-ExecStart=/usr/bin/curl -fSL -o "/var/mnt/media/Movies/Big Buck Bunny/BigBuckBunny_320x180.mp4" "https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4"
+ExecStart=/usr/bin/mkdir -p "/var/mnt/media/media/movies/Big Buck Bunny"
+ExecStart=/usr/bin/curl -fSL -o "/var/mnt/media/media/movies/Big Buck Bunny/BigBuckBunny_320x180.mp4" "https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4"
 RemainAfterExit=yes
 
 [Install]
