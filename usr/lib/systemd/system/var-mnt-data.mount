@@ -1,0 +1,12 @@
+[Unit]
+Description=Mount external media data volume
+After=init-data-disk.service
+
+[Mount]
+What=/dev/disk/by-label/data
+Where=/var/mnt/data
+Type=ext4
+Options=defaults,context=system_u:object_r:container_file_t:s0
+
+[Install]
+WantedBy=multi-user.target

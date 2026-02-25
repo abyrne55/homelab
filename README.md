@@ -16,7 +16,7 @@ This repo builds a [bootc](https://containers.github.io/bootc/)-based system ima
 ## Included Services
 
 - **Caddy** - Reverse proxy accessible at `http://localhost:80`. Runs as a rootless Podman quadlet under a dedicated `caddy` user (UID 1051). Forwards traffic to Jellyfin; firewalld redirects port 80 → Caddy's internal port 8080. Config (`Caddyfile`) lives in the private `homelab-config` repo.
-- **Jellyfin** - Media server accessible at `http://localhost:8096`. Runs as a rootless Podman quadlet under a dedicated `jellyfin` user (UID 1052). State and media live on a persistent data disk at `/var/mnt/media`.
+- **Jellyfin** - Media server accessible at `http://localhost:8096`. Runs as a rootless Podman quadlet under a dedicated `jellyfin` user (UID 1052). State and media live on a persistent data disk at `/var/mnt/data`.
 - **Tinyproxy** - Forward proxy (jellynet isolation). Allows Jellyfin to fetch metadata/artwork from approved external domains while keeping it off the main network. Config and domain allowlist live in the private `homelab-config` repo.
 - **Jellarr** - Declarative Jellyfin configuration manager. Bootstraps an API key into Jellyfin's SQLite database on first boot, then applies `config.yml` (users, libraries, startup settings) via the Jellyfin API. Re-runs daily via a systemd timer. Config lives in the private `homelab-config` repo.
 
@@ -39,7 +39,7 @@ minutes. Both use the SSH keypair at `/var/lib/git-ssh/id_ed25519` as a read-onl
 The VM uses two disks:
 
 - **Root disk** - Read-only system image (runs in snapshot mode, changes discarded on reboot)
-- **Data disk** - Persistent storage mounted at `/var/mnt/media` for media files and Jellyfin state
+- **Data disk** - Persistent storage mounted at `/var/mnt/data` for media files, torrents, usenet, and app state
 
 ## Secrets Management
 
