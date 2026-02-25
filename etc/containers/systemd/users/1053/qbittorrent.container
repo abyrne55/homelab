@@ -1,0 +1,26 @@
+[Unit]
+Description=qBittorrent torrent client
+After=gluetun.service
+Requires=gluetun.service
+
+[Container]
+Image=lscr.io/linuxserver/qbittorrent:latest
+AutoUpdate=registry
+Pod=torrent.pod
+Environment=PUID=1053
+Environment=PGID=1053
+Environment=TZ=UTC
+Environment=WEBUI_PORT=8090
+Volume=/var/mnt/media/.qbittorrent/config:/config:Z
+Volume=/var/mnt/media/Downloads:/downloads:Z
+HealthCmd=curl -f http://localhost:8090/
+HealthStartPeriod=30s
+HealthInterval=30s
+Notify=healthy
+
+[Service]
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

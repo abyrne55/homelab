@@ -1,0 +1,34 @@
+[Unit]
+Description=Gluetun VPN client (Mullvad WireGuard)
+
+[Container]
+Image=docker.io/qmcgaw/gluetun:v3
+AutoUpdate=registry
+Pod=torrent.pod
+# WireGuard requires NET_ADMIN to create tunnel interface in user namespace
+# NET_RAW required for ICMP-based healthchecks
+AddCapability=NET_ADMIN NET_RAW
+# TUN device required for WireGuard
+AddDevice=/dev/net/tun
+# Required for WireGuard routing rules in rootless containers
+Sysctl=net.ipv4.conf.all.src_valid_mark=1
+Environment=VPN_SERVICE_PROVIDER=mullvad
+Environment=VPN_TYPE=wireguard
+Environment=SERVER_CITIES=Boston\x20MA,New\x20York\x20NY
+Environment=WIREGUARD_PRIVATE_KEY_SECRETFILE=/run/credentials/mullvad-wireguard-private-key
+Environment=WIREGUARD_ADDRESSES_SECRETFILE=/run/credentials/mullvad-wireguard-address
+# Mount host credentials directory into the container so SECRETFILE paths resolve
+Volume=%d:/run/credentials:ro,z
+HealthCmd=/gluetun-entrypoint healthcheck
+HealthStartPeriod=120s
+HealthInterval=10s
+Notify=healthy
+
+[Service]
+Restart=on-failure
+RestartSec=10
+LoadCredential=mullvad-wireguard-private-key:/run/systemd-age-creds.sock
+LoadCredential=mullvad-wireguard-address:/run/systemd-age-creds.sock
+
+[Install]
+WantedBy=default.target

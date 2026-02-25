@@ -1,0 +1,7 @@
+; Allow containers (rootless Podman, container_t) to access /dev/net/tun (tun_tap_device_t).
+; Required for Gluetun (WireGuard VPN) running as a rootless quadlet.
+; Permissions captured from AVC denials:
+;   avc: denied { read write }  tclass=chr_file (enforcing)
+;   avc: denied { open getattr } tclass=chr_file (permissive run)
+; ioctl is included for WireGuard TUNSETIFF/TUNSETFLAGS calls.
+(allow container_t tun_tap_device_t (chr_file (getattr open read write ioctl)))
