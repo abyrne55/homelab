@@ -31,7 +31,6 @@ Two top-level directories mirror their target filesystem counterparts, with a de
   - `etc/containers/systemd/users/<uid>/` - Rootless Podman quadlet definitions, organized by user UID
   - `etc/firewalld/` - Firewall configuration
   - `etc/jellarr/` - Jellarr bootstrap script (OS plumbing, not config — stays in image)
-
 - **`usr/`** — OS-image-owned infrastructure (mirrors target `/usr/`). Use this for systemd units, sysusers, tmpfiles, and other OS-level plumbing that belongs to the system rather than any one application.
   - `usr/lib/systemd/system/` - Service units for boot orchestration and secrets management
   - `usr/lib/sysusers.d/` - User/group definitions created at boot
@@ -75,11 +74,13 @@ The Makefile allows you to build container images locally or via GitHub Actions 
 
 1. Commit your changes to a non-main branch and push to origin
 2. Wait for the build to complete and then trigger a bootc upgrade inside the running VM
+
    ```bash
    make await-ghcr vm-switch
    ```
 
 If the VM isn't running or if you're testing changes that affect persistent/mutable parts of the container's filesystem (e.g., /var/), rebuild from scratch instead of doing a bootc upgrade:
+
 ```bash
 make await-ghcr clean run-vm-from-ghcr
 ```
