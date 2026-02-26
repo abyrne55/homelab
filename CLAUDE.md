@@ -93,7 +93,20 @@ ssh -i ./secrets/core/id_ed25519 -p 2222 -o LogLevel=QUIET -o StrictHostKeyCheck
 
 (the `|| true` is to prevent exit statuses from interrupting sibling tool calls)
 
-Use the following command to check on the status of rootless quadlets:
+Use `hl` (baked into the image at `/usr/local/bin/hl`) to manage rootless quadlets:
+
+```bash
+hl                              # status summary for all service users
+hl status jellyfin              # detailed status for jellyfin.service
+hl logs jellyfin -n 50          # last 50 log lines
+hl logs -u jellyfin tinyproxy   # logs for a secondary service
+hl restart qbittorrent          # restart a unit
+hl ps                           # running containers across all users
+hl users                        # list discovered service users
+hl help                         # full usage
+```
+
+The underlying pattern (useful when `hl` is unavailable) is:
 
 ```bash
 sudo systemctl --user -M $QUADLET_USERNAME@.host status $QUADLET_NAME.service
