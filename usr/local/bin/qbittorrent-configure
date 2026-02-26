@@ -3,7 +3,8 @@ set -euo pipefail
 
 QBIT_URL="http://localhost:20530"
 COOKIE_JAR=$(mktemp)
-trap "rm -f $COOKIE_JAR" EXIT
+cleanup() { rm -f "$COOKIE_JAR"; }
+trap cleanup EXIT
 
 # Scope journal lookup to the current qbittorrent.service invocation
 INVOCATION_ID=$(systemctl --user show -p InvocationID --value qbittorrent.service)

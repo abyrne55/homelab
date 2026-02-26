@@ -1,0 +1,9 @@
+build/
+secrets/
+.git/
+.github/
+.claude/
+docs/
+*.md
+Makefile
+.rumdl_cache/
