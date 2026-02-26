@@ -1,0 +1,275 @@
+#!/bin/bash
+set -euo pipefail
+
+PROG=$(basename "$0")
+
+usage() {
+  cat <<EOF
+Usage: $PROG [command] [options]
+
+Homelab service management CLI.
+
+Commands:
+  (no args)                     Status summary across all service users
+  status [-u <user>] [<unit>]   Unit status; without <unit>, shows all for user(s)
+  logs   [-u <user>] <unit> [flags...]  Journal logs (extra flags passed to journalctl)
+  restart [-u <user>] <unit>    Restart a unit
+  start   [-u <user>] <unit>    Start a unit
+  stop    [-u <user>] <unit>    Stop a unit
+  list   [-u <user>]            List units for all (or one) service user(s)
+  ps     [-u <user>]            Show running Podman containers
+  users                         List discovered service users
+  update [-u <user>]            Trigger podman-auto-update.service
+  help                          Print this help
+
+Options:
+  -u, --user <user>   Target a specific service user (defaults to unit name)
+  -h, --help          Print this help
+
+Examples:
+  $PROG                              # status summary for all users
+  $PROG status jellyfin              # status of jellyfin.service under jellyfin user
+  $PROG logs jellyfin -n 50          # last 50 log lines for jellyfin
+  $PROG logs -u jellyfin tinyproxy   # logs for tinyproxy (secondary service)
+  $PROG restart qbittorrent          # restart qbittorrent.service
+  $PROG ps                           # running containers across all users
+  $PROG update                       # trigger auto-update for all users
+EOF
+}
+
+# Discover service users: query active user@<uid>.service instances, resolve to usernames,
+# exclude core (the interactive user).
+discover_users() {
+  systemctl list-units 'user@*.service' --state=active --no-legend --plain 2>/dev/null \
+    | awk '{print $1}' \
+    | sed 's/user@\([0-9]*\)\.service/\1/' \
+    | while read -r uid; do
+        getent passwd "$uid" 2>/dev/null | cut -d: -f1
+      done \
+    | grep -v '^core$' \
+    | sort -u
+}
+
+user_uid() {
+  id -u "$1" 2>/dev/null
+}
+
+ctl() {
+  local user="$1"; shift
+  sudo systemctl --user -M "${user}@.host" "$@"
+}
+
+# journalctl --user -M user@.host is rejected ("Connecting to a machine as non-root
+# is not supported"), so match by journal fields instead.
+jctl() {
+  local user="$1"
+  local unit="$2"
+  shift 2
+  local uid
+  uid=$(user_uid "$user")
+  sudo journalctl "_SYSTEMD_USER_UNIT=${unit}" "_UID=${uid}" "$@"
+}
+
+# sudo -u user keeps the CWD (/var/home/core) which the service user can't read.
+# Use `su -` to switch to the service user's login environment instead.
+podman_ps() {
+  local user="$1"
+  sudo su - "$user" -s /bin/sh -c 'XDG_RUNTIME_DIR=/run/user/$(id -u) podman ps'
+}
+
+cmd_status() {
+  local target_user=""
+  local unit=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -u|--user) target_user="$2"; shift 2 ;;
+      -*) echo "$PROG: unknown option '$1'" >&2; usage; exit 1 ;;
+      *) unit="$1"; shift ;;
+    esac
+  done
+
+  if [[ -z "$target_user" && -z "$unit" ]]; then
+    # Summary across all users
+    local users
+    mapfile -t users < <(discover_users)
+    if [[ ${#users[@]} -eq 0 ]]; then
+      echo "No service users found." >&2
+      exit 1
+    fi
+    for user in "${users[@]}"; do
+      echo "=== $user ==="
+      ctl "$user" status --no-pager 2>&1 | head -3 || true
+      echo
+    done
+    return
+  fi
+
+  if [[ -z "$target_user" ]]; then
+    # Infer user from unit name
+    target_user="$unit"
+  fi
+
+  if [[ -z "$unit" ]]; then
+    # Show all units for the specified user
+    ctl "$target_user" status --no-pager
+  else
+    ctl "$target_user" status --no-pager "${unit}.service"
+  fi
+}
+
+cmd_logs() {
+  local target_user=""
+  local unit=""
+  local extra_args=()
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -u|--user) target_user="$2"; shift 2 ;;
+      -*)
+        # Remaining args are journalctl flags — collect them all
+        extra_args+=("$@")
+        break
+        ;;
+      *)
+        if [[ -z "$unit" ]]; then
+          unit="$1"; shift
+        else
+          extra_args+=("$@")
+          break
+        fi
+        ;;
+    esac
+  done
+
+  if [[ -z "$unit" ]]; then
+    echo "$PROG logs: <unit> is required" >&2
+    usage
+    exit 1
+  fi
+
+  if [[ -z "$target_user" ]]; then
+    target_user="$unit"
+  fi
+
+  jctl "$target_user" "${unit}.service" "${extra_args[@]+"${extra_args[@]}"}"
+}
+
+cmd_simple() {
+  local action="$1"; shift
+  local target_user=""
+  local unit=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -u|--user) target_user="$2"; shift 2 ;;
+      -*) echo "$PROG: unknown option '$1'" >&2; usage; exit 1 ;;
+      *) unit="$1"; shift ;;
+    esac
+  done
+
+  if [[ -z "$unit" ]]; then
+    echo "$PROG $action: <unit> is required" >&2
+    usage
+    exit 1
+  fi
+
+  if [[ -z "$target_user" ]]; then
+    target_user="$unit"
+  fi
+
+  ctl "$target_user" "$action" "${unit}.service"
+}
+
+cmd_list() {
+  local target_user=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -u|--user) target_user="$2"; shift 2 ;;
+      -*) echo "$PROG: unknown option '$1'" >&2; usage; exit 1 ;;
+      *) echo "$PROG: unexpected argument '$1'" >&2; usage; exit 1 ;;
+    esac
+  done
+
+  if [[ -n "$target_user" ]]; then
+    echo "=== $target_user ==="
+    ctl "$target_user" list-units --no-pager
+  else
+    local users
+    mapfile -t users < <(discover_users)
+    for user in "${users[@]}"; do
+      echo "=== $user ==="
+      ctl "$user" list-units --no-pager
+      echo
+    done
+  fi
+}
+
+cmd_ps() {
+  local target_user=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -u|--user) target_user="$2"; shift 2 ;;
+      -*) echo "$PROG: unknown option '$1'" >&2; usage; exit 1 ;;
+      *) echo "$PROG: unexpected argument '$1'" >&2; usage; exit 1 ;;
+    esac
+  done
+
+  if [[ -n "$target_user" ]]; then
+    echo "=== $target_user ==="
+    podman_ps "$target_user"
+  else
+    local users
+    mapfile -t users < <(discover_users)
+    for user in "${users[@]}"; do
+      echo "=== $user ==="
+      podman_ps "$user"
+      echo
+    done
+  fi
+}
+
+cmd_users() {
+  discover_users
+}
+
+cmd_update() {
+  local target_user=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -u|--user) target_user="$2"; shift 2 ;;
+      -*) echo "$PROG: unknown option '$1'" >&2; usage; exit 1 ;;
+      *) echo "$PROG: unexpected argument '$1'" >&2; usage; exit 1 ;;
+    esac
+  done
+
+  if [[ -n "$target_user" ]]; then
+    ctl "$target_user" start podman-auto-update.service
+  else
+    local users
+    mapfile -t users < <(discover_users)
+    for user in "${users[@]}"; do
+      echo "Triggering auto-update for $user..."
+      ctl "$user" start podman-auto-update.service
+    done
+  fi
+}
+
+# Main dispatch
+case "${1:-}" in
+  -h|--help|help) usage ;;
+  "") cmd_status ;;
+  status)  shift; cmd_status "$@" ;;
+  logs)    shift; cmd_logs "$@" ;;
+  restart) shift; cmd_simple restart "$@" ;;
+  start)   shift; cmd_simple start "$@" ;;
+  stop)    shift; cmd_simple stop "$@" ;;
+  list)    shift; cmd_list "$@" ;;
+  ps)      shift; cmd_ps "$@" ;;
+  users)   cmd_users ;;
+  update)  shift; cmd_update "$@" ;;
+  *)       echo "$PROG: unknown command '$1'" >&2; usage; exit 1 ;;
+esac

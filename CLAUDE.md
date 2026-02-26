@@ -31,11 +31,11 @@ Two top-level directories mirror their target filesystem counterparts, with a de
   - `etc/containers/systemd/users/<uid>/` - Rootless Podman quadlet definitions, organized by user UID
   - `etc/firewalld/` - Firewall configuration
   - `etc/jellarr/` - Jellarr bootstrap script (OS plumbing, not config — stays in image)
-
 - **`usr/`** — OS-image-owned infrastructure (mirrors target `/usr/`). Use this for systemd units, sysusers, tmpfiles, and other OS-level plumbing that belongs to the system rather than any one application.
   - `usr/lib/systemd/system/` - Service units for boot orchestration and secrets management
   - `usr/lib/sysusers.d/` - User/group definitions created at boot
   - `usr/lib/tmpfiles.d/` - Temporary file/directory creation rules
+  - `usr/local/bin/` - OS-level CLI tools baked into the image (e.g., `hl`, `qbittorrent-configure`)
 - `selinux/` - SELinux policy for systemd-age-creds socket access
 - `build/` - Generated artifacts (.gitignored and deleted upon `make clean`)
 - `secrets/` - Pre-generated keys for injection into QEMU VM (.gitignored)
@@ -74,11 +74,13 @@ The Makefile allows you to build container images locally or via GitHub Actions 
 
 1. Commit your changes to a non-main branch and push to origin
 2. Wait for the build to complete and then trigger a bootc upgrade inside the running VM
+
    ```bash
    make await-ghcr vm-switch
    ```
 
 If the VM isn't running or if you're testing changes that affect persistent/mutable parts of the container's filesystem (e.g., /var/), rebuild from scratch instead of doing a bootc upgrade:
+
 ```bash
 make await-ghcr clean run-vm-from-ghcr
 ```
@@ -93,7 +95,20 @@ ssh -i ./secrets/core/id_ed25519 -p 2222 -o LogLevel=QUIET -o StrictHostKeyCheck
 
 (the `|| true` is to prevent exit statuses from interrupting sibling tool calls)
 
-Use the following command to check on the status of rootless quadlets:
+Use `hl` (baked into the image at `/usr/local/bin/hl`) to manage rootless quadlets:
+
+```bash
+hl                              # status summary for all service users
+hl status jellyfin              # detailed status for jellyfin.service
+hl logs jellyfin -n 50          # last 50 log lines
+hl logs -u jellyfin tinyproxy   # logs for a secondary service
+hl restart qbittorrent          # restart a unit
+hl ps                           # running containers across all users
+hl users                        # list discovered service users
+hl help                         # full usage
+```
+
+The underlying pattern (useful when `hl` is unavailable) is:
 
 ```bash
 sudo systemctl --user -M $QUADLET_USERNAME@.host status $QUADLET_NAME.service
