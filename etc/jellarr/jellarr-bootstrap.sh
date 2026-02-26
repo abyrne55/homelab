@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-DB="/var/mnt/media/.jellyfin/config/data/jellyfin.db"
+DB="/var/mnt/data/.jellyfin/config/data/jellyfin.db"
 API_KEY=$(tr -d '[:space:]' < "${CREDENTIALS_DIRECTORY}/jellarr-api-key")
 API_KEY_NAME="jellarr"
 

@@ -1,21 +1,40 @@
 [Unit]
 Description=Initialize data disk with ext4 filesystem
 DefaultDependencies=no
-Before=var-mnt-media.mount
+Before=var-mnt-data.mount
 After=systemd-udevd.service var.mount
-ConditionPathExists=!/dev/disk/by-label/media-data
+ConditionPathExists=!/dev/disk/by-label/data
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/mkdir -p /var/mnt/media /var/mnt/.media-init
-ExecStart=/usr/sbin/mkfs.ext4 -L media-data /dev/vdb
-ExecStart=/usr/bin/mount /dev/vdb /var/mnt/.media-init
-ExecStart=/usr/bin/mkdir -p /var/mnt/.media-init/Movies /var/mnt/.media-init/TV /var/mnt/.media-init/.jellyfin/config /var/mnt/.media-init/.jellyfin/cache /var/mnt/.media-init/.qbittorrent/config /var/mnt/.media-init/Downloads
-ExecStart=/usr/bin/chown -R 1052:1052 /var/mnt/.media-init/.jellyfin /var/mnt/.media-init/Movies /var/mnt/.media-init/TV
-ExecStart=/usr/bin/chown -R 1053:1053 /var/mnt/.media-init/.qbittorrent /var/mnt/.media-init/Downloads
-ExecStart=/usr/bin/umount /var/mnt/.media-init
-ExecStart=/usr/bin/rmdir /var/mnt/.media-init
+ExecStart=/usr/bin/mkdir -p /var/mnt/data /var/mnt/.data-init
+ExecStart=/usr/sbin/mkfs.ext4 -L data /dev/vdb
+ExecStart=/usr/bin/mount /dev/vdb /var/mnt/.data-init
+ExecStart=/usr/bin/mkdir -p \
+  /var/mnt/.data-init/media/movies \
+  /var/mnt/.data-init/media/tv \
+  /var/mnt/.data-init/media/music \
+  /var/mnt/.data-init/media/books \
+  /var/mnt/.data-init/media/other \
+  /var/mnt/.data-init/torrents/movies \
+  /var/mnt/.data-init/torrents/tv \
+  /var/mnt/.data-init/torrents/music \
+  /var/mnt/.data-init/torrents/books \
+  /var/mnt/.data-init/torrents/other \
+  /var/mnt/.data-init/usenet/incomplete \
+  /var/mnt/.data-init/usenet/complete/movies \
+  /var/mnt/.data-init/usenet/complete/tv \
+  /var/mnt/.data-init/usenet/complete/music \
+  /var/mnt/.data-init/usenet/complete/books \
+  /var/mnt/.data-init/usenet/complete/other \
+  /var/mnt/.data-init/.jellyfin/config \
+  /var/mnt/.data-init/.jellyfin/cache \
+  /var/mnt/.data-init/.qbittorrent/config
+ExecStart=/usr/bin/chown -R 1052:1052 /var/mnt/.data-init/.jellyfin /var/mnt/.data-init/media
+ExecStart=/usr/bin/chown -R 1053:1053 /var/mnt/.data-init/.qbittorrent /var/mnt/.data-init/torrents
+ExecStart=/usr/bin/umount /var/mnt/.data-init
+ExecStart=/usr/bin/rmdir /var/mnt/.data-init
 RemainAfterExit=yes
 
 [Install]
-WantedBy=var-mnt-media.mount
+WantedBy=var-mnt-data.mount
