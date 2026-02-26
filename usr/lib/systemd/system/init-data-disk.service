@@ -7,6 +7,17 @@ ConditionPathExists=!/dev/disk/by-label/data
 
 [Service]
 Type=oneshot
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+LockPersonality=yes
+RestrictRealtime=yes
+ProtectHome=yes
+# PrivateDevices intentionally omitted: service formats /dev/vdb
+# ProtectSystem intentionally omitted: service mounts the newly formatted device
 ExecStart=/usr/bin/mkdir -p /var/mnt/data /var/mnt/.data-init
 ExecStart=/usr/sbin/mkfs.ext4 -L data /dev/vdb
 ExecStart=/usr/bin/mount /dev/vdb /var/mnt/.data-init
