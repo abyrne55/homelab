@@ -19,7 +19,8 @@ HealthStartPeriod=30s
 HealthInterval=30s
 Notify=healthy
 NoNewPrivileges=true
-DropCapability=all
+# DropCapability=all intentionally omitted: linuxserver s6 init calls setgroups()
+# to switch from root to PUID/PGID, which requires CAP_SETGID inside the container
 
 [Service]
 Restart=on-failure
