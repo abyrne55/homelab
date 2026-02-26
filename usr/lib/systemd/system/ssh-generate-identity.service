@@ -14,6 +14,11 @@ ProtectKernelLogs=yes
 ProtectControlGroups=yes
 LockPersonality=yes
 RestrictRealtime=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateDevices=yes
+RestrictAddressFamilies=AF_UNIX
+ReadWritePaths=/var/lib/git-ssh
 
 ExecStartPre=/usr/bin/install -d -m 0700 /var/lib/git-ssh
 ExecStart=/usr/bin/ssh-keygen -t ed25519 -N "" -C "homelab-git-pull" -f /var/lib/git-ssh/id_ed25519
