@@ -16,6 +16,7 @@ repos:
         files: \.(json|user.*|group.*)$
     -   id: check-added-large-files
     -   id: check-executables-have-shebangs
+    -   id: check-shebang-scripts-are-executable
     -   id: check-case-conflict
     -   id: detect-aws-credentials
         args: ['--allow-missing-credentials']
