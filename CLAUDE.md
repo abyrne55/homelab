@@ -36,6 +36,7 @@ Two top-level directories mirror their target filesystem counterparts, with a de
   - `usr/lib/systemd/system/` - Service units for boot orchestration and secrets management
   - `usr/lib/sysusers.d/` - User/group definitions created at boot
   - `usr/lib/tmpfiles.d/` - Temporary file/directory creation rules
+  - `usr/local/bin/` - OS-level CLI tools baked into the image (e.g., `hl`, `qbittorrent-configure`)
 - `selinux/` - SELinux policy for systemd-age-creds socket access
 - `build/` - Generated artifacts (.gitignored and deleted upon `make clean`)
 - `secrets/` - Pre-generated keys for injection into QEMU VM (.gitignored)

@@ -19,6 +19,8 @@ This repo builds a [bootc](https://containers.github.io/bootc/)-based system ima
 - **Jellyfin** - Media server accessible at `http://localhost:20520`. Runs as a rootless Podman quadlet under a dedicated `jellyfin` user (UID 1052). State and media live on a persistent data disk at `/var/mnt/data`.
 - **Tinyproxy** - Forward proxy (jellynet isolation). Allows Jellyfin to fetch metadata/artwork from approved external domains while keeping it off the main network. Config and domain allowlist live in the private `homelab-config` repo.
 - **Jellarr** - Declarative Jellyfin configuration manager. Bootstraps an API key into Jellyfin's SQLite database on first boot, then applies `config.yml` (users, libraries, startup settings) via the Jellyfin API. Re-runs daily via a systemd timer. Config lives in the private `homelab-config` repo.
+- **qBittorrent** - Torrent client accessible at `http://localhost:20530`. Runs as a rootless Podman quadlet under a dedicated `qbittorrent` user (UID 1053). All traffic is routed through Gluetun. State and downloads live on the data disk at `/var/mnt/data`.
+  - **Gluetun** - Mullvad WireGuard VPN client. Runs alongside qBittorrent in a shared pod so that all torrent traffic is tunnelled through the VPN. WireGuard credentials are loaded at runtime from `homelab-secrets` via `systemd-age-creds`.
 
 ## Three-Repository Pattern
 
@@ -75,6 +77,20 @@ Pre-generated secrets can be injected into the VM via an optional ISO image:
 | `stop-vm` | Stop the running VM |
 | `verify-systemd` | Verify all systemd unit files inside the container |
 | `clean` | Stop VM and delete all build artifacts |
+
+## Service Management
+
+Once the VM is running, use the `hl` CLI (baked into the image at `/usr/local/bin/hl`) to manage services:
+
+```bash
+hl                              # status summary for all service users
+hl status jellyfin              # detailed status for jellyfin.service
+hl logs jellyfin -n 50          # last 50 log lines
+hl logs -u jellyfin tinyproxy   # logs for a secondary service
+hl restart qbittorrent          # restart a unit
+hl ps                           # running containers across all users
+hl help                         # full usage
+```
 
 ## Configuration
 
