@@ -204,6 +204,7 @@ else
 endif
 
 # SSH options
+SSH_HOST := 127.0.0.1
 SSH_OPTS := -o LogLevel=QUIET -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o PreferredAuthentications=publickey
 
 # Internal target to check if VM is running
@@ -217,10 +218,10 @@ _check-vm-running:
 # SSH into the running VM (waits for SSH to become available)
 ssh-vm: _check-vm-running
 	@echo "Waiting for SSH to become available..."
-	@until ssh -i $(CORE_SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) -o ConnectTimeout=2 core@localhost exit 2>/dev/null; do \
+	@until ssh -i $(CORE_SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) -o ConnectTimeout=2 core@$(SSH_HOST) exit 2>/dev/null; do \
 		sleep 1; \
 	done
-	ssh -i $(CORE_SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost || true
+	ssh -i $(CORE_SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@$(SSH_HOST) || true
 
 # Open Jellyfin web UI in default browser
 open-jellyfin: _check-vm-running
@@ -233,11 +234,11 @@ open-jellyfin: _check-vm-running
 # Switch VM to container image for current git branch
 vm-switch: _check-vm-running
 	@echo "Waiting for SSH to become available..."
-	@until ssh -i $(CORE_SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) -o ConnectTimeout=2 core@localhost exit 2>/dev/null; do \
+	@until ssh -i $(CORE_SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) -o ConnectTimeout=2 core@$(SSH_HOST) exit 2>/dev/null; do \
 		sleep 1; \
 	done
 	@echo "Switching to $(REMOTE_IMAGE)..."
-	ssh -i $(CORE_SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost -- "sudo bootc switch --apply $(REMOTE_IMAGE) && sudo bootc upgrade --apply" || true
+	ssh -i $(CORE_SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@$(SSH_HOST) -- "sudo bootc switch --apply $(REMOTE_IMAGE) && sudo bootc upgrade --apply" || true
 
 # Wait for GitHub Actions to build container image for current commit
 await-ghcr:
@@ -290,10 +291,10 @@ stop-vm:
 # Reboot the VM
 reboot-vm: _check-vm-running
 	@echo "Waiting for SSH to become available..."
-	@until ssh -i $(CORE_SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) -o ConnectTimeout=2 core@localhost exit 2>/dev/null; do \
+	@until ssh -i $(CORE_SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) -o ConnectTimeout=2 core@$(SSH_HOST) exit 2>/dev/null; do \
 		sleep 1; \
 	done
-	ssh -i $(CORE_SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@localhost -- "sudo reboot" || true
+	ssh -i $(CORE_SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@$(SSH_HOST) -- "sudo reboot" || true
 
 # Clean up all build artifacts
 clean: stop-vm

@@ -13,6 +13,7 @@ RUN curl -LO https://github.com/abyrne55/systemd-age-creds/releases/download/v1.
 
 COPY etc/ /etc/
 COPY usr/ /usr/
+RUN chmod +x /usr/local/bin/qbittorrent-configure
 
 # Copy SELinux policy
 COPY selinux/systemd_age_creds.cil /tmp/systemd_age_creds.cil
