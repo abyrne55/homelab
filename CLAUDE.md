@@ -87,13 +87,21 @@ make await-ghcr clean run-vm-from-ghcr
 
 To more-quickly test small changes, try interacting with the already-running VM via SSH (see below) before rebuilding.
 
-Once the VM is running, you can interact with it using the following command format:
+Once the VM is running, use `vsh` (`~/.local/bin/vsh`) to run commands on it:
+
+```bash
+vsh hl failed
+vsh "sudo dmesg | tail -20"          # quote when using pipes/redirects/subshells
+vsh 'echo $(hostname)-$(date +%s)'   # single-quote to defer expansion to remote
+```
+
+Append `|| true` when running parallel tool calls to prevent a non-zero exit from cancelling siblings.
+
+If `vsh` is unavailable, use the raw SSH command:
 
 ```bash
 ssh -i ./secrets/core/id_ed25519 -p 2222 -o LogLevel=QUIET -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o PreferredAuthentications=publickey core@127.0.0.1 -- "<your command here>" || true
 ```
-
-(the `|| true` is to prevent exit statuses from interrupting sibling tool calls)
 
 Use `hl` (baked into the image at `/usr/local/bin/hl`) to manage rootless quadlets:
 
