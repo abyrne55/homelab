@@ -18,6 +18,8 @@ HealthCmd=curl -f http://localhost:20530/
 HealthStartPeriod=30s
 HealthInterval=30s
 Notify=healthy
+NoNewPrivileges=true
+DropCapability=all
 
 [Service]
 Restart=on-failure
