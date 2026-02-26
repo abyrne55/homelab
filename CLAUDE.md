@@ -105,6 +105,14 @@ sudo systemctl --user -M $QUADLET_USERNAME@.host status $QUADLET_NAME.service
 
 Create `./etc/containers/systemd/users/<uid>/<name>.container` in the Podman quadlet format, where `<uid>` is the numeric UID of the service user (defined in `usr/lib/sysusers.d/`). If the quadlet requires a secret to be loaded from the homelab-secrets repo (separate), add `LoadCredential=credential-name:%t/systemd-age-creds.sock` to the `[Service]` section
 
+**Port assignment scheme:** Host-published ports use the formula `2<last 3 digits of UID><index>`, e.g. UID 1051 → 20510, 20511, …; UID 1052 → 20520, 20521, …. This encodes the owning user into the port number and keeps all ports in the 20000–29999 range (below the Linux ephemeral port floor of 32768). Tinyproxy is an exception — it is not published to the host and is only reachable via container-internal DNS.
+
+| Service | UID | Host port | Container port |
+|---|---|---|---|
+| caddy | 1051 | 20510 | 20510 |
+| jellyfin | 1052 | 20520 | 8096 |
+| qbittorrent | 1053 | 20530 | 20530 |
+
 ### Systemd Services
 
 Create unit file(s) (e.g., `name.service`, `name.socket`, `name.path`) in `./usr/lib/systemd/system/` and update `./Containerfile` with any required dependencies or additions to the `RUN systemctl enable` line
