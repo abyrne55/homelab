@@ -83,13 +83,17 @@ Pre-generated secrets can be injected into the VM via an optional ISO image:
 Once the VM is running, use the `hl` CLI (baked into the image at `/usr/local/bin/hl`) to manage services:
 
 ```bash
-hl                              # status summary for all service users
-hl status jellyfin              # detailed status for jellyfin.service
-hl logs jellyfin -n 50          # last 50 log lines
-hl logs -u jellyfin tinyproxy   # logs for a secondary service
-hl restart qbittorrent          # restart a unit
-hl ps                           # running containers across all users
-hl help                         # full usage
+hl                                    # status summary for system + all service users
+hl status jellyfin                    # detailed status for jellyfin.service
+hl status -s homelab-config-sync      # status of a system unit
+hl logs jellyfin -n 50               # last 50 log lines
+hl logs -u jellyfin tinyproxy         # logs for a secondary service
+hl logs -s homelab-secrets-sync -n 20 # logs for a system unit
+hl restart qbittorrent               # restart a unit
+hl restart -s homelab-config-sync    # restart a system unit
+hl failed                            # list failed units across system and all users
+hl ps                                # running containers across all users
+hl help                              # full usage
 ```
 
 ## Configuration

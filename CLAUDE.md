@@ -87,25 +87,37 @@ make await-ghcr clean run-vm-from-ghcr
 
 To more-quickly test small changes, try interacting with the already-running VM via SSH (see below) before rebuilding.
 
-Once the VM is running, you can interact with it using the following command format:
+Once the VM is running, use `vsh` (`~/.local/bin/vsh`) to run commands on it:
+
+```bash
+vsh hl failed
+vsh "sudo dmesg | tail -20"          # quote when using pipes/redirects/subshells
+vsh 'echo $(hostname)-$(date +%s)'   # single-quote to defer expansion to remote
+```
+
+Append `|| true` when running parallel tool calls to prevent a non-zero exit from cancelling siblings.
+
+If `vsh` is unavailable, use the raw SSH command:
 
 ```bash
 ssh -i ./secrets/core/id_ed25519 -p 2222 -o LogLevel=QUIET -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o PreferredAuthentications=publickey core@127.0.0.1 -- "<your command here>" || true
 ```
 
-(the `|| true` is to prevent exit statuses from interrupting sibling tool calls)
-
 Use `hl` (baked into the image at `/usr/local/bin/hl`) to manage rootless quadlets:
 
 ```bash
-hl                              # status summary for all service users
-hl status jellyfin              # detailed status for jellyfin.service
-hl logs jellyfin -n 50          # last 50 log lines
-hl logs -u jellyfin tinyproxy   # logs for a secondary service
-hl restart qbittorrent          # restart a unit
-hl ps                           # running containers across all users
-hl users                        # list discovered service users
-hl help                         # full usage
+hl                                    # status summary for system + all service users
+hl status jellyfin                    # detailed status for jellyfin.service
+hl status -s homelab-config-sync      # status of a system unit
+hl logs jellyfin -n 50               # last 50 log lines
+hl logs -u jellyfin tinyproxy         # logs for a secondary service
+hl logs -s homelab-secrets-sync -n 20 # logs for a system unit
+hl restart qbittorrent               # restart a unit
+hl restart -s homelab-config-sync    # restart a system unit
+hl failed                            # list failed units across system and all users
+hl ps                                # running containers across all users
+hl users                             # list discovered service users
+hl help                              # full usage
 ```
 
 The underlying pattern (useful when `hl` is unavailable) is:
