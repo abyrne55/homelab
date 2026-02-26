@@ -1,0 +1,34 @@
+#!/bin/bash
+set -euo pipefail
+
+QBIT_URL="http://localhost:20530"
+COOKIE_JAR=$(mktemp)
+trap "rm -f $COOKIE_JAR" EXIT
+
+# Scope journal lookup to the current qbittorrent.service invocation
+INVOCATION_ID=$(systemctl --user show -p InvocationID --value qbittorrent.service)
+TEMP_PASS=$(journalctl --user "_SYSTEMD_INVOCATION_ID=${INVOCATION_ID}" --no-pager -o cat 2>/dev/null \
+  | grep "temporary password is provided for this session:" \
+  | awk '{print $NF}')
+
+if [ -z "$TEMP_PASS" ]; then
+  echo "No temporary password found; qBittorrent already has a permanent password set"
+  exit 0
+fi
+
+echo "Temporary password detected; logging in..."
+RESPONSE=$(curl -sf -c "$COOKIE_JAR" -X POST "$QBIT_URL/api/v2/auth/login" \
+  --data-urlencode "username=admin" \
+  --data-urlencode "password=$TEMP_PASS")
+
+if [ "$RESPONSE" != "Ok." ]; then
+  echo "Login failed: $RESPONSE" >&2
+  exit 1
+fi
+
+echo "Setting permanent WebUI password from credential..."
+NEW_PASS=$(cat "${CREDENTIALS_DIRECTORY}/qbittorrent-webui-password")
+curl -sf -b "$COOKIE_JAR" -X POST "$QBIT_URL/api/v2/app/setPreferences" \
+  --data-urlencode "json={\"web_ui_password\":\"${NEW_PASS}\"}"
+
+echo "qBittorrent permanent password set successfully"
