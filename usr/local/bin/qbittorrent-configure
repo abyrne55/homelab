@@ -9,7 +9,7 @@ trap "rm -f $COOKIE_JAR" EXIT
 INVOCATION_ID=$(systemctl --user show -p InvocationID --value qbittorrent.service)
 TEMP_PASS=$(journalctl --user "_SYSTEMD_INVOCATION_ID=${INVOCATION_ID}" --no-pager -o cat 2>/dev/null \
   | grep "temporary password is provided for this session:" \
-  | awk '{print $NF}')
+  | awk '{print $NF}' || true)
 
 if [ -z "$TEMP_PASS" ]; then
   echo "No temporary password found; qBittorrent already has a permanent password set"
