@@ -10,10 +10,10 @@ Pod=torrent.pod
 Environment=PUID=1053
 Environment=PGID=1053
 Environment=TZ=UTC
-Environment=WEBUI_PORT=8090
+Environment=WEBUI_PORT=20530
 Volume=/var/mnt/data/.qbittorrent/config:/config:Z
 Volume=/var/mnt/data/torrents:/downloads:Z
-HealthCmd=curl -f http://localhost:8090/
+HealthCmd=curl -f http://localhost:20530/
 HealthStartPeriod=30s
 HealthInterval=30s
 Notify=healthy

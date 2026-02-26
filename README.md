@@ -15,8 +15,8 @@ This repo builds a [bootc](https://containers.github.io/bootc/)-based system ima
 
 ## Included Services
 
-- **Caddy** - Reverse proxy accessible at `http://localhost:80`. Runs as a rootless Podman quadlet under a dedicated `caddy` user (UID 1051). Forwards traffic to Jellyfin; firewalld redirects port 80 → Caddy's internal port 8080. Config (`Caddyfile`) lives in the private `homelab-config` repo.
-- **Jellyfin** - Media server accessible at `http://localhost:8096`. Runs as a rootless Podman quadlet under a dedicated `jellyfin` user (UID 1052). State and media live on a persistent data disk at `/var/mnt/data`.
+- **Caddy** - Reverse proxy accessible at `http://localhost:80`. Runs as a rootless Podman quadlet under a dedicated `caddy` user (UID 1051). Forwards traffic to Jellyfin; firewalld redirects port 80 → Caddy's internal port 20510. Config (`Caddyfile`) lives in the private `homelab-config` repo.
+- **Jellyfin** - Media server accessible at `http://localhost:20520`. Runs as a rootless Podman quadlet under a dedicated `jellyfin` user (UID 1052). State and media live on a persistent data disk at `/var/mnt/data`.
 - **Tinyproxy** - Forward proxy (jellynet isolation). Allows Jellyfin to fetch metadata/artwork from approved external domains while keeping it off the main network. Config and domain allowlist live in the private `homelab-config` repo.
 - **Jellarr** - Declarative Jellyfin configuration manager. Bootstraps an API key into Jellyfin's SQLite database on first boot, then applies `config.yml` (users, libraries, startup settings) via the Jellyfin API. Re-runs daily via a systemd timer. Config lives in the private `homelab-config` repo.
 
@@ -83,8 +83,8 @@ Pre-generated secrets can be injected into the VM via an optional ISO image:
 | `IMAGE_NAME` | `homelab` | Container image name |
 | `TAG` | `latest` | Container image tag |
 | `SSH_PORT` | `2222` | Host port forwarded to VM SSH |
-| `HTTP_PORT` | `8080` | Host port forwarded to VM port 8080 |
-| `JELLYFIN_PORT` | `8096` | Host port forwarded to Jellyfin web UI |
+| `HTTP_PORT` | `20510` | Host port forwarded to VM port 20510 (Caddy) |
+| `JELLYFIN_PORT` | `20520` | Host port forwarded to Jellyfin web UI |
 | `CADDY_PORT` | `80` | Host port forwarded to Caddy reverse proxy |
 | `DATA_DISK_SIZE` | `3G` | Size of the persistent data disk |
 | `DETACH` | `true` | Run QEMU in background (`false` for foreground) |

@@ -7,14 +7,14 @@
   <service name="ssh"/>
 
   <!-- Allow Jellyfin -->
-  <port port="8096" protocol="tcp"/>
+  <port port="20520" protocol="tcp"/>
 
-  <!-- Allow test HTTPd -->
-  <port port="8080" protocol="tcp"/>
+  <!-- Allow Caddy -->
+  <port port="20510" protocol="tcp"/>
 
   <!-- Allow qBittorrent WebUI (via Gluetun pod) -->
-  <port port="8090" protocol="tcp"/>
+  <port port="20530" protocol="tcp"/>
 
-  <!-- Port forwarding: external 80 → internal 8080 for rootless Caddy (handles both IPv4/IPv6) -->
-  <forward-port port="80" protocol="tcp" to-port="8080"/>
+  <!-- Port forwarding: external 80 → internal 20510 for rootless Caddy (handles both IPv4/IPv6) -->
+  <forward-port port="80" protocol="tcp" to-port="20510"/>
 </zone>

@@ -3,7 +3,7 @@ Description=Torrent stack pod (Gluetun VPN + qBittorrent)
 
 [Pod]
 # WebUI port published on the pod, not on individual containers
-PublishPort=8090:8090
+PublishPort=20530:20530
 
 [Install]
 WantedBy=default.target
