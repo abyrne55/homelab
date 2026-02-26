@@ -106,14 +106,18 @@ ssh -i ./secrets/core/id_ed25519 -p 2222 -o LogLevel=QUIET -o StrictHostKeyCheck
 Use `hl` (baked into the image at `/usr/local/bin/hl`) to manage rootless quadlets:
 
 ```bash
-hl                              # status summary for all service users
-hl status jellyfin              # detailed status for jellyfin.service
-hl logs jellyfin -n 50          # last 50 log lines
-hl logs -u jellyfin tinyproxy   # logs for a secondary service
-hl restart qbittorrent          # restart a unit
-hl ps                           # running containers across all users
-hl users                        # list discovered service users
-hl help                         # full usage
+hl                                    # status summary for system + all service users
+hl status jellyfin                    # detailed status for jellyfin.service
+hl status -s homelab-config-sync      # status of a system unit
+hl logs jellyfin -n 50               # last 50 log lines
+hl logs -u jellyfin tinyproxy         # logs for a secondary service
+hl logs -s homelab-secrets-sync -n 20 # logs for a system unit
+hl restart qbittorrent               # restart a unit
+hl restart -s homelab-config-sync    # restart a system unit
+hl failed                            # list failed units across system and all users
+hl ps                                # running containers across all users
+hl users                             # list discovered service users
+hl help                              # full usage
 ```
 
 The underlying pattern (useful when `hl` is unavailable) is:
