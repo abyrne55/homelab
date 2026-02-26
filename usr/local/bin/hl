@@ -50,13 +50,6 @@ discover_users() {
     | sort -u
 }
 
-# Get UID for a username
-get_uid() {
-  getent passwd "$1" | cut -d: -f5- | cut -d: -f1 || true
-  # Actually use id -u
-  id -u "$1" 2>/dev/null || true
-}
-
 user_uid() {
   id -u "$1" 2>/dev/null
 }
@@ -66,16 +59,22 @@ ctl() {
   sudo systemctl --user -M "${user}@.host" "$@"
 }
 
+# journalctl --user -M user@.host is rejected ("Connecting to a machine as non-root
+# is not supported"), so match by journal fields instead.
 jctl() {
-  local user="$1"; shift
-  sudo journalctl --user -M "${user}@.host" "$@"
-}
-
-podman_ps() {
   local user="$1"
+  local unit="$2"
+  shift 2
   local uid
   uid=$(user_uid "$user")
-  sudo -u "$user" XDG_RUNTIME_DIR="/run/user/${uid}" podman ps "$@"
+  sudo journalctl "_SYSTEMD_USER_UNIT=${unit}" "_UID=${uid}" "$@"
+}
+
+# sudo -u user keeps the CWD (/var/home/core) which the service user can't read.
+# Use `su -` to switch to the service user's login environment instead.
+podman_ps() {
+  local user="$1"
+  sudo su - "$user" -s /bin/sh -c 'XDG_RUNTIME_DIR=/run/user/$(id -u) podman ps'
 }
 
 cmd_status() {
@@ -153,7 +152,7 @@ cmd_logs() {
     target_user="$unit"
   fi
 
-  jctl "$target_user" -u "${unit}.service" "${extra_args[@]+"${extra_args[@]}"}"
+  jctl "$target_user" "${unit}.service" "${extra_args[@]+"${extra_args[@]}"}"
 }
 
 cmd_simple() {
