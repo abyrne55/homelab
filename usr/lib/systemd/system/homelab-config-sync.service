@@ -32,8 +32,8 @@ ExecStart=/usr/bin/git -C /var/lib/homelab-config/ pull --ff-only
 # Relabel repo contents so rootless containers can read them (var_lib_t → container_file_t)
 ExecStartPost=/usr/bin/chcon -Rt container_file_t /var/lib/homelab-config/
 
-# Reload Caddy live (hot reload via admin socket)
-ExecStartPost=-/usr/bin/systemctl --user -M caddy@.host reload caddy.service
+# Start Caddy if not running, or hot-reload it if already active
+ExecStartPost=-/usr/bin/systemctl --user -M caddy@.host reload-or-restart caddy.service
 # Reload Tinyproxy via SIGUSR1 (no restart needed; ReloadSignal=SIGUSR1 in quadlet)
 ExecStartPost=-/usr/bin/systemctl --user -M jellyfin@.host reload tinyproxy.service
 
