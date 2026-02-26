@@ -34,8 +34,8 @@ ExecStartPost=/usr/bin/chcon -Rt container_file_t /var/lib/homelab-config/
 
 # Start Caddy if not running, or hot-reload it if already active
 ExecStartPost=-/usr/bin/systemctl --user -M caddy@.host reload-or-restart caddy.service
-# Reload Tinyproxy via SIGUSR1 (no restart needed; ReloadSignal=SIGUSR1 in quadlet)
-ExecStartPost=-/usr/bin/systemctl --user -M jellyfin@.host reload tinyproxy.service
+# Reload Tinyproxy via SIGUSR1, or start it if not running (ReloadSignal=SIGUSR1 in quadlet)
+ExecStartPost=-/usr/bin/systemctl --user -M jellyfin@.host reload-or-restart tinyproxy.service
 
 [Install]
 WantedBy=multi-user.target
