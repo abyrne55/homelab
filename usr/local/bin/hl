@@ -10,30 +10,35 @@ Usage: $PROG [command] [options]
 Homelab service management CLI.
 
 Commands:
-  (no args)                     Status summary across all service users
-  status [-u <user>] [<unit>]   Unit status; without <unit>, shows all for user(s)
-  logs   [-u <user>] <unit> [flags...]  Journal logs (extra flags passed to journalctl)
-  restart [-u <user>] <unit>    Restart a unit
-  start   [-u <user>] <unit>    Start a unit
-  stop    [-u <user>] <unit>    Stop a unit
-  list   [-u <user>]            List units for all (or one) service user(s)
-  ps     [-u <user>]            Show running Podman containers
-  users                         List discovered service users
-  update [-u <user>]            Trigger podman-auto-update.service
-  help                          Print this help
+  (no args)                          Status summary across system and all service users
+  status [-s] [-u <user>] [<unit>]   Unit status; without <unit>, shows all for user(s)
+  logs   [-s] [-u <user>] <unit> [flags...]  Journal logs (extra flags passed to journalctl)
+  restart [-s] [-u <user>] <unit>    Restart a unit
+  start   [-s] [-u <user>] <unit>    Start a unit
+  stop    [-s] [-u <user>] <unit>    Stop a unit
+  list   [-s] [-u <user>]            List units for system or service user(s)
+  ps     [-u <user>]                 Show running Podman containers
+  users                              List discovered service users
+  update [-u <user>]                 Trigger podman-auto-update.service
+  failed                             List failed units across system and all service users
+  help                               Print this help
 
 Options:
+  -s, --system        Target system units instead of a service user
   -u, --user <user>   Target a specific service user (defaults to unit name)
   -h, --help          Print this help
 
 Examples:
-  $PROG                              # status summary for all users
-  $PROG status jellyfin              # status of jellyfin.service under jellyfin user
-  $PROG logs jellyfin -n 50          # last 50 log lines for jellyfin
-  $PROG logs -u jellyfin tinyproxy   # logs for tinyproxy (secondary service)
-  $PROG restart qbittorrent          # restart qbittorrent.service
-  $PROG ps                           # running containers across all users
-  $PROG update                       # trigger auto-update for all users
+  $PROG                                    # status summary for system + all users
+  $PROG status jellyfin                    # status of jellyfin.service under jellyfin user
+  $PROG status -s homelab-config-sync      # status of a system unit
+  $PROG logs jellyfin -n 50               # last 50 log lines for jellyfin
+  $PROG logs -s homelab-secrets-sync -n 50 # last 50 lines for a system unit
+  $PROG logs -u jellyfin tinyproxy         # logs for tinyproxy (secondary service)
+  $PROG restart qbittorrent               # restart qbittorrent.service
+  $PROG restart -s homelab-config-sync    # restart a system unit
+  $PROG ps                                # running containers across all users
+  $PROG update                            # trigger auto-update for all users
 EOF
 }
 
@@ -59,6 +64,15 @@ ctl() {
   sudo systemctl --user -M "${user}@.host" "$@"
 }
 
+sctl() {
+  sudo systemctl "$@"
+}
+
+sjctl() {
+  local unit="$1"; shift
+  sudo journalctl -u "$unit" "$@"
+}
+
 # journalctl --user -M user@.host is rejected ("Connecting to a machine as non-root
 # is not supported"), so match by journal fields instead.
 jctl() {
@@ -80,23 +94,37 @@ podman_ps() {
 cmd_status() {
   local target_user=""
   local unit=""
+  local system=0
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
+      -s|--system) system=1; shift ;;
       -u|--user) target_user="$2"; shift 2 ;;
       -*) echo "$PROG: unknown option '$1'" >&2; usage; exit 1 ;;
       *) unit="$1"; shift ;;
     esac
   done
 
+  if [[ $system -eq 1 && -n "$target_user" ]]; then
+    echo "$PROG status: -s and -u are mutually exclusive" >&2; exit 1
+  fi
+
+  if [[ $system -eq 1 ]]; then
+    if [[ -z "$unit" ]]; then
+      sctl status --no-pager
+    else
+      sctl status --no-pager "${unit}.service"
+    fi
+    return
+  fi
+
   if [[ -z "$target_user" && -z "$unit" ]]; then
-    # Summary across all users
+    # Summary across system and all service users
+    echo "=== system ==="
+    systemctl status --no-pager 2>&1 | head -3 || true
+    echo
     local users
     mapfile -t users < <(discover_users)
-    if [[ ${#users[@]} -eq 0 ]]; then
-      echo "No service users found." >&2
-      exit 1
-    fi
     for user in "${users[@]}"; do
       echo "=== $user ==="
       ctl "$user" status --no-pager 2>&1 | head -3 || true
@@ -106,12 +134,10 @@ cmd_status() {
   fi
 
   if [[ -z "$target_user" ]]; then
-    # Infer user from unit name
     target_user="$unit"
   fi
 
   if [[ -z "$unit" ]]; then
-    # Show all units for the specified user
     ctl "$target_user" status --no-pager
   else
     ctl "$target_user" status --no-pager "${unit}.service"
@@ -121,10 +147,12 @@ cmd_status() {
 cmd_logs() {
   local target_user=""
   local unit=""
+  local system=0
   local extra_args=()
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
+      -s|--system) system=1; shift ;;
       -u|--user) target_user="$2"; shift 2 ;;
       -*)
         # Remaining args are journalctl flags — collect them all
@@ -148,20 +176,29 @@ cmd_logs() {
     exit 1
   fi
 
-  if [[ -z "$target_user" ]]; then
-    target_user="$unit"
+  if [[ $system -eq 1 && -n "$target_user" ]]; then
+    echo "$PROG logs: -s and -u are mutually exclusive" >&2; exit 1
   fi
 
-  jctl "$target_user" "${unit}.service" "${extra_args[@]+"${extra_args[@]}"}"
+  if [[ $system -eq 1 ]]; then
+    sjctl "${unit}.service" "${extra_args[@]+"${extra_args[@]}"}"
+  else
+    if [[ -z "$target_user" ]]; then
+      target_user="$unit"
+    fi
+    jctl "$target_user" "${unit}.service" "${extra_args[@]+"${extra_args[@]}"}"
+  fi
 }
 
 cmd_simple() {
   local action="$1"; shift
   local target_user=""
   local unit=""
+  local system=0
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
+      -s|--system) system=1; shift ;;
       -u|--user) target_user="$2"; shift 2 ;;
       -*) echo "$PROG: unknown option '$1'" >&2; usage; exit 1 ;;
       *) unit="$1"; shift ;;
@@ -174,25 +211,41 @@ cmd_simple() {
     exit 1
   fi
 
-  if [[ -z "$target_user" ]]; then
-    target_user="$unit"
+  if [[ $system -eq 1 && -n "$target_user" ]]; then
+    echo "$PROG $action: -s and -u are mutually exclusive" >&2; exit 1
   fi
 
-  ctl "$target_user" "$action" "${unit}.service"
+  if [[ $system -eq 1 ]]; then
+    sctl "$action" "${unit}.service"
+  else
+    if [[ -z "$target_user" ]]; then
+      target_user="$unit"
+    fi
+    ctl "$target_user" "$action" "${unit}.service"
+  fi
 }
 
 cmd_list() {
   local target_user=""
+  local system=0
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
+      -s|--system) system=1; shift ;;
       -u|--user) target_user="$2"; shift 2 ;;
       -*) echo "$PROG: unknown option '$1'" >&2; usage; exit 1 ;;
       *) echo "$PROG: unexpected argument '$1'" >&2; usage; exit 1 ;;
     esac
   done
 
-  if [[ -n "$target_user" ]]; then
+  if [[ $system -eq 1 && -n "$target_user" ]]; then
+    echo "$PROG list: -s and -u are mutually exclusive" >&2; exit 1
+  fi
+
+  if [[ $system -eq 1 ]]; then
+    echo "=== system ==="
+    sctl list-units --no-pager
+  elif [[ -n "$target_user" ]]; then
     echo "=== $target_user ==="
     ctl "$target_user" list-units --no-pager
   else
@@ -235,6 +288,38 @@ cmd_users() {
   discover_users
 }
 
+cmd_failed() {
+  local any=0
+
+  echo "=== system ==="
+  local sys_failed
+  sys_failed=$(systemctl list-units --state=failed --no-pager --plain --no-legend 2>/dev/null || true)
+  if [[ -n "$sys_failed" ]]; then
+    echo "$sys_failed"
+    any=1
+  else
+    echo "(none)"
+  fi
+  echo
+
+  local users
+  mapfile -t users < <(discover_users)
+  for user in "${users[@]}"; do
+    echo "=== $user ==="
+    local user_failed
+    user_failed=$(ctl "$user" list-units --state=failed --no-pager --plain --no-legend 2>/dev/null || true)
+    if [[ -n "$user_failed" ]]; then
+      echo "$user_failed"
+      any=1
+    else
+      echo "(none)"
+    fi
+    echo
+  done
+
+  [[ $any -eq 0 ]]
+}
+
 cmd_update() {
   local target_user=""
 
@@ -271,5 +356,6 @@ case "${1:-}" in
   ps)      shift; cmd_ps "$@" ;;
   users)   cmd_users ;;
   update)  shift; cmd_update "$@" ;;
+  failed)  cmd_failed ;;
   *)       echo "$PROG: unknown command '$1'" >&2; usage; exit 1 ;;
 esac
