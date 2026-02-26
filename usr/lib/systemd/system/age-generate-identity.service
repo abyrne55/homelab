@@ -13,6 +13,11 @@ ProtectKernelLogs=yes
 ProtectControlGroups=yes
 LockPersonality=yes
 RestrictRealtime=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateDevices=yes
+RestrictAddressFamilies=AF_UNIX
+ReadWritePaths=/var/lib/age
 
 ExecStartPre=/usr/bin/install -d -m 0700 /var/lib/age
 ExecStart=/usr/bin/age-keygen -pq -o /var/lib/age/identity.txt
