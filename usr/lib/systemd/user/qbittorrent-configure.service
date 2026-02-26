@@ -7,3 +7,5 @@ After=qbittorrent.service
 Type=oneshot
 ExecStart=/usr/local/bin/qbittorrent-configure
 LoadCredential=qbittorrent-webui-password:/run/systemd-age-creds.sock
+Restart=on-failure
+RestartSec=10
