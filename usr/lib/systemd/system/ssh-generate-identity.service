@@ -6,16 +6,26 @@ After=network-online.target
 
 [Service]
 Type=oneshot
-NoNewPrivileges=yes
+# NoNewPrivileges intentionally omitted: ssh-keygen has SELinux type ssh_keygen_exec_t,
+# which requires a domain transition from initrc_t to ssh_keygen_t. NO_NEW_PRIVS (set
+# explicitly or implicitly by ProtectKernelTunables=, ProtectKernelModules=,
+# ProtectKernelLogs=, RestrictRealtime=, RestrictAddressFamilies=, or PrivateDevices=)
+# blocks all SELinux transitions to non-bounded domains. Fedora's policy grants no
+# nnp_transition permission for this path, so those directives cannot be used here.
 PrivateTmp=yes
-ProtectKernelTunables=yes
-ProtectKernelModules=yes
-ProtectKernelLogs=yes
 ProtectControlGroups=yes
 LockPersonality=yes
-RestrictRealtime=yes
+ProtectSystem=strict
+ProtectHome=yes
+# /var/lib/git-ssh doesn't exist at first boot (this service creates it), so we
+# can't use the specific subpath — bind-mount setup would fail at namespace setup.
+ReadWritePaths=/var/lib
 
 ExecStartPre=/usr/bin/install -d -m 0700 /var/lib/git-ssh
+# Set SELinux label to ssh_home_t so that ssh_keygen_t (the domain ssh-keygen
+# transitions into) has write permission. The default var_lib_t label silently
+# denies writes from ssh_keygen_t (dontaudit rule suppresses the AVC).
+ExecStartPre=/usr/bin/chcon -t ssh_home_t /var/lib/git-ssh
 ExecStart=/usr/bin/ssh-keygen -t ed25519 -N "" -C "homelab-git-pull" -f /var/lib/git-ssh/id_ed25519
 ExecStartPost=/usr/bin/chmod 400 /var/lib/git-ssh/id_ed25519
 ExecStartPost=/usr/bin/chmod 444 /var/lib/git-ssh/id_ed25519.pub

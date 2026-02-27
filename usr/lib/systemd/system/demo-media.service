@@ -7,6 +7,19 @@ ConditionPathExists=!/var/mnt/data/media/movies/Big Buck Bunny/BigBuckBunny_320x
 
 [Service]
 Type=oneshot
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+LockPersonality=yes
+RestrictRealtime=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateDevices=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/var/mnt/data
 ExecStart=/usr/bin/mkdir -p "/var/mnt/data/media/movies/Big Buck Bunny"
 ExecStart=/usr/bin/curl -fSL -o "/var/mnt/data/media/movies/Big Buck Bunny/BigBuckBunny_320x180.mp4" "https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4"
 RemainAfterExit=yes

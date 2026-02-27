@@ -7,6 +7,16 @@ ConditionPathExists=!/dev/disk/by-label/data
 
 [Service]
 Type=oneshot
+NoNewPrivileges=yes
+LockPersonality=yes
+RestrictRealtime=yes
+# All mount-namespace-creating directives (PrivateTmp, PrivateDevices,
+# ProtectSystem, ProtectHome, ProtectKernelTunables, ProtectKernelModules,
+# ProtectKernelLogs, ProtectControlGroups) intentionally omitted: systemd
+# gives each ExecStart= step a fresh clone of the service namespace, so a
+# mount created in one step is invisible to subsequent steps. This service
+# must run mount and umount across separate ExecStart= lines and therefore
+# cannot use any directive that creates a private mount namespace.
 ExecStart=/usr/bin/mkdir -p /var/mnt/data /var/mnt/.data-init
 ExecStart=/usr/sbin/mkfs.ext4 -L data /dev/vdb
 ExecStart=/usr/bin/mount /dev/vdb /var/mnt/.data-init
