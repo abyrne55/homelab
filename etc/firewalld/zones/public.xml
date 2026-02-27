@@ -6,15 +6,11 @@
   <!-- Allow SSH -->
   <service name="ssh"/>
 
-  <!-- Allow Jellyfin -->
-  <port port="20520" protocol="tcp"/>
-
-  <!-- Allow Caddy -->
+  <!-- Allow rootless Caddy HTTP+HTTPS -->
   <port port="20510" protocol="tcp"/>
+  <port port="20511" protocol="tcp"/>
 
-  <!-- Allow qBittorrent WebUI (via Gluetun pod) -->
-  <port port="20530" protocol="tcp"/>
-
-  <!-- Port forwarding: external 80 → internal 20510 for rootless Caddy (handles both IPv4/IPv6) -->
+  <!-- Forward external 80/443 → internal 20510/20511 for rootless Caddy -->
   <forward-port port="80" protocol="tcp" to-port="20510"/>
+  <forward-port port="443" protocol="tcp" to-port="20511"/>
 </zone>
