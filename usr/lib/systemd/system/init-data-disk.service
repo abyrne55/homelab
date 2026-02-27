@@ -8,17 +8,15 @@ ConditionPathExists=!/dev/disk/by-label/data
 [Service]
 Type=oneshot
 NoNewPrivileges=yes
-# PrivateTmp intentionally omitted: it creates a private mount namespace which
-# interferes with the mount/umount of /dev/vdb — umount can't see the mount.
-ProtectKernelTunables=yes
-ProtectKernelModules=yes
-ProtectKernelLogs=yes
-ProtectControlGroups=yes
 LockPersonality=yes
 RestrictRealtime=yes
-ProtectHome=yes
-# PrivateDevices intentionally omitted: service formats /dev/vdb
-# ProtectSystem intentionally omitted: service mounts the newly formatted device
+# All mount-namespace-creating directives (PrivateTmp, PrivateDevices,
+# ProtectSystem, ProtectHome, ProtectKernelTunables, ProtectKernelModules,
+# ProtectKernelLogs, ProtectControlGroups) intentionally omitted: systemd
+# gives each ExecStart= step a fresh clone of the service namespace, so a
+# mount created in one step is invisible to subsequent steps. This service
+# must run mount and umount across separate ExecStart= lines and therefore
+# cannot use any directive that creates a private mount namespace.
 ExecStart=/usr/bin/mkdir -p /var/mnt/data /var/mnt/.data-init
 ExecStart=/usr/sbin/mkfs.ext4 -L data /dev/vdb
 ExecStart=/usr/bin/mount /dev/vdb /var/mnt/.data-init
