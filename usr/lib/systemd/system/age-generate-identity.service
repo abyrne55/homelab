@@ -17,7 +17,9 @@ ProtectSystem=strict
 ProtectHome=yes
 PrivateDevices=yes
 RestrictAddressFamilies=AF_UNIX
-ReadWritePaths=/var/lib/age
+# /var/lib/age doesn't exist at first boot (this service creates it), so we
+# can't use the specific subpath — bind-mount setup would fail at namespace setup.
+ReadWritePaths=/var/lib
 
 ExecStartPre=/usr/bin/install -d -m 0700 /var/lib/age
 ExecStart=/usr/bin/age-keygen -pq -o /var/lib/age/identity.txt

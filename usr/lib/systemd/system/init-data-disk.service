@@ -8,7 +8,8 @@ ConditionPathExists=!/dev/disk/by-label/data
 [Service]
 Type=oneshot
 NoNewPrivileges=yes
-PrivateTmp=yes
+# PrivateTmp intentionally omitted: it creates a private mount namespace which
+# interferes with the mount/umount of /dev/vdb — umount can't see the mount.
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectKernelLogs=yes
