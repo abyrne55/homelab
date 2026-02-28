@@ -49,7 +49,8 @@ Quick file-level index — consult this before exploring the repo.
 | caddy | 1051 | 20510, 20511 | 231072 | 20512 |
 | jellyfin | 1052 | 20520 | 296608 | 20521 |
 | qbittorrent | 1053 | 20530 | 362144 | 20531 |
-| **next slot** | **1054** | **20540** | **427680** | — |
+| radarr | 1054 | 20540 | 427680 | 20541 |
+| **next slot** | **1055** | **20550** | **493216** | — |
 
 **Containerfile `systemctl enable` line** — when adding a new *system* unit, append it here. Quadlets are auto-discovered by podman-quadlet and do not need to be listed.
 
@@ -167,6 +168,7 @@ Use `/add-quadlet [service-name]` for the full step-by-step checklist. The short
 | caddy | 1051 | 20510, 20511 | 8080 (HTTP), 8443 (HTTPS) | Yes — firewalld forwards 80→20510, 443→20511 |
 | jellyfin | 1052 | 20520 | 8096 | No — via Caddy only |
 | qbittorrent | 1053 | 20530 | 20530 | No — via Caddy only |
+| radarr | 1054 | 20540 | 7878 | No — via Caddy only |
 
 New system units (not quadlets) must also be appended to the `RUN systemctl enable` line in `Containerfile`.
 

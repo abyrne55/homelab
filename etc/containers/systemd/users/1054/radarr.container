@@ -1,0 +1,29 @@
+[Unit]
+Description=Radarr media management
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=lscr.io/linuxserver/radarr:6.0.4
+PublishPort=20540:7878
+Volume=/var/mnt/data/media:/media:Z
+Volume=/var/mnt/data/.radarr/config:/config:Z
+AutoUpdate=registry
+NoNewPrivileges=true
+# DropCapability=all intentionally omitted: linuxserver s6 init calls setgroups()
+# to switch from root to PUID/PGID, which requires CAP_SETGID inside the container
+HealthCmd=curl -f http://localhost:7878/
+HealthStartPeriod=30s
+HealthInterval=30s
+Notify=healthy
+LoadCredential=qbittorrent-webui-password:/run/systemd-age-creds.sock
+Environment=PUID=1054
+Environment=PGID=1054
+Environment=TZ=UTC
+
+[Service]
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
