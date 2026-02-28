@@ -24,6 +24,24 @@ RUN semodule -i /tmp/file1.cil /tmp/file2.cil && rm /tmp/file1.cil /tmp/file2.ci
 invocation in the Containerfile. Forgetting either means the policy doesn't get built into the
 image.
 
+## Available Tools
+
+The following tools are available on the homelab VM:
+
+| Tool | Availability | Purpose |
+|---|---|---|
+| `semodule` | ✓ Built-in | Install/manage SELinux policy modules |
+| `journalctl` | ✓ Built-in | Retrieve AVC denials from kernel audit logs |
+| `setenforce` | ✓ Built-in | Toggle global enforcing/permissive mode (no reboot) |
+| `ausearch` | ✗ Not installed | Alternative audit log search (selinux-policy-devel not in image) |
+| `seinfo` | ✗ Not installed | Query SELinux type information (selinux-policy-devel not in image) |
+| `semanage` | ✗ Not installed | Domain-level mode control (selinux-policy-devel not in image) |
+| `audit2allow` | ✗ Not installed | Generate policy from denials (reference only) |
+
+Use `journalctl` as the primary method to retrieve AVC denials. Use `setenforce` to toggle
+permissive mode for testing. The `seinfo` tool is nice-to-have but not critical — you can
+look up types via Fedora's SELinux policy documentation instead.
+
 ## CIL Syntax
 
 The fundamental rule form:
@@ -79,14 +97,24 @@ Allows systemd (`init_t`) to connect to the systemd-age-creds UNIX socket (`unco
 
 ### 1. Collect AVC denials
 
-Read from the VM's audit log:
+Read from the VM's kernel audit log using `journalctl`:
 
 ```bash
-vsh "sudo ausearch -m avc -ts recent 2>/dev/null || sudo journalctl -k --grep='avc:' -n 50"
+vsh "sudo journalctl -k --grep='avc:' -n 50"
 ```
 
-Tip: if multiple rules will be needed, boot in permissive mode first (`enforcing=0` kernel arg)
-to collect all denials in one pass, then write them all before switching back to enforcing.
+This retrieves the last 50 lines containing "avc:" from the kernel log. Increase `-n 50` if you
+need more history (e.g., `-n 100` for the last 100 matches).
+
+**Tip:** To collect multiple AVC denials at once without rebooting, toggle permissive mode:
+
+```bash
+vsh "sudo setenforce 0"    # switch to permissive mode
+# ... run your service/test, denials will be logged ...
+vsh "sudo setenforce 1"    # switch back to enforcing mode
+```
+
+Then review the collected denials and write all the CIL rules at once. No reboot needed.
 
 ### 2. Parse the denial
 
@@ -137,7 +165,7 @@ make await-ghcr vm-switch       # rolling upgrade if no /var/ changes
 make await-ghcr clean run-vm-from-ghcr
 
 # Check for remaining denials after the upgrade:
-vsh "sudo ausearch -m avc -ts recent 2>/dev/null | grep denied | head -20"
+vsh "sudo journalctl -k --grep='avc:.*denied' -n 20"
 ```
 
 ## Tips
@@ -148,7 +176,7 @@ vsh "sudo ausearch -m avc -ts recent 2>/dev/null | grep denied | head -20"
   `allow` rule with all permissions listed together.
 - **Multiple rules per file**: a single `.cil` file can contain many rules. Group by service or
   domain (e.g., all `container_t` rules together in one file).
-- **`audit2allow`** can translate denials to TE (Type Enforcement) syntax as a starting point,
-  but you'll need to convert to CIL manually. The CIL form is usually simpler.
 - **Unknown types**: if a type isn't recognized by `semodule`, it may not exist on the running
-  system. Use `seinfo -t | grep partial_name` on the VM to look it up.
+  system. Check Fedora's SELinux policy documentation or the AVC denial message itself for clues
+  about what type should be used. (The `seinfo` tool would help here but isn't installed in the
+  image.)
