@@ -21,7 +21,8 @@ HealthInterval=30s
 ReadOnly=true
 ReadOnlyTmpfs=true
 Volume=/var/lib/homelab-config/caddy:/etc/caddy:ro,z
-PublishPort=20510:20510
+PublishPort=20510:8080
+PublishPort=20511:8443
 
 [Install]
 WantedBy=default.target
