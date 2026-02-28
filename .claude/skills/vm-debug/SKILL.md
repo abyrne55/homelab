@@ -1,12 +1,23 @@
 ---
 name: vm-debug
-description: Diagnose and debug failures on the running homelab VM. Use this skill when a service isn't starting, a container is unhealthy, the VM behaves unexpectedly, or the user asks to investigate an error on the VM. Also invoke with /vm-debug [service-name or symptom].
+description: Diagnoses and debugs failures on the running homelab VM. Use this skill when a service isn't starting, a container is unhealthy, the VM behaves unexpectedly, or the user asks to investigate an error on the VM. Triggered via /vm-debug [service-name or symptom].
 argument-hint: [service-name or symptom]
 ---
 
 # VM Debug: $ARGUMENTS
 
 Work through these steps in order. Stop when you've identified the root cause.
+
+```text
+Triage: $ARGUMENTS
+- [ ] 1. Check for failed units
+- [ ] 2. Check service status and recent logs
+- [ ] 3. Check container health
+- [ ] 4. Check systemd journal for boot-time errors
+- [ ] 5. Check specific unit's full journal
+- [ ] 6. Inspect container directly
+- [ ] 7. Check credentials
+```
 
 ## 1. Check for any failed units
 

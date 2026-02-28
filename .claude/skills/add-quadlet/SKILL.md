@@ -1,12 +1,25 @@
 ---
 name: add-quadlet
-description: Add a new rootless quadlet service to the homelab stack. Use this skill whenever adding a new service, container, or quadlet to the homelab — even if the user just says "add X" or "set up X as a service". Covers the full checklist: sysusers, homedirs, linger, subids, quadlet file, Caddy routing, and allocation table update.
+description: Adds a new rootless quadlet service to the homelab stack. Use this skill whenever adding a new service, container, or quadlet to the homelab — even if the user just says "add X" or "set up X as a service". Covers the full checklist: sysusers, homedirs, linger, subids, quadlet file, Caddy routing, and allocation table update.
 argument-hint: [service-name]
 ---
 
 # Add Quadlet: $ARGUMENTS
 
 Read the service user allocations table in CLAUDE.md to pick the next available UID/port/subUID slot before starting.
+
+Copy this checklist and check off each step as you complete it:
+
+```text
+Add Quadlet: $ARGUMENTS
+- [ ] 1. sysusers.d entry
+- [ ] 2. homedirs tmpfiles entry
+- [ ] 3. linger tmpfiles entry
+- [ ] 4. subids tmpfiles entry
+- [ ] 5. .container quadlet file
+- [ ] 6. Caddy route in homelab-config
+- [ ] 7. Allocations table updated in CLAUDE.md
+```
 
 ## 1. `usr/lib/sysusers.d/<N>-<name>-user.conf`
 
@@ -17,7 +30,7 @@ u $ARGUMENTS <UID> "<Display Name>" /var/home/$ARGUMENTS /sbin/nologin
 m $ARGUMENTS systemd-age-creds-users
 ```
 
-### 2. `usr/lib/tmpfiles.d/quadlet-users-homedirs.conf`
+## 2. `usr/lib/tmpfiles.d/quadlet-users-homedirs.conf`
 
 Append the home directory and Podman subdirectory tree that rootless Podman requires:
 
@@ -30,7 +43,7 @@ d /var/home/$ARGUMENTS/.config 0755 $ARGUMENTS $ARGUMENTS - -
 d /var/home/$ARGUMENTS/.config/containers 0755 $ARGUMENTS $ARGUMENTS - -
 ```
 
-### 3. `usr/lib/tmpfiles.d/quadlet-users-linger.conf`
+## 3. `usr/lib/tmpfiles.d/quadlet-users-linger.conf`
 
 Append one line to enable linger (starts the user's services at boot without a login session):
 
@@ -38,11 +51,11 @@ Append one line to enable linger (starts the user's services at boot without a l
 f /var/lib/systemd/linger/$ARGUMENTS 0644 root root - -
 ```
 
-### 4. `usr/lib/tmpfiles.d/quadlet-users-subids.conf`
+## 4. `usr/lib/tmpfiles.d/quadlet-users-subids.conf`
 
 Append the new user's subUID/subGID range to **both** the `subuid` and `subgid` write directives. Each user gets 65536 IDs; start after the last allocated range end (see allocations table in CLAUDE.md).
 
-### 5. Create `etc/containers/systemd/users/<uid>/<name>.container`
+## 5. Create `etc/containers/systemd/users/<uid>/<name>.container`
 
 Podman quadlet format. Apply the baseline hardening directives from the `/hardening` skill.
 
@@ -53,7 +66,7 @@ For credential access, use the hardcoded `/run/` path — **not** `%t/`. In user
 LoadCredential=credential-name:/run/systemd-age-creds.sock
 ```
 
-### 6. Add a Caddy route (in homelab-config)
+## 6. Add a Caddy route (in homelab-config)
 
 In the private `homelab-config` repo, add a hostname-based reverse-proxy block to the `Caddyfile`:
 
@@ -65,7 +78,7 @@ $ARGUMENTS.yourdomain.example {
 
 Do **not** open the service port in `etc/firewalld/zones/public.xml` — all external HTTP/HTTPS flows through Caddy on ports 20510/20511 only.
 
-### 7. Update the allocations table in CLAUDE.md
+## 7. Update the allocations table in CLAUDE.md
 
 Update the service user allocations table to reflect the new user and advance the "next slot" row (UID, port, subUID range start).
 
