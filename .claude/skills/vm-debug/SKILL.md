@@ -80,10 +80,15 @@ vsh "sudo su - $ARGUMENTS -s /bin/sh -c 'XDG_RUNTIME_DIR=/run/user/\$(id -u) pod
 
 ## 7. Check credentials (if service uses age-encrypted secrets)
 
+Check that secrets were synced and the socket is decrypting correctly:
+
 ```bash
 vsh hl logs -s homelab-secrets-sync -n 30
+vsh "sudo journalctl -u systemd-age-creds.service --no-pager -n 30"
 vsh "ls /run/credentials/"
 ```
+
+The `systemd-age-creds.service` log shows each credential request (service name, UID, credential name) — use this to confirm whether the failing service ever successfully requested its credential, and whether decryption succeeded or failed. Note: `hl logs -s` cannot be used here because it appends `.service` to the unit name, breaking socket unit lookups.
 
 ---
 
