@@ -61,7 +61,6 @@ make build-vm              # Build qcow2 VM from local container
 make run-vm-from-ghcr      # Start QEMU VM from GHCR image (faster, recommended)
 make run-vm                # Start QEMU VM from local build
 make ssh-vm                # Open an interactive SSH session into VM
-make open-jellyfin         # Open Jellyfin web UI
 make stop-vm               # Stop running QEMU instance
 make reboot-vm             # Stop and restart VM
 make await-ghcr            # Wait for GitHub Actions to build current commit
@@ -134,11 +133,17 @@ Create `./etc/containers/systemd/users/<uid>/<name>.container` in the Podman qua
 
 **Port assignment scheme:** Host-published ports use the formula `2<last 3 digits of UID><index>`, e.g. UID 1051 → 20510, 20511, …; UID 1052 → 20520, 20521, …. This encodes the owning user into the port number and keeps all ports in the 20000–29999 range (below the Linux ephemeral port floor of 32768). Tinyproxy is an exception — it is not published to the host and is only reachable via container-internal DNS.
 
-| Service | UID | Host port | Container port |
-|---|---|---|---|
-| caddy | 1051 | 20510 | 20510 |
-| jellyfin | 1052 | 20520 | 8096 |
-| qbittorrent | 1053 | 20530 | 20530 |
+| Service | UID | Host port(s) | Container port(s) | Externally accessible |
+|---|---|---|---|---|
+| caddy | 1051 | 20510, 20511 | 8080 (HTTP), 8443 (HTTPS) | Yes — firewalld forwards 80→20510, 443→20511 |
+| jellyfin | 1052 | 20520 | 8096 | No — via Caddy only |
+| qbittorrent | 1053 | 20530 | 20530 | No — via Caddy only |
+
+**Adding a new service to the stack:**
+
+1. Create the quadlet (see above) with the service's assigned host port.
+2. Add a hostname-based route to the `Caddyfile` in the private `homelab-config` repo, pointing the new hostname to `host.containers.internal:<host-port>`.
+3. Do **not** open the service port in `firewalld` — all external HTTP/HTTPS access flows through Caddy (ports 20510/20511), not directly to service ports.
 
 ### Systemd Services
 
