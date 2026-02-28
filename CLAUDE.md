@@ -129,7 +129,35 @@ sudo systemctl --user -M $QUADLET_USERNAME@.host status $QUADLET_NAME.service
 
 ### Quadlets (preferred)
 
-Create `./etc/containers/systemd/users/<uid>/<name>.container` in the Podman quadlet format, where `<uid>` is the numeric UID of the service user (defined in `usr/lib/sysusers.d/`). If the quadlet requires a secret to be loaded from the homelab-secrets repo (separate), add `LoadCredential=credential-name:/run/systemd-age-creds.sock` to the `[Service]` section (note: use the hardcoded `/run/` path, not `%t/` — in user units `%t` expands to `/run/user/<uid>`, not `/run`)
+Each rootless quadlet runs under a dedicated system user. Adding a new one requires updates to four files before creating the quadlet itself:
+
+1. **`usr/lib/sysusers.d/<N>-<name>-user.conf`** — define the user with a fixed UID and home directory. Add it to the `systemd-age-creds-users` group if the service needs credentials:
+
+   ```text
+   u myservice 1054 "My service" /var/home/myservice /sbin/nologin
+   m myservice systemd-age-creds-users
+   ```
+
+2. **`usr/lib/tmpfiles.d/quadlet-users-homedirs.conf`** — create the home directory and the Podman subdirectory tree that rootless Podman requires:
+
+   ```text
+   d /var/home/myservice 0750 myservice myservice - -
+   d /var/home/myservice/.local 0755 myservice myservice - -
+   d /var/home/myservice/.local/share 0755 myservice myservice - -
+   d /var/home/myservice/.local/share/containers 0755 myservice myservice - -
+   d /var/home/myservice/.config 0755 myservice myservice - -
+   d /var/home/myservice/.config/containers 0755 myservice myservice - -
+   ```
+
+3. **`usr/lib/tmpfiles.d/quadlet-users-linger.conf`** — enable linger so systemd starts the user's services at boot without a login:
+
+   ```text
+   f /var/lib/systemd/linger/myservice 0644 root root - -
+   ```
+
+4. **`usr/lib/tmpfiles.d/quadlet-users-subids.conf`** — append the new user's subUID/subGID range (each user gets 65536 IDs; start after the last allocated range) to both the `subuid` and `subgid` write directives.
+
+Then create `./etc/containers/systemd/users/<uid>/<name>.container` in the Podman quadlet format. If the quadlet requires a secret, add `LoadCredential=credential-name:/run/systemd-age-creds.sock` to the `[Service]` section (use the hardcoded `/run/` path, not `%t/` — in user units `%t` expands to `/run/user/<uid>`, not `/run`)
 
 **Port assignment scheme:** Host-published ports use the formula `2<last 3 digits of UID><index>`, e.g. UID 1051 → 20510, 20511, …; UID 1052 → 20520, 20521, …. This encodes the owning user into the port number and keeps all ports in the 20000–29999 range (below the Linux ephemeral port floor of 32768). Tinyproxy is an exception — it is not published to the host and is only reachable via container-internal DNS.
 
@@ -144,6 +172,72 @@ Create `./etc/containers/systemd/users/<uid>/<name>.container` in the Podman qua
 1. Create the quadlet (see above) with the service's assigned host port.
 2. Add a hostname-based route to the `Caddyfile` in the private `homelab-config` repo, pointing the new hostname to `host.containers.internal:<host-port>`.
 3. Do **not** open the service port in `firewalld` — all external HTTP/HTTPS access flows through Caddy (ports 20510/20511), not directly to service ports.
+
+## Hardening
+
+Always comment when intentionally omitting a hardening directive so future readers know it was a conscious choice, not an oversight.
+
+### Quadlet containers
+
+**Baseline — apply to every quadlet:**
+
+```ini
+NoNewPrivileges=true      # prevents privilege escalation inside the container
+DropCapability=all        # drops all Linux capabilities
+AutoUpdate=registry       # keep images up to date automatically
+
+HealthCmd=<command>       # health check command appropriate for the service
+HealthStartPeriod=30s
+HealthInterval=30s
+```
+
+**Good to add if the image supports it:**
+
+```ini
+ReadOnly=true             # container root filesystem is read-only
+ReadOnlyTmpfs=true        # /tmp is also read-only
+Notify=healthy            # systemd waits for healthy state, not just process start
+```
+
+**Also consider:**
+
+- `ConditionPathExists=` / `ConditionPathIsDirectory=` in `[Unit]` — guard against starting without required config (e.g., a missing Caddyfile)
+- `ExecStartPre=/usr/bin/cosign verify ...` in `[Service]` — verify image provenance before starting (used by caddy and tinyproxy, which use custom images built via GitHub Actions)
+
+**Known exceptions:**
+
+- `DropCapability=all` must be omitted for images that need capabilities inside the container (e.g., gluetun needs `NET_ADMIN`/`NET_RAW` for WireGuard; linuxserver s6-based images call `setgroups()` and need `CAP_SETGID`). Use `AddCapability=` to grant only what's needed and document why.
+
+### Systemd system services
+
+**Baseline — apply to every system service:**
+
+```ini
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+LockPersonality=yes
+RestrictRealtime=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/...   # explicit allowlist of paths the service actually writes to
+```
+
+**Good to add if the service allows it:**
+
+```ini
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6  # or just AF_UNIX for network-free services
+PrivateDevices=yes        # no access to physical devices
+PrivateNetwork=yes        # fully isolated network namespace (only for services with no network needs)
+```
+
+**Known exceptions:**
+
+- All mount-namespace-creating directives (`PrivateTmp`, `ProtectSystem`, `ProtectHome`, `ProtectKernel*`, `ProtectControlGroups`, `PrivateDevices`) must be omitted for services that run `mount`/`umount` across multiple `ExecStart=` lines — systemd clones a fresh mount namespace for each step, so mounts from one step are invisible to the next (see `init-data-disk.service`).
+- `NoNewPrivileges=yes` (and any directive that implies it: `ProtectKernelTunables`, `ProtectKernelModules`, `ProtectKernelLogs`, `RestrictRealtime`, `RestrictAddressFamilies`, `PrivateDevices`) must be omitted for services that invoke binaries with SELinux domain transitions — `NO_NEW_PRIVS` blocks all transitions to non-bounded domains (see `ssh-generate-identity.service`).
 
 ### Systemd Services
 
