@@ -14,7 +14,7 @@ DETACH ?= true
 SSH_PORT ?= 2222
 
 # Phony targets (convenience aliases and non-file targets)
-.PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm open-jellyfin vm-switch await-ghcr stop-vm reboot-vm clean verify-systemd
+.PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm vm-switch await-ghcr stop-vm reboot-vm clean verify-systemd
 
 # Default target
 .DEFAULT_GOAL := build-container
@@ -218,14 +218,6 @@ ssh-vm: _check-vm-running
 		sleep 1; \
 	done
 	ssh -i $(CORE_SSH_KEY) -p $(SSH_PORT) $(SSH_OPTS) core@$(SSH_HOST) || true
-
-# Open Jellyfin web UI in default browser
-open-jellyfin: _check-vm-running
-	@if [ "$$(uname)" = "Darwin" ]; then \
-		open "http://localhost:$(JELLYFIN_PORT)"; \
-	else \
-		xdg-open "http://localhost:$(JELLYFIN_PORT)"; \
-	fi
 
 # Switch VM to container image for current git branch
 vm-switch: _check-vm-running

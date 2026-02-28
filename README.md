@@ -15,11 +15,11 @@ This repo builds a [bootc](https://containers.github.io/bootc/)-based system ima
 
 ## Included Services
 
-- **Caddy** - Reverse proxy accessible at `http://localhost:80`. Runs as a rootless Podman quadlet under a dedicated `caddy` user (UID 1051). Forwards traffic to Jellyfin; firewalld redirects port 80 → Caddy's internal port 20510. Config (`Caddyfile`) lives in the private `homelab-config` repo.
-- **Jellyfin** - Media server accessible at `http://localhost:20520`. Runs as a rootless Podman quadlet under a dedicated `jellyfin` user (UID 1052). State and media live on a persistent data disk at `/var/mnt/data`.
+- **Caddy** - Reverse proxy and gateway for all HTTP/HTTPS services. Runs as a rootless Podman quadlet under a dedicated `caddy` user (UID 1051). Listens on internal ports 8080 (HTTP) and 8443 (HTTPS), published to host ports 20510 and 20511. Firewalld forwards external 80 → 20510 and 443 → 20511, so all web traffic enters through Caddy. Routes requests to backend services by hostname. Config (`Caddyfile`) lives in the private `homelab-config` repo.
+- **Jellyfin** - Media server. Runs as a rootless Podman quadlet under a dedicated `jellyfin` user (UID 1052). Not directly exposed externally — accessed via Caddy by hostname. State and media live on a persistent data disk at `/var/mnt/data`.
 - **Tinyproxy** - Forward proxy (jellynet isolation). Allows Jellyfin to fetch metadata/artwork from approved external domains while keeping it off the main network. Config and domain allowlist live in the private `homelab-config` repo.
 - **Jellarr** - Declarative Jellyfin configuration manager. Bootstraps an API key into Jellyfin's SQLite database on first boot, then applies `config.yml` (users, libraries, startup settings) via the Jellyfin API. Re-runs daily via a systemd timer. Config lives in the private `homelab-config` repo.
-- **qBittorrent** - Torrent client accessible at `http://localhost:20530`. Runs as a rootless Podman quadlet under a dedicated `qbittorrent` user (UID 1053). All traffic is routed through Gluetun. State and downloads live on the data disk at `/var/mnt/data`.
+- **qBittorrent** - Torrent client. Runs as a rootless Podman quadlet under a dedicated `qbittorrent` user (UID 1053). Not directly exposed externally — accessed via Caddy by hostname. All traffic is routed through Gluetun. State and downloads live on the data disk at `/var/mnt/data`.
   - **Gluetun** - Mullvad WireGuard VPN client. Runs alongside qBittorrent in a shared pod so that all torrent traffic is tunnelled through the VPN. WireGuard credentials are loaded at runtime from `homelab-secrets` via `systemd-age-creds`.
 
 ## Three-Repository Pattern
@@ -70,7 +70,6 @@ Pre-generated secrets can be injected into the VM via an optional ISO image:
 | `run-vm` | Start the VM in QEMU (optionally with ./secrets/ injected; see above) |
 | `run-vm-from-ghcr` | Build from GHCR and start the VM in QEMU |
 | `ssh-vm` | Open an interactive SSH session into the running VM |
-| `open-jellyfin` | Open Jellyfin in browser (VM must be running) |
 | `vm-switch` | Switch running VM to the container image for the current git branch |
 | `await-ghcr` | Wait for GitHub Actions to finish building the current commit |
 | `reboot-vm` | Reboot the running VM |
@@ -103,16 +102,15 @@ hl help                              # full usage
 | `IMAGE_NAME` | `homelab` | Container image name |
 | `TAG` | `latest` | Container image tag |
 | `SSH_PORT` | `2222` | Host port forwarded to VM SSH |
-| `HTTP_PORT` | `20510` | Host port forwarded to VM port 20510 (Caddy) |
-| `JELLYFIN_PORT` | `20520` | Host port forwarded to Jellyfin web UI |
-| `CADDY_PORT` | `80` | Host port forwarded to Caddy reverse proxy |
 | `DATA_DISK_SIZE` | `3G` | Size of the persistent data disk |
 | `DETACH` | `true` | Run QEMU in background (`false` for foreground) |
+
+QEMU always forwards host ports 80 and 443 to the VM (which Caddy listens on via firewalld forwarding). These are not configurable.
 
 Example:
 
 ```bash
-make run-vm HTTP_PORT=8081 DETACH=false
+make run-vm DETACH=false
 ```
 
 ## Dependencies
