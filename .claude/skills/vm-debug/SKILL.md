@@ -57,21 +57,25 @@ vsh "sudo journalctl -b -p err --no-pager | tail -40"
 
 ## 5. Check a specific unit's full journal
 
+`--user-unit` doesn't work on this system; `hl logs` uses journal field matching instead:
+
 ```bash
-vsh "sudo journalctl -b -u $ARGUMENTS --no-pager | tail -60"
+vsh hl logs $ARGUMENTS -n 200
 ```
 
-For user units:
+For system units:
 
 ```bash
-vsh "sudo journalctl -b --user-unit $ARGUMENTS --no-pager | tail -60"
+vsh hl logs -s $ARGUMENTS -n 200
 ```
 
 ## 6. Inspect a container directly
 
+`machinectl` is not installed. Use `hl ps` to list containers, then `sudo su -` to run podman commands as the service user:
+
 ```bash
-vsh "sudo machinectl shell $ARGUMENTS@.host /usr/bin/podman ps -a"
-vsh "sudo machinectl shell $ARGUMENTS@.host /usr/bin/podman logs <container-name>"
+vsh hl ps -u $ARGUMENTS
+vsh "sudo su - $ARGUMENTS -s /bin/sh -c 'XDG_RUNTIME_DIR=/run/user/\$(id -u) podman logs <container-name>'"
 ```
 
 ## 7. Check credentials (if service uses age-encrypted secrets)
