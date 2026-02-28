@@ -23,6 +23,36 @@ Note that none of the software referenced/defined in this repo is meant to be ru
 2. `homelab-config` (private) - Identity-bearing application config (synced at runtime by `homelab-config-sync.service`)
 3. `homelab-secrets` (private) - `age`-encrypted credentials (synced at runtime by `homelab-secrets-sync.service`)
 
+## Codebase Map
+
+Quick file-level index — consult this before exploring the repo.
+
+| File / Directory | What it controls |
+|---|---|
+| `Containerfile` | OS image definition: packages, file copies, SELinux policy, `systemctl enable` line |
+| `Makefile` | All dev operations: build, QEMU run, SSH, vm-switch, await-ghcr |
+| `etc/containers/systemd/users/<uid>/` | Rootless quadlet definitions, one directory per service user |
+| `etc/firewalld/zones/public.xml` | Firewall rules — only Caddy's ports (20510, 20511) should be open |
+| `usr/lib/systemd/system/` | System-level units (boot orchestration, secrets, git sync) |
+| `usr/lib/sysusers.d/` | User/group definitions — one file per user, named `NN-username-user.conf` |
+| `usr/lib/tmpfiles.d/quadlet-users-homedirs.conf` | Home + Podman directory trees for all quadlet users |
+| `usr/lib/tmpfiles.d/quadlet-users-linger.conf` | Linger entries (one per quadlet user) |
+| `usr/lib/tmpfiles.d/quadlet-users-subids.conf` | subUID/subGID ranges for rootless Podman |
+| `usr/lib/tmpfiles.d/` (other files) | Data disk mount points, git known-hosts, homelab-config dir |
+| `usr/local/bin/` | Scripts baked into the image (`hl`, `secrets-inject`, `qbittorrent-configure`, …) |
+| `selinux/` | Custom SELinux policy modules (`.cil` files) |
+
+**Current service user allocations** (update this table when adding a new user):
+
+| User | UID | Host port(s) | subUID range start | Next port index |
+|---|---|---|---|---|
+| caddy | 1051 | 20510, 20511 | 231072 | 20512 |
+| jellyfin | 1052 | 20520 | 296608 | 20521 |
+| qbittorrent | 1053 | 20530 | 362144 | 20531 |
+| **next slot** | **1054** | **20540** | **427680** | — |
+
+**Containerfile `systemctl enable` line** — when adding a new *system* unit, append it here. Quadlets are auto-discovered by podman-quadlet and do not need to be listed.
+
 ## Key Directories
 
 Two top-level directories mirror their target filesystem counterparts, with a deliberate split:
