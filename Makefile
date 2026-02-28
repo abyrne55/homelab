@@ -12,10 +12,6 @@ DATA_DISK_SIZE ?= 3G
 QEMU_BIOS ?= $(shell brew --prefix qemu)/share/qemu/edk2-aarch64-code.fd
 DETACH ?= true
 SSH_PORT ?= 2222
-HTTP_PORT ?= 20510
-JELLYFIN_PORT ?= 20520
-CADDY_PORT ?= 80
-QBITTORRENT_PORT ?= 20530
 
 # Phony targets (convenience aliases and non-file targets)
 .PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm open-jellyfin vm-switch await-ghcr stop-vm reboot-vm clean verify-systemd
@@ -182,7 +178,7 @@ ifeq ($(DETACH),true)
 		-serial file:$(BUILD_DIR)/serial.log \
 		-display none \
 		-machine virt \
-		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::$(HTTP_PORT)-:20510,hostfwd=tcp::$(JELLYFIN_PORT)-:20520,hostfwd=tcp::$(CADDY_PORT)-:80,hostfwd=tcp::$(QBITTORRENT_PORT)-:20530 \
+		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::80-:80,hostfwd=tcp::443-:443 \
 		-drive if=virtio,file=$(BUILD_DIR)/qcow2/disk.qcow2,snapshot=on \
 		-drive if=virtio,file=$(BUILD_DIR)/data.qcow2 \
 		$(shell [ -s $(BUILD_DIR)/secrets.iso ] && echo "-drive file=$(BUILD_DIR)/secrets.iso,format=raw,if=virtio,readonly=on,media=cdrom,id=secrets") & disown
@@ -197,7 +193,7 @@ else
 		-serial stdio \
 		-display none \
 		-machine virt \
-		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::$(HTTP_PORT)-:20510,hostfwd=tcp::$(JELLYFIN_PORT)-:20520,hostfwd=tcp::$(CADDY_PORT)-:80,hostfwd=tcp::$(QBITTORRENT_PORT)-:20530 \
+		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::80-:80,hostfwd=tcp::443-:443 \
 		-drive if=virtio,file=$(BUILD_DIR)/qcow2/disk.qcow2,snapshot=on \
 		-drive if=virtio,file=$(BUILD_DIR)/data.qcow2 \
 		$(shell [ -s $(BUILD_DIR)/secrets.iso ] && echo "-drive file=$(BUILD_DIR)/secrets.iso,format=raw,if=virtio,readonly=on,media=cdrom,id=secrets")
