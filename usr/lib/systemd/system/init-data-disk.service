@@ -39,9 +39,13 @@ ExecStart=/usr/bin/mkdir -p \
   /var/mnt/.data-init/usenet/complete/other \
   /var/mnt/.data-init/.jellyfin/config \
   /var/mnt/.data-init/.jellyfin/cache \
-  /var/mnt/.data-init/.qbittorrent/config
-ExecStart=/usr/bin/chown -R 1052:1052 /var/mnt/.data-init/.jellyfin /var/mnt/.data-init/media
+  /var/mnt/.data-init/.qbittorrent/config \
+  /var/mnt/.data-init/.radarr/config
+ExecStart=/usr/bin/chown -R 1052:1052 /var/mnt/.data-init/.jellyfin
 ExecStart=/usr/bin/chown -R 1053:1053 /var/mnt/.data-init/.qbittorrent /var/mnt/.data-init/torrents
+# media is owned by radarr (rw); jellyfin gets read access via world-readable 755 permissions
+# and mounts it :ro in the container anyway
+ExecStart=/usr/bin/chown -R 1054:1054 /var/mnt/.data-init/.radarr /var/mnt/.data-init/media
 ExecStart=/usr/bin/umount /var/mnt/.data-init
 ExecStart=/usr/bin/rmdir /var/mnt/.data-init
 RemainAfterExit=yes
