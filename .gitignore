@@ -31,6 +31,9 @@ docs/
 # Editor
 .cache
 
+# Claude Code local settings (personal, not shared)
+.claude/settings.local.json
+
 # Binaries/Disk Images
 *.xz
 *.ign
