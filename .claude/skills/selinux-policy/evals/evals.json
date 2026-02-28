@@ -1,0 +1,44 @@
+{
+  "evals": [
+    {
+      "expectations": [
+        "The CIL rule uses 'container_t' as the source type",
+        "The CIL rule uses 'var_run_t' as the target type",
+        "The CIL rule grants 'name_bind' permission on 'sock_file' class",
+        "The output includes a comment block explaining the denial or purpose of the rule",
+        "The output mentions updating the Containerfile (COPY and semodule lines)"
+      ],
+      "expected_output": "A .cil file with the correct (allow container_t var_run_t (sock_file (name_bind))) rule, with a comment block explaining the denial, and a reminder to update the Containerfile.",
+      "files": [],
+      "id": 1,
+      "prompt": "I'm getting this AVC denial in my homelab VM and need a CIL policy to fix it:\n\navc:  denied  { name_bind } for  pid=892 comm=\"caddy\" path=\"/run/caddy.sock\"\n  scontext=system_u:system_r:container_t:s0:c1,c2\n  tcontext=system_u:object_r:var_run_t:s0 tclass=sock_file permissive=0\n\nPlease write the CIL policy file for this."
+    },
+    {
+      "expectations": [
+        "The CIL rule uses 'container_t' as the source type",
+        "The CIL rule uses 'dns_port_t' as the target type",
+        "The CIL rule grants 'name_bind' permission on 'udp_socket' class",
+        "The output suggests a descriptive filename for the .cil file (e.g. dns_resolver.cil or dnsmasq.cil)",
+        "The output includes a comment block referencing the AVC denial",
+        "The output reminds the user to update the Containerfile COPY and semodule lines"
+      ],
+      "expected_output": "A new selinux/dns_resolver.cil (or similar name) with (allow container_t dns_port_t (udp_socket (name_bind))), comment block, and a note about updating the Containerfile.",
+      "files": [],
+      "id": 2,
+      "prompt": "I'm adding a new quadlet for a dnsmasq DNS resolver (uid 1054) and getting this AVC denial when it tries to bind to UDP port 53:\n\navc:  denied  { name_bind } for  pid=445 comm=\"dnsmasq\"\n  scontext=system_u:system_r:container_t:s0\n  tcontext=system_u:object_r:dns_port_t:s0 tclass=udp_socket permissive=0\n\nWhat CIL file should I create in selinux/ to allow this?"
+    },
+    {
+      "expectations": [
+        "The response identifies the Containerfile as the file to update",
+        "The response mentions updating the COPY line to include the new .cil filename",
+        "The response mentions updating the semodule -i invocation to include the new filename",
+        "The response explains both the COPY and semodule lines need to stay in sync"
+      ],
+      "expected_output": "Clear instructions to update the Containerfile: add the new filename to the COPY line and to the semodule -i invocation. Both changes are required.",
+      "files": [],
+      "id": 3,
+      "prompt": "I've just created selinux/dns_resolver.cil for my new dnsmasq container. The file contains the right CIL rule. What else do I need to update in the repo to make this policy actually take effect in the built image?"
+    }
+  ],
+  "skill_name": "selinux-policy"
+}
