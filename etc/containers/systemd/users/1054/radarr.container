@@ -16,7 +16,8 @@ HealthCmd=curl -f http://localhost:7878/
 HealthStartPeriod=30s
 HealthInterval=30s
 Notify=healthy
-LoadCredential=qbittorrent-webui-password:/run/systemd-age-creds.sock
+# Mount host credentials directory into the container so credential file paths resolve
+Volume=%d:/run/credentials:ro,z
 Environment=PUID=1054
 Environment=PGID=1054
 Environment=TZ=UTC
@@ -24,6 +25,7 @@ Environment=TZ=UTC
 [Service]
 Restart=on-failure
 RestartSec=5
+LoadCredential=qbittorrent-webui-password:/run/systemd-age-creds.sock
 
 [Install]
 WantedBy=default.target
