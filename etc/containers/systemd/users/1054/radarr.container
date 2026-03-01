@@ -19,7 +19,8 @@ Notify=healthy
 # Mount host credentials directory into the container so credential file paths resolve
 Volume=%d:/run/credentials:ro,z
 Environment=PUID=1054
-Environment=PGID=1054
+Environment=PGID=2000
+Environment=UMASK=002
 Environment=TZ=UTC
 
 [Service]

@@ -42,10 +42,15 @@ ExecStart=/usr/bin/mkdir -p \
   /var/mnt/.data-init/.qbittorrent/config \
   /var/mnt/.data-init/.radarr/config
 ExecStart=/usr/bin/chown -R 1052:1052 /var/mnt/.data-init/.jellyfin
-ExecStart=/usr/bin/chown -R 1053:1053 /var/mnt/.data-init/.qbittorrent /var/mnt/.data-init/content/torrents
-# content/media is owned by radarr (rw); jellyfin gets read access via world-readable 755 permissions
-# and mounts it :ro in the container anyway
-ExecStart=/usr/bin/chown -R 1054:1054 /var/mnt/.data-init/.radarr /var/mnt/.data-init/content/media
+ExecStart=/usr/bin/chown -R 1053:1053 /var/mnt/.data-init/.qbittorrent
+ExecStart=/usr/bin/chown -R 1054:1054 /var/mnt/.data-init/.radarr
+# Set content-writers (GID 2000) as group for entire content tree
+ExecStart=/usr/bin/chown -R :2000 /var/mnt/.data-init/content
+# Override UID for service-specific subdirs (group stays 2000)
+ExecStart=/usr/bin/chown -R 1053 /var/mnt/.data-init/content/torrents
+ExecStart=/usr/bin/chown -R 1054 /var/mnt/.data-init/content/media
+# setgid (2) ensures new subdirs inherit GID 2000; 775 gives group rw
+ExecStart=/usr/bin/chmod -R 2775 /var/mnt/.data-init/content
 ExecStart=/usr/bin/umount /var/mnt/.data-init
 ExecStart=/usr/bin/rmdir /var/mnt/.data-init
 RemainAfterExit=yes
