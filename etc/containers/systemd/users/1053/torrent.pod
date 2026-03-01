@@ -4,7 +4,6 @@ Description=Torrent stack pod (Gluetun VPN + qBittorrent)
 [Pod]
 # WebUI port published on the pod, not on individual containers
 PublishPort=20530:20530
-UserNS=keep-id:uid=1053,gid=2000
 
 [Install]
 WantedBy=default.target
