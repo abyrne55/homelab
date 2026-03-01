@@ -13,10 +13,9 @@ Environment=PGID=2000
 Environment=UMASK=002
 # Map container GID 2000 → host GID 2000 (content-writers) for cross-UID hardlinks.
 # Split around GID 2000 to keep total at 65536; requires qbittorrent:2000:1 in /etc/subgid.
-GIDMap=0:1053:1
-GIDMap=1:362144:1999
+GIDMap=0:362144:2000
 GIDMap=2000:2000:1
-GIDMap=2001:364143:63535
+GIDMap=2001:364144:63535
 Environment=TZ=UTC
 Environment=WEBUI_PORT=20530
 Volume=/var/mnt/data/.qbittorrent/config:/config:Z

@@ -23,8 +23,7 @@ Environment=PGID=2000
 Environment=UMASK=002
 # Map container GID 2000 → host GID 2000 (content-writers) for cross-UID hardlinks.
 # Split around GID 2000 to keep total at 65536; requires radarr:2000:1 in /etc/subgid.
-GIDMap=0:1054:1
-GIDMap=1:427680:1999
+GIDMap=0:427680:2000
 GIDMap=2000:2000:1
 GIDMap=2001:429680:63535
 Environment=TZ=UTC
