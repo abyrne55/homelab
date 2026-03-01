@@ -6,7 +6,7 @@ Wants=network-online.target
 [Container]
 Image=lscr.io/linuxserver/radarr:6.0.4
 PublishPort=20540:7878
-Volume=/var/mnt/data/media:/media:rw,Z
+Volume=/var/mnt/data/content:/content:rw,Z
 Volume=/var/mnt/data/.radarr/config:/config:Z
 AutoUpdate=registry
 NoNewPrivileges=true

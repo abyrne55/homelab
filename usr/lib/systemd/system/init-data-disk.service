@@ -21,31 +21,31 @@ ExecStart=/usr/bin/mkdir -p /var/mnt/data /var/mnt/.data-init
 ExecStart=/usr/sbin/mkfs.ext4 -L data /dev/vdb
 ExecStart=/usr/bin/mount /dev/vdb /var/mnt/.data-init
 ExecStart=/usr/bin/mkdir -p \
-  /var/mnt/.data-init/media/movies \
-  /var/mnt/.data-init/media/tv \
-  /var/mnt/.data-init/media/music \
-  /var/mnt/.data-init/media/books \
-  /var/mnt/.data-init/media/other \
-  /var/mnt/.data-init/torrents/movies \
-  /var/mnt/.data-init/torrents/tv \
-  /var/mnt/.data-init/torrents/music \
-  /var/mnt/.data-init/torrents/books \
-  /var/mnt/.data-init/torrents/other \
-  /var/mnt/.data-init/usenet/incomplete \
-  /var/mnt/.data-init/usenet/complete/movies \
-  /var/mnt/.data-init/usenet/complete/tv \
-  /var/mnt/.data-init/usenet/complete/music \
-  /var/mnt/.data-init/usenet/complete/books \
-  /var/mnt/.data-init/usenet/complete/other \
+  /var/mnt/.data-init/content/media/movies \
+  /var/mnt/.data-init/content/media/tv \
+  /var/mnt/.data-init/content/media/music \
+  /var/mnt/.data-init/content/media/books \
+  /var/mnt/.data-init/content/media/other \
+  /var/mnt/.data-init/content/torrents/movies \
+  /var/mnt/.data-init/content/torrents/tv \
+  /var/mnt/.data-init/content/torrents/music \
+  /var/mnt/.data-init/content/torrents/books \
+  /var/mnt/.data-init/content/torrents/other \
+  /var/mnt/.data-init/content/usenet/incomplete \
+  /var/mnt/.data-init/content/usenet/complete/movies \
+  /var/mnt/.data-init/content/usenet/complete/tv \
+  /var/mnt/.data-init/content/usenet/complete/music \
+  /var/mnt/.data-init/content/usenet/complete/books \
+  /var/mnt/.data-init/content/usenet/complete/other \
   /var/mnt/.data-init/.jellyfin/config \
   /var/mnt/.data-init/.jellyfin/cache \
   /var/mnt/.data-init/.qbittorrent/config \
   /var/mnt/.data-init/.radarr/config
 ExecStart=/usr/bin/chown -R 1052:1052 /var/mnt/.data-init/.jellyfin
-ExecStart=/usr/bin/chown -R 1053:1053 /var/mnt/.data-init/.qbittorrent /var/mnt/.data-init/torrents
-# media is owned by radarr (rw); jellyfin gets read access via world-readable 755 permissions
+ExecStart=/usr/bin/chown -R 1053:1053 /var/mnt/.data-init/.qbittorrent /var/mnt/.data-init/content/torrents
+# content/media is owned by radarr (rw); jellyfin gets read access via world-readable 755 permissions
 # and mounts it :ro in the container anyway
-ExecStart=/usr/bin/chown -R 1054:1054 /var/mnt/.data-init/.radarr /var/mnt/.data-init/media
+ExecStart=/usr/bin/chown -R 1054:1054 /var/mnt/.data-init/.radarr /var/mnt/.data-init/content/media
 ExecStart=/usr/bin/umount /var/mnt/.data-init
 ExecStart=/usr/bin/rmdir /var/mnt/.data-init
 RemainAfterExit=yes
