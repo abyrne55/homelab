@@ -19,10 +19,11 @@ Notify=healthy
 # Mount host credentials directory into the container so credential file paths resolve
 Volume=%d:/run/credentials:ro,z
 Environment=PUID=1054
-Environment=PGID=2000
+# PGID=1: in the rootless user namespace, container GID 1 maps to host GID 2000 (content-writers)
+# via the radarr:2000:1 subgid entry. This gives the app process host effective GID 2000,
+# satisfying fs.protected_hardlinks for files owned by qbittorrent with group content-writers.
+Environment=PGID=1
 Environment=UMASK=002
-GroupAdd=keep-groups
-UserNS=keep-id:uid=1054,gid=2000
 Environment=TZ=UTC
 
 [Service]
