@@ -1,12 +1,12 @@
 ---
-name: vm-debug
-description: Diagnoses and debugs failures on the running homelab VM. Use this skill when a service isn't starting, a container is unhealthy, the VM behaves unexpectedly, or the user asks to investigate an error on the VM. Triggered via /vm-debug [service-name or symptom].
+name: test-vm
+description: Tests changes using the running homelab VM. Use this skill when testing a new service or troubleshooting something (e.g., a service isn't starting, a container is unhealthy, the VM behaves unexpectedly, or the user asks to investigate an error on the VM). Triggered via /test-vm [service-name or symptom].
 argument-hint: [service-name or symptom]
 ---
 
-# VM Debug: $ARGUMENTS
+# Test VM: $ARGUMENTS
 
-Work through these steps in order. Stop when you've identified the root cause.
+Work through these steps in order. Stop when you've confirmed the target service is working or if you've identified the root cause of any issues.
 
 ```text
 Triage: $ARGUMENTS
@@ -71,10 +71,13 @@ vsh hl logs -s $ARGUMENTS -n 200
 
 ## 6. Inspect a container directly
 
-`machinectl` is not installed. Use `hl ps` to list containers, then `sudo su -` to run podman commands as the service user:
+`machinectl` is not installed. Use `hl ps` to list containers, then `hl sudo` to exec into one:
 
 ```bash
 vsh hl ps -u $ARGUMENTS
+vsh "hl sudo $ARGUMENTS -- <cmd>"                          # exec into container
+vsh "hl sudo -u $ARGUMENTS <container> -- <cmd>"           # exec (explicit user)
+# For podman commands other than exec (e.g. logs, inspect):
 vsh "sudo su - $ARGUMENTS -s /bin/sh -c 'XDG_RUNTIME_DIR=/run/user/\$(id -u) podman logs <container-name>'"
 ```
 
@@ -101,7 +104,7 @@ ssh -i ./secrets/core/id_ed25519 -p 2222 \
   -o UserKnownHostsFile=/dev/null \
   -o IdentitiesOnly=yes \
   -o PreferredAuthentications=publickey \
-  core@127.0.0.1 -- "<your command here>" || true
+  core@127.0.0.1 -- "<your command here>"
 ```
 
 Append `|| true` when running parallel tool calls to prevent a non-zero exit from cancelling sibling calls.

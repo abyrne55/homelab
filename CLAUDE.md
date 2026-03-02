@@ -49,7 +49,8 @@ Quick file-level index — consult this before exploring the repo.
 | caddy | 1051 | 20510, 20511 | 231072 | 20512 |
 | jellyfin | 1052 | 20520 | 296608 | 20521 |
 | qbittorrent | 1053 | 20530 | 362144 | 20531 |
-| **next slot** | **1054** | **20540** | **427680** | — |
+| radarr | 1054 | 20540 | 427680 | 20541 |
+| **next slot** | **1055** | **20550** | **493216** | — |
 
 **Containerfile `systemctl enable` line** — when adding a new *system* unit, append it here. Quadlets are auto-discovered by podman-quadlet and do not need to be listed.
 
@@ -66,7 +67,7 @@ Two top-level directories mirror their target filesystem counterparts, with a de
   - `usr/lib/sysusers.d/` - User/group definitions created at boot
   - `usr/lib/tmpfiles.d/` - Temporary file/directory creation rules
   - `usr/local/bin/` - OS-level CLI tools baked into the image (e.g., `hl`, `qbittorrent-configure`)
-- `selinux/` - SELinux policy for systemd-age-creds socket access
+- `selinux/` - Custom SELinux policy modules (`.cil` files) for container and systemd permissions
 - `build/` - Generated artifacts (.gitignored and deleted upon `make clean`)
 - `secrets/` - Pre-generated keys for injection into QEMU VM (.gitignored)
   - These secrets are injected into the VM during development for convenience. On the Raspberry Pi, unique credentials will be generated on first boot
@@ -91,12 +92,13 @@ make build-vm-from-ghcr    # Build qcow2 VM from GHCR (faster, recommended)
 make build-vm              # Build qcow2 VM from local container
 make run-vm-from-ghcr      # Start QEMU VM from GHCR image (faster, recommended)
 make run-vm                # Start QEMU VM from local build
-make ssh-vm                # Open an interactive SSH session into VM
 make stop-vm               # Stop running QEMU instance
 make reboot-vm             # Stop and restart VM
 make await-ghcr            # Wait for GitHub Actions to build current commit
 make vm-switch             # Switch running VM to current branch image from GHCR
 ```
+
+Note: there's also an `ssh-vm` target, but do not use it yourself; that target is for interactive/user use only. Use `vsh` instead (see below).
 
 The Makefile allows you to build container images locally or via GitHub Actions — **prefer GitHub Actions (`from-ghcr` targets)**, as GitHub can build container images much more quickly than the user's machine can.
 
@@ -125,7 +127,7 @@ vsh "sudo dmesg | tail -20"          # quote when using pipes/redirects/subshell
 vsh 'echo $(hostname)-$(date +%s)'   # single-quote to defer expansion to remote
 ```
 
-Append `|| true` when running parallel tool calls to prevent a non-zero exit from cancelling siblings.
+Use `/test-vm [service-name]` whenever you're testing, debugging, or doing other complex/multi-step interactions with the VM.
 
 If `vsh` is unavailable, use the raw SSH command:
 
@@ -146,6 +148,7 @@ hl restart qbittorrent               # restart a unit
 hl restart -s homelab-config-sync    # restart a system unit
 hl failed                            # list failed units across system and all users
 hl ps                                # running containers across all users
+hl sudo jellyfin -- ls /              # run a command inside a container
 hl users                             # list discovered service users
 hl help                              # full usage
 ```
@@ -158,7 +161,7 @@ sudo systemctl --user -M $QUADLET_USERNAME@.host status $QUADLET_NAME.service
 
 ## Adding New Software
 
-Use `/add-quadlet [service-name]` for the full step-by-step checklist. The short version: each service gets a dedicated system user (sysusers.d), home directory (tmpfiles homedirs), linger entry, subid range, a `.container` quadlet file under `etc/containers/systemd/users/<uid>/`, and a Caddy route in homelab-config. For hardening directives to apply to the quadlet, use `/hardening`.
+Use `/add-quadlet [service-name]` for the full step-by-step checklist. The short version: each service gets a dedicated system user (sysusers.d), home directory (tmpfiles homedirs), linger entry, subid range, a `.container` quadlet file under `etc/containers/systemd/users/<uid>/`, and a Caddy route in homelab-config. Use `/vm-test [service-name]` for testing and troubleshooting. For hardening directives to apply to the quadlet, use `/hardening`.
 
 **Port assignment scheme:** `2<last 3 digits of UID><index>` — e.g. UID 1051 → 20510, 20511, … All ports stay in 20000–29999 (below the ephemeral port floor of 32768). Tinyproxy is an exception — it is not published to the host and is only reachable via container-internal DNS.
 
@@ -167,6 +170,7 @@ Use `/add-quadlet [service-name]` for the full step-by-step checklist. The short
 | caddy | 1051 | 20510, 20511 | 8080 (HTTP), 8443 (HTTPS) | Yes — firewalld forwards 80→20510, 443→20511 |
 | jellyfin | 1052 | 20520 | 8096 | No — via Caddy only |
 | qbittorrent | 1053 | 20530 | 20530 | No — via Caddy only |
+| radarr | 1054 | 20540 | 7878 | No — via Caddy only |
 
 New system units (not quadlets) must also be appended to the `RUN systemctl enable` line in `Containerfile`.
 
@@ -176,4 +180,5 @@ New system units (not quadlets) must also be appended to the `RUN systemctl enab
 |---|---|
 | `/add-quadlet [name]` | Full checklist for adding a new rootless quadlet service |
 | `/hardening` | Baseline hardening directives for quadlets and systemd units |
-| `/vm-debug [service]` | Guided triage for diagnosing VM/service failures |
+| `/test-vm [service]` | Guided testing/troubleshooting of new or problematic features/services |
+| `/selinux-policy` | Write, debug, and extend custom SELinux CIL policy modules |

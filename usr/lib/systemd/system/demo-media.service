@@ -3,7 +3,7 @@ Description=Download demo media content (Big Buck Bunny)
 After=network-online.target var-mnt-data.mount
 Wants=network-online.target
 Requires=var-mnt-data.mount
-ConditionPathExists=!/var/mnt/data/media/movies/Big Buck Bunny/BigBuckBunny_320x180.mp4
+ConditionPathExists=!/var/mnt/data/content/media/movies/Big Buck Bunny/BigBuckBunny_320x180.mp4
 
 [Service]
 Type=oneshot
@@ -20,8 +20,8 @@ ProtectHome=yes
 PrivateDevices=yes
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
 ReadWritePaths=/var/mnt/data
-ExecStart=/usr/bin/mkdir -p "/var/mnt/data/media/movies/Big Buck Bunny"
-ExecStart=/usr/bin/curl -fSL -o "/var/mnt/data/media/movies/Big Buck Bunny/BigBuckBunny_320x180.mp4" "https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4"
+ExecStart=/usr/bin/mkdir -p "/var/mnt/data/content/media/movies/Big Buck Bunny"
+ExecStart=/usr/bin/curl -fSL -o "/var/mnt/data/content/media/movies/Big Buck Bunny/BigBuckBunny_320x180.mp4" "https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4"
 RemainAfterExit=yes
 
 [Install]

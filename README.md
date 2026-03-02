@@ -19,8 +19,9 @@ This repo builds a [bootc](https://containers.github.io/bootc/)-based system ima
 - **Jellyfin** - Media server. Runs as a rootless Podman quadlet under a dedicated `jellyfin` user (UID 1052). Not directly exposed externally — accessed via Caddy by hostname. State and media live on a persistent data disk at `/var/mnt/data`.
 - **Tinyproxy** - Forward proxy (jellynet isolation). Allows Jellyfin to fetch metadata/artwork from approved external domains while keeping it off the main network. Config and domain allowlist live in the private `homelab-config` repo.
 - **Jellarr** - Declarative Jellyfin configuration manager. Bootstraps an API key into Jellyfin's SQLite database on first boot, then applies `config.yml` (users, libraries, startup settings) via the Jellyfin API. Re-runs daily via a systemd timer. Config lives in the private `homelab-config` repo.
-- **qBittorrent** - Torrent client. Runs as a rootless Podman quadlet under a dedicated `qbittorrent` user (UID 1053). Not directly exposed externally — accessed via Caddy by hostname. All traffic is routed through Gluetun. State and downloads live on the data disk at `/var/mnt/data`.
+- **qBittorrent** - Torrent client. Runs as a rootless Podman quadlet under a dedicated `qbittorrent` user (UID 1053). Not directly exposed externally — accessed via Caddy by hostname. All traffic is routed through Gluetun. State and downloads live on the data disk at `/var/mnt/data/content/`.
   - **Gluetun** - Mullvad WireGuard VPN client. Runs alongside qBittorrent in a shared pod so that all torrent traffic is tunnelled through the VPN. WireGuard credentials are loaded at runtime from `homelab-secrets` via `systemd-age-creds`.
+- **Radarr** - Movie collection manager. Runs as a rootless Podman quadlet under a dedicated `radarr` user (UID 1054). Not directly exposed externally — accessed via Caddy by hostname. Integrates with qBittorrent to automate movie downloads; hardlinks completed downloads into the media library. State and media live on the data disk at `/var/mnt/data/content/`.
 
 ## Three-Repository Pattern
 
@@ -92,6 +93,7 @@ hl restart qbittorrent               # restart a unit
 hl restart -s homelab-config-sync    # restart a system unit
 hl failed                            # list failed units across system and all users
 hl ps                                # running containers across all users
+hl sudo jellyfin -- ls /              # run a command inside a container
 hl help                              # full usage
 ```
 
