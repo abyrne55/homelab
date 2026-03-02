@@ -1,6 +1,6 @@
 # Dynamic Reconfiguration
 
-The bootc model emphasises building a custom container image, binding
+The bootc model emphasizes building a custom container image, binding
 together a base operating system with configuration in a "static"
 manner.
 

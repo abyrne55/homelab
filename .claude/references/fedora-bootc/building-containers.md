@@ -43,7 +43,7 @@ Let's take a look at the following two examples:
   running.
 
 - `tuned` is a profile-based power-management daemon that is usually
-  being controled with the `tuned-adm` client that communicates over
+  being controlled with the `tuned-adm` client that communicates over
   D-Bus. In this case, we can revert to configuring `tuned` via its
   configuration files in `/etc/tuned`. For instance, the active profile
   can be written to `/etc/tuned/active_profile` instead of running

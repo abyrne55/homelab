@@ -12,7 +12,7 @@ If today's date is more than ~3 months past the date above, suggest that the use
 | File | When to consult |
 |---|---|
 | `podman-systemd.unit.5.md` | Writing or reviewing any `.container`, `.volume`, `.network`, or `.pod` quadlet file — options, directives, supported keys |
-| `rootless.md` | Rootless Podman behaviour, subUID/subGID mapping, user namespace issues |
+| `rootless.md` | Rootless Podman behavior, subUID/subGID mapping, user namespace issues |
 | `troubleshooting.md` | Container errors, networking problems, permission denials, Podman bugs |
 
 ### bootc — `.claude/references/bootc/`
@@ -37,7 +37,7 @@ If today's date is more than ~3 months past the date above, suggest that the use
 - Consult `podman-systemd.unit.5.md` before writing or modifying a quadlet file — do not rely on memory for supported directives and their syntax.
 - Consult `rootless.md` whenever dealing with rootless quadlet issues, user namespaces, or subUID/subGID allocation.
 - Consult `troubleshooting.md` when a container fails to start, has networking problems, or produces unexpected errors.
-- Consult the bootc references whenever reasoning about filesystem ownership, `/etc` vs `/usr` placement, upgrade behaviour, or user/group management in the image.
+- Consult the bootc references whenever reasoning about filesystem ownership, `/etc` vs `/usr` placement, upgrade behavior, or user/group management in the image.
 - Consult `building-containers.md` when authoring Containerfile steps that involve firewalld, sysctl, D-Bus tools, or other commands that behave differently in a container build vs. a running system.
 - Consult `debugging-toolbx.md` when diagnosing issues on a live bootc system using toolbox containers.
 - Consult `dynamic-reconfiguration.md` when considering live (non-image) changes to a running system, especially for firewall or `/etc` modifications.
