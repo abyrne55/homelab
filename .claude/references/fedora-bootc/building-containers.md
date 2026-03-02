@@ -1,6 +1,6 @@
 # Building Containers
 
-The original Docker container model of using \"layers\" to model
+The original Docker container model of using "layers" to model
 applications has been extremely successful. This project aims to apply
 the same technique for bootable host systems - using standard OCI/Docker
 containers as a transport and delivery format for base operating system
@@ -11,7 +11,7 @@ with the same tools as for application containers. That means you can
 build on top of base bootc images with Dockerfiles and tailor the OS to
 your needs.
 
-## Container-Build Environment {#_container_build_environment}
+## Container-Build Environment
 
 It is crucial to understand that a container-build environment has
 certain limitations that impact the commands we can run in a
@@ -25,7 +25,7 @@ in the form of configuration files as explained in the
 You may find solutions in our [examples
 repository](https://gitlab.com/fedora/bootc/examples).
 
-## Configuration tools using D-Bus and other IPC {#_configuration_tools_using_d_bus_and_other_ipc}
+## Configuration tools using D-Bus and other IPC
 
 Some projects like firewalld include CLI configuration tools (e.g.,
 `firewall-cmd`) that default to assuming they are part of a running
@@ -42,24 +42,22 @@ Let's take a look at the following two examples:
   built for exactly such use-cases where the firewalld daemon is not
   running.
 
-<!-- -->
-
 - `tuned` is a profile-based power-management daemon that is usually
   being controled with the `tuned-adm` client that communicates over
   D-Bus. In this case, we can revert to configuring `tuned` via its
   configuration files in `/etc/tuned`. For instance, the active profile
   can be written to `/etc/tuned/active_profile` instead of running
-  `tuned-adm` `profile` `<profile>`.
+  `tuned-adm profile <profile>`.
 
-## systemd {#_systemd}
+## systemd
 
 systemd is not running in a standard container-build environment. Hence,
 certain commands that expect a running system daemon may not work as
-expected and error out. Starting a systemd service via `systemctl`
-`start`, for instance, will not work. Configuring a service to start at
-boot time via `systemctl` `enable`, however, works.
+expected and error out. Starting a systemd service via `systemctl start`,
+for instance, will not work. Configuring a service to start at
+boot time via `systemctl enable`, however, works.
 
-## Deferring to systemd services {#_deferring_to_systemd_services}
+## Deferring to systemd services
 
 Commands used to configure the system can usually be replaced by writing
 to the individual configuration files. However, if you run into a
@@ -73,10 +71,7 @@ correctly due limitations of the container-build environment. We can
 move executing this command into a systemd service that fires at boot
 time:
 
-:::: {subs="attributes"}
-::: title
-important-cmd.service
-:::
+### important-cmd.service
 
 ```text
 [Unit]
@@ -88,16 +83,14 @@ ExecStart=/usr/bin/important-cmd
 WantedBy=multi-user.target
 ```
 
-::::
-
 The systemd service can be copied to
 `/usr/lib/systemd/system/important-cmd.service` in the Containerfile
-where a `RUN` `systemctl` `enable` `important-cmd.service` would
+where a `RUN systemctl enable important-cmd.service` would
 instruct it to be started at boot once the network is available.
 
-## Best Practices {#_best_practices}
+## Best Practices
 
-## Multi-stage builds {#_multi_stage_builds}
+## Multi-stage builds
 
 Bootc containers are shipped as ordinary OCI containers and are intended
 to be usable as part of a container build process, but are primarily
@@ -114,54 +107,48 @@ builds](https://docs.docker.com/build/building/multi-stage/) for that
 purpose and compile the source in a build stage from which build
 artifacts can be copied into the final stage to create a derived image.
 
-## dnf -y update {#_dnf_y_update}
+## dnf -y update
 
-Do **not** attempt to invoke `dnf` `-y` `update` (or `upgrade`) in
+Do **not** attempt to invoke `dnf -y update` (or `upgrade`) in
 general. While some things will work correctly, others will not
 (especially at the moment kernel and bootloader updates). We will aim to
 fix much of this over time, but still you should instead prefer only
 explicitly pulling in updates (or reversions) that you need.
 
 The secondary reason to avoid this: Often people choose image-based
-updates for their predicability, and you can easily \"pin\" the base
+updates for their predicability, and you can easily "pin" the base
 image by digest for example. The default for dnf repositories is to
-\"float\" - so what happens with an image build today could be different
+"float" - so what happens with an image build today could be different
 tomorrow. Packages can be locked with extra effort.
 
 If you want to make large scale changes to the base image, instead look
 at using the [from scratch build](https://docs.fedoraproject.org/en-US/bootc/building-from-scratch/).
 
-## linting {#_linting}
+## linting
 
-We recommend running the `bootc` `container` `lint` command as a final
+We recommend running the `bootc container lint` command as a final
 stage during a container build in Containerfile. This command will
 perform a number of checks inside the container image and throw an error
 in case of issues.
 
-:::: {subs="attributes"}
-::: title
-Containerfile
-:::
+### Containerfile
 
-``` dockerfile
+```dockerfile
 FROM quay.io/fedora/fedora-bootc:42
 # Customization steps
 RUN bootc container lint
 ```
 
-::::
-
-## Kernel management {#_kernel_management}
+## Kernel management
 
 On recent images we introduced kernel-install integration which allows
 you to use DNF to manage kernel packages.
 
 This allows you to have a container file that is as simple as:
-.Containerfile
 
-``` {.dockerfile subs="attributes"}
+```dockerfile
 FROM quay.io/fedora/fedora-bootc:42
-RUN &lt;&lt;EOF
+RUN <<EOF
 set -xeuo pipefail
 dnf -y downgrade kernel
 dnf clean all
@@ -169,16 +156,13 @@ bootc container lint
 EOF
 ```
 
-An example for kernel-rt on centos is:
+An example for kernel-rt on CentOS is:
 
-:::: {subs="attributes"}
-::: title
-Containerfile
-:::
+### Containerfile
 
-``` dockerfile
+```dockerfile
 FROM quay.io/centos-bootc/centos-bootc:stream10
-RUN &lt;&lt;EOF
+RUN <<EOF
 set -xeuo pipefail
 dnf config-manager --set-enabled rt
 dnf config-manager --set-enabled nfv
@@ -188,47 +172,42 @@ bootc container lint
 EOF
 ```
 
-::::
-
-If you are on an older image, you can use `rpm-ostree` `override`
-`replace` or `rpm-ostree` `override` `remove` `pkg` `--install`
-`new-pkg` to manage your kernel. An example of using rpm-ostree is
-available at our [examples
+If you are on an older image, you can use `rpm-ostree override replace` or
+`rpm-ostree override remove pkg --install new-pkg` to manage your kernel.
+An example of using rpm-ostree is available at our [examples
 repository](https://gitlab.com/fedora/bootc/examples).
 
-## GitHub Actions {#_github_actions}
+## GitHub Actions
 
 You may want to build a derived bootc image on a GitHub project via
 GitHub Actions. Since bootc-based images can grow in size quickly, you
 are likely to run into disk-space issues on the Action runner. Adding
 the following first step to the Action may solve the space issue:
 
-``` yaml
+```yaml
     # Based on https://github.com/orgs/community/discussions/25678
     - name: Delete huge unnecessary tools folder
-          run: rm -rf /opt/hostedtoolcache
+      run: rm -rf /opt/hostedtoolcache
 ```
 
 For an example project on GitHub using the Buildah and Podman Actions,
-please visit
-[github](https://github.com/nzwulfin/cicd-bootc){.com/nzwulfin/cicd-bootc}.
+please visit [nzwulfin/cicd-bootc](https://github.com/nzwulfin/cicd-bootc).
 
-## Container metadata {#_container_metadata}
+## Container metadata
 
 While one can add [Container configuration
 metadata](https://github.com/opencontainers/image-spec/blob/main/config.md)
 (e.g., environment, exposed ports, default users) to an OCI container
 image, bootc generally ignores that. In practice, that means that
 certain things may work when being run as an ordinary OCI container via
-Podman but won't work once booted. For instance, you may use the `ENV`
-`foo=bar` instruction in a Container file which will be visible in a
+Podman but won't work once booted. For instance, you may use the `ENV
+foo=bar` instruction in a Containerfile which will be visible in a
 Podman container but it won't be propagated to the booted system.
 
 For details and recommendations, please refer to the
-{bootc-upstream}/building/bootc-runtime.html\[bootc-runtime
-documentation\].
+[bootc-runtime documentation](https://bootc-dev.github.io/bootc/building/bootc-runtime.html).
 
-## Performing \"targeted\" updates {#_performing_\"targeted\"_updates}
+## Performing "targeted" updates
 
 One scenario that may occur is when one wants to perform e.g. **just** a
 kernel patch to a running system; or other targeted fixes, without
@@ -237,9 +216,9 @@ is (assuming you have orchestration/management software) to have an
 inventory of which container image (identified by `@sha256`) is in use
 for each machine you want to target for specific updates. Then create a
 container build which has just the changes you want, and have the
-targeted nodes use that container image via e.g. `bootc` `switch`.
+targeted nodes use that container image via e.g. `bootc switch`.
 
-## Lifecycle binding code and configuration {#_lifecycle_binding_code_and_configuration}
+## Lifecycle binding code and configuration
 
 At the current time, the role of `bootc` is solely to boot and upgrade
 from a single container image. This is a very simplistic model, but it
@@ -249,32 +228,29 @@ In particular, the default assumption is that **code** and
 **configuration** for the base OS are tightly bound. Systems which
 update one or the other asynchronously often lead to problems with skew.
 
-## Containerized vs 1:1 host:app {#_containerized_vs_1:1_host:app}
+## Containerized vs 1:1 host:app
 
 A webserver is the classic case of something that can be run as a
 container on a generic host alongside other workloads. However, many
-systems today still follow a \"1:1\" model between application and a
+systems today still follow a "1:1" model between application and a
 virtual machine. Migrating to a container build for this can be an
 important stepping stone into eventually lifting the workload into an
 application container itself.
 
 Additionally in practice, even some containerized workloads have such
-strong bindings/requirememnts for the host system that they effectively
+strong bindings/requirements for the host system that they effectively
 require a 1:1 binding. Production databases often fall into this class.
 
-## httpd (bound) {#_httpd_(bound)}
+## httpd (bound)
 
 Nevertheless, here's a classic static http webserver example; an
 illustrative aspect is that we move content from `/var` into `/usr`. It
 expects an `index.html` colocated with the Containerfile.
 
-:::: {subs="attributes"}
-::: title
-Containerfile
-:::
+### Containerfile
 
-``` dockerfile
-FROM {container-fedora-full}
+```dockerfile
+FROM quay.io/fedora/fedora-bootc:42
 # The default package drops content in /var/www, and on bootc systems
 # we have /var as a machine-local mount by default. Because this content
 # should be read-only (at runtime) and versioned with the container image,
@@ -296,60 +272,42 @@ COPY index.html /usr/share/www/html
 EXPOSE 80
 ```
 
-::::
+## httpd (containerized)
 
-## httpd (containerized) {#_httpd_(containerized)}
-
-In contrast, this example demonstrates a webserver as a \"referenced\"
+In contrast, this example demonstrates a webserver as a "referenced"
 container image via
-{podman-docs}/podman-systemd.unit.5.html\[podman-systemd\] that is also
-configured for automatic updates.
+[podman-systemd](https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html)
+that is also configured for automatic updates.
 
-::: {subs="attributes"}
-This reference example is maintained in
-{git-examples}/app-podman-systemd\[app-podman-systemd\].
-:::
+This reference example is maintained in the
+[app-podman-systemd](https://gitlab.com/fedora/bootc/examples/-/tree/main/app-podman-systemd)
+examples directory.
 
-:::: {}
-::: title
-caddy.container
-:::
+### caddy.container
 
 ```text
 [Unit]
 Description=Run a demo webserver
-```
 
-```text
 [Container]
-```
-
-## This image happens to be multiarch and somewhat maintained
-
-```text
+# This image happens to be multiarch and somewhat maintained
 Image=docker.io/library/caddy
 PublishPort=80:80
 AutoUpdate=registry
-```
 
-```text
 [Install]
 WantedBy=default.target
 ```
 
-::::
+#### Containerfile
 
-:::: {subs="attributes"}
-::: title
-Containerfile
-:::
-
-``` dockerfile
+```dockerfile
 # In this example, a simple "podman-systemd" unit which runs
-# an application container via {podman-docs}/podman-systemd.unit.5.html
-# that is also configured for automatic updates via
-# {podman-docs}/podman-auto-update.1.html
-FROM {container-c9s}
+# an application container via podman-systemd.unit(5)
+# (https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html)
+# that is also configured for automatic updates via podman-auto-update(1)
+# (https://docs.podman.io/en/latest/markdown/podman-auto-update.1.html)
+FROM quay.io/centos-bootc/centos-bootc:stream9
 COPY caddy.container /usr/share/containers/systemd
 # Enable the simple "automatic update containers" timer, in the same way
 # that there is a simplistic bootc upgrade timer. However, you can
@@ -359,9 +317,7 @@ COPY caddy.container /usr/share/containers/systemd
 RUN systemctl enable podman-auto-update.timer
 ```
 
-::::
-
-## Authentication, users and groups {#_authentication,_users_and_groups}
+## Authentication, users and groups
 
 The container images above are just illustrative demonstrations that are
 not useful standalone. It is highly likely that you will want to run
@@ -370,15 +326,13 @@ other container images, and perform other customizations.
 Among the most likely additions is configuring a mechanism for remote
 SSH; see [Authentication, Users, and Groups](https://docs.fedoraproject.org/en-US/bootc/authentication/).
 
-## Invoking `useradd` as part of a container build {#_invoking_useradd_as_part_of_a_container_build}
+## Invoking `useradd` as part of a container build
 
-Often packaging scripts may invoke `useradd`. This can cause \"state
-drift\" in the case where `/etc/passwd` is also locally modified on the
+Often packaging scripts may invoke `useradd`. This can cause "state
+drift" in the case where `/etc/passwd` is also locally modified on the
 system, and transient `/etc` is not in use.
 
-More on this in
-{bootc-upstream}/building/users-and-groups.html#adding-users-and-credentials-statically-in-the-container-build\[bootc
-upstream\].
+More on this in the [bootc upstream users-and-groups documentation](https://bootc-dev.github.io/bootc/building/users-and-groups.html#adding-users-and-credentials-statically-in-the-container-build).
 
 If the user does not **own** any content shipped in `/usr` and it runs
 as a systemd unit, then it's often a good candidate to convert to
@@ -400,7 +354,7 @@ You can then also switch to creating the user via
 And at that point, you can also drop the `%post` from the RPM which
 allocates the user.
 
-### When your package owns content shipped in `/usr` {#_when_your_package_owns_content_shipped_in_/usr}
+### When your package owns content shipped in `/usr`
 
 This occurs in the case of things like setuid/setgid binaries. The first
 solution: Avoid setuid/setgid binaries entirely! Usually, there's a
@@ -418,17 +372,16 @@ can request it e.g. via
 [Fedora](https://docs.fedoraproject.org/en-US/packaging-guidelines/UsersAndGroups/#_soft_static_allocation).
 But this should be avoided to the greatest extent possible.
 
-## General configuration guidance {#_general_configuration_guidance}
+## General configuration guidance
 
-See the {bootc-upstream}/building/guidance.html\[bootc upstream
-guidance\].
+See the [bootc upstream guidance](https://bootc-dev.github.io/bootc/building/guidance.html).
 
 Many configuration changes to a Linux system boil down effectively to
 writing configuration files into `/etc` or `/usr` - those operations
 translate seamlessly into booted hosts via a `COPY` instruction or
 similar in a container build.
 
-## Referencing configuration as a container artifact {#_referencing_configuration_as_a_container_artifact}
+## Referencing configuration as a container artifact
 
 Custom bootc image uses the 'artifact pattern' to reference other
 container images as reusable components. This approach enables you to
@@ -439,8 +392,8 @@ Copy any configuration from referenced images before applying additional
 customizations. This step should be performed early in the build process
 to ensure consistency and avoid conflicts.
 
-``` {.dockerfile subs="attributes"}
-FROM {container-c10s} as builder
+```dockerfile
+FROM quay.io/centos-bootc/centos-bootc:stream10 as builder
 RUN /usr/libexec/bootc-base-imagectl build-rootfs --manifest=standard /target-rootfs
 
 # This container image uses the "artifact pattern"; it has some
@@ -460,7 +413,6 @@ LABEL ostree.bootable 1
 RUN bootc container lint
 ```
 
-## More examples {#_more_examples}
+## More examples
 
-See {git-examples}\[Examples\] for many examples of container image
-definitions!
+See the [Fedora bootc examples repository](https://gitlab.com/fedora/bootc/examples) for many examples of container image definitions!
