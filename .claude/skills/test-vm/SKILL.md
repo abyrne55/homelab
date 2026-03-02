@@ -115,3 +115,10 @@ Append `|| true` when running parallel tool calls to prevent a non-zero exit fro
 - **Container unhealthy but running** → `HealthCmd` is failing; check the command manually inside the container
 - **Unit not found** → quadlet may not have been picked up; check file is in `etc/containers/systemd/users/<uid>/` with `.container` extension
 - **Port conflict** → check `hl ps` for duplicate port bindings; verify allocation table in CLAUDE.md
+
+## Additional References
+
+If the above steps don't resolve the issue, these docs may help diagnose further:
+
+- `.claude/references/podman/troubleshooting.md` — indexed list of common Podman errors with solutions: permission denials (§2, §7), rootless namespace issues (§9, §10, §19, §35), networking (§4, §30), UID/GID mapping (§34, §35)
+- `.claude/references/fedora-bootc/debugging-toolbx.md` — how to use a `toolbox` container to access diagnostic tools not installed in the bootc image
