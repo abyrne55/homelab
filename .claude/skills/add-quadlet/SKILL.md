@@ -17,8 +17,9 @@ Add Quadlet: $ARGUMENTS
 - [ ] 3. linger tmpfiles entry
 - [ ] 4. subids tmpfiles entry
 - [ ] 5. .container quadlet file
-- [ ] 6. Caddy route in homelab-config
-- [ ] 7. Allocations table updated in CLAUDE.md
+- [ ] 6. init-data-disk.service (if data disk config dir needed)
+- [ ] 7. Caddy route in homelab-config
+- [ ] 8. Allocations table updated in CLAUDE.md
 ```
 
 ## 1. `usr/lib/sysusers.d/<N>-<name>-user.conf`
@@ -66,13 +67,33 @@ For credential access, use the hardcoded `/run/` path — **not** `%t/`. In user
 LoadCredential=credential-name:/run/systemd-age-creds.sock
 ```
 
-## 6. Add a Caddy route (in homelab-config)
+## 6. Add a data disk entry to `init-data-disk.service`
 
-In the private `homelab-config` repo, add a hostname-based reverse-proxy block to the `Caddyfile`:
+**File:** `usr/lib/systemd/system/init-data-disk.service`
+
+If the service stores config or data on the data disk (`/var/mnt/data/`), add its directory to the `mkdir -p` block and add a `chown` step:
+
+```ini
+ExecStart=/usr/bin/mkdir -p \
+  ...
+  /var/mnt/.data-init/.$ARGUMENTS/config
+ExecStart=/usr/bin/chown -R <uid>:<uid> /var/mnt/.data-init/.$ARGUMENTS
+```
+
+> **Note:** This service only runs on fresh disk initialization (`ConditionPathExists=!/dev/disk/by-label/data`). For an existing test VM, manually run:
+>
+> ```bash
+> sudo mkdir -p /var/mnt/data/.$ARGUMENTS/config && sudo chown -R <uid>:<uid> /var/mnt/data/.$ARGUMENTS
+> ```
+
+## 7. Add a Caddy route (in homelab-config)
+
+In the private `homelab-config` repo, add a block to the `Caddyfile` using the `(proxy)` snippet:
 
 ```caddy
+# $ARGUMENTS
 $ARGUMENTS.yourdomain.example {
-    reverse_proxy host.containers.internal:<host-port>
+    import proxy <host-port>
 }
 ```
 
@@ -87,7 +108,7 @@ If in doubt about a directive or behavior, these docs may help:
 - `.claude/references/bootc/users-and-groups.md` — sysusers.d patterns, subid allocation, user/group management in a bootc image
 - `.claude/references/bootc/filesystem.md` (lines 114–154) — `/var/` layout and persistent state patterns (home directories, data mounts)
 
-## 7. Update the allocations table in CLAUDE.md
+## 8. Update the allocations table in CLAUDE.md
 
 Update the service user allocations table to reflect the new user and advance the "next slot" row (UID, port, subUID range start).
 

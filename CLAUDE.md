@@ -50,7 +50,8 @@ Quick file-level index — consult this before exploring the repo.
 | jellyfin | 1052 | 20520 | 296608 | 20521 |
 | qbittorrent | 1053 | 20530 | 362144 | 20531 |
 | radarr | 1054 | 20540 | 427680 | 20541 |
-| **next slot** | **1055** | **20550** | **493216** | — |
+| sonarr | 1055 | 20550 | 493216 | 20551 |
+| **next slot** | **1056** | **20560** | **558752** | — |
 
 **Containerfile `systemctl enable` line** — when adding a new *system* unit, append it here. Quadlets are auto-discovered by podman-quadlet and do not need to be listed.
 
@@ -171,6 +172,7 @@ Use `/add-quadlet [service-name]` for the full step-by-step checklist. The short
 | jellyfin | 1052 | 20520 | 8096 | No — via Caddy only |
 | qbittorrent | 1053 | 20530 | 20530 | No — via Caddy only |
 | radarr | 1054 | 20540 | 7878 | No — via Caddy only |
+| sonarr | 1055 | 20550 | 8989 | No — via Caddy only |
 
 New system units (not quadlets) must also be appended to the `RUN systemctl enable` line in `Containerfile`.
 

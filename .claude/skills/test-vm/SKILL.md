@@ -111,6 +111,7 @@ Append `|| true` when running parallel tool calls to prevent a non-zero exit fro
 
 ## Common patterns
 
+- **`statfs /var/mnt/data/.<service>/config: no such file or directory`** → data disk config dir not created; `init-data-disk.service` only runs on fresh disk init. Fix: `sudo mkdir -p /var/mnt/data/.<service>/config && sudo chown -R <uid>:<uid> /var/mnt/data/.<service>`, then `hl restart <service>`
 - **Service fails immediately at boot** → likely a missing config file or credential; check `ConditionPathExists` guards and secrets sync logs
 - **Container unhealthy but running** → `HealthCmd` is failing; check the command manually inside the container
 - **Unit not found** → quadlet may not have been picked up; check file is in `etc/containers/systemd/users/<uid>/` with `.container` extension
