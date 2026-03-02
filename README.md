@@ -22,6 +22,7 @@ This repo builds a [bootc](https://containers.github.io/bootc/)-based system ima
 - **qBittorrent** - Torrent client. Runs as a rootless Podman quadlet under a dedicated `qbittorrent` user (UID 1053). Not directly exposed externally — accessed via Caddy by hostname. All traffic is routed through Gluetun. State and downloads live on the data disk at `/var/mnt/data/content/`.
   - **Gluetun** - Mullvad WireGuard VPN client. Runs alongside qBittorrent in a shared pod so that all torrent traffic is tunnelled through the VPN. WireGuard credentials are loaded at runtime from `homelab-secrets` via `systemd-age-creds`.
 - **Radarr** - Movie collection manager. Runs as a rootless Podman quadlet under a dedicated `radarr` user (UID 1054). Not directly exposed externally — accessed via Caddy by hostname. Integrates with qBittorrent to automate movie downloads; hardlinks completed downloads into the media library. State and media live on the data disk at `/var/mnt/data/content/`.
+- **Sonarr** - TV series collection manager. Runs as a rootless Podman quadlet under a dedicated `sonarr` user (UID 1055). Not directly exposed externally — accessed via Caddy by hostname. Integrates with qBittorrent to automate TV show downloads; hardlinks completed downloads into the media library. State and media live on the data disk at `/var/mnt/data/content/`.
 
 ## Three-Repository Pattern
 
