@@ -67,7 +67,7 @@ Two top-level directories mirror their target filesystem counterparts, with a de
   - `usr/lib/sysusers.d/` - User/group definitions created at boot
   - `usr/lib/tmpfiles.d/` - Temporary file/directory creation rules
   - `usr/local/bin/` - OS-level CLI tools baked into the image (e.g., `hl`, `qbittorrent-configure`)
-- `selinux/` - SELinux policy for systemd-age-creds socket access
+- `selinux/` - Custom SELinux policy modules (`.cil` files) for container and systemd permissions
 - `build/` - Generated artifacts (.gitignored and deleted upon `make clean`)
 - `secrets/` - Pre-generated keys for injection into QEMU VM (.gitignored)
   - These secrets are injected into the VM during development for convenience. On the Raspberry Pi, unique credentials will be generated on first boot
@@ -179,3 +179,4 @@ New system units (not quadlets) must also be appended to the `RUN systemctl enab
 | `/add-quadlet [name]` | Full checklist for adding a new rootless quadlet service |
 | `/hardening` | Baseline hardening directives for quadlets and systemd units |
 | `/vm-debug [service]` | Guided triage for diagnosing VM/service failures |
+| `/selinux-policy` | Write, debug, and extend custom SELinux CIL policy modules |
