@@ -18,6 +18,7 @@ Commands:
   stop    [-s] [-u <user>] <unit>    Stop a unit
   list   [-s] [-u <user>]            List units for system or service user(s)
   ps     [-u <user>]                 Show running Podman containers
+  sudo   [-u <user>] <container> [--] <cmd...>  Run a command inside a container
   users                              List discovered service users
   update [-u <user>]                 Trigger podman-auto-update.service
   failed                             List failed units across system and all service users
@@ -38,6 +39,8 @@ Examples:
   $PROG restart qbittorrent               # restart qbittorrent.service
   $PROG restart -s homelab-config-sync    # restart a system unit
   $PROG ps                                # running containers across all users
+  $PROG sudo jellyfin -- ls /              # run ls inside jellyfin container
+  $PROG sudo -u jellyfin tinyproxy -- sh   # shell into tinyproxy (jellyfin's user)
   $PROG update                            # trigger auto-update for all users
 EOF
 }
@@ -320,6 +323,42 @@ cmd_failed() {
   [[ $any -eq 0 ]]
 }
 
+cmd_sudo() {
+  local target_user=""
+  local container=""
+  local cmd_args=()
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -u|--user) target_user="$2"; shift 2 ;;
+      --) shift; cmd_args=("$@"); break ;;
+      -*) echo "$PROG: unknown option '$1'" >&2; usage; exit 1 ;;
+      *)
+        if [[ -z "$container" ]]; then
+          container="$1"; shift
+        else
+          # No -- separator: rest of args are the command
+          cmd_args=("$@"); break
+        fi
+        ;;
+    esac
+  done
+
+  if [[ -z "$container" ]]; then
+    echo "$PROG sudo: <container> is required" >&2; usage; exit 1
+  fi
+  if [[ ${#cmd_args[@]} -eq 0 ]]; then
+    echo "$PROG sudo: command to run is required" >&2; usage; exit 1
+  fi
+  if [[ -z "$target_user" ]]; then
+    target_user="$container"
+  fi
+
+  local quoted_args
+  quoted_args=$(printf '%q ' "systemd-${container}" "${cmd_args[@]}")
+  sudo su - "$target_user" -s /bin/sh -c "XDG_RUNTIME_DIR=/run/user/\$(id -u) podman exec $quoted_args"
+}
+
 cmd_update() {
   local target_user=""
 
@@ -354,6 +393,7 @@ case "${1:-}" in
   stop)    shift; cmd_simple stop "$@" ;;
   list)    shift; cmd_list "$@" ;;
   ps)      shift; cmd_ps "$@" ;;
+  sudo)    shift; cmd_sudo "$@" ;;
   users)   cmd_users ;;
   update)  shift; cmd_update "$@" ;;
   failed)  cmd_failed ;;

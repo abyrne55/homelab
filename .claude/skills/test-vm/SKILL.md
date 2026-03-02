@@ -71,10 +71,13 @@ vsh hl logs -s $ARGUMENTS -n 200
 
 ## 6. Inspect a container directly
 
-`machinectl` is not installed. Use `hl ps` to list containers, then `sudo su -` to run podman commands as the service user:
+`machinectl` is not installed. Use `hl ps` to list containers, then `hl sudo` to exec into one:
 
 ```bash
 vsh hl ps -u $ARGUMENTS
+vsh "hl sudo $ARGUMENTS -- <cmd>"                          # exec into container
+vsh "hl sudo -u $ARGUMENTS <container> -- <cmd>"           # exec (explicit user)
+# For podman commands other than exec (e.g. logs, inspect):
 vsh "sudo su - $ARGUMENTS -s /bin/sh -c 'XDG_RUNTIME_DIR=/run/user/\$(id -u) podman logs <container-name>'"
 ```
 

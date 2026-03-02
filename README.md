@@ -93,6 +93,7 @@ hl restart qbittorrent               # restart a unit
 hl restart -s homelab-config-sync    # restart a system unit
 hl failed                            # list failed units across system and all users
 hl ps                                # running containers across all users
+hl sudo jellyfin -- ls /              # run a command inside a container
 hl help                              # full usage
 ```
 
