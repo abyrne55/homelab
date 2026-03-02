@@ -92,12 +92,13 @@ make build-vm-from-ghcr    # Build qcow2 VM from GHCR (faster, recommended)
 make build-vm              # Build qcow2 VM from local container
 make run-vm-from-ghcr      # Start QEMU VM from GHCR image (faster, recommended)
 make run-vm                # Start QEMU VM from local build
-make ssh-vm                # Open an interactive SSH session into VM
 make stop-vm               # Stop running QEMU instance
 make reboot-vm             # Stop and restart VM
 make await-ghcr            # Wait for GitHub Actions to build current commit
 make vm-switch             # Switch running VM to current branch image from GHCR
 ```
+
+Note: there's also an `ssh-vm` target, but do not use it yourself; that target is for interactive/user use only. Use `vsh` instead (see below).
 
 The Makefile allows you to build container images locally or via GitHub Actions — **prefer GitHub Actions (`from-ghcr` targets)**, as GitHub can build container images much more quickly than the user's machine can.
 
@@ -126,7 +127,7 @@ vsh "sudo dmesg | tail -20"          # quote when using pipes/redirects/subshell
 vsh 'echo $(hostname)-$(date +%s)'   # single-quote to defer expansion to remote
 ```
 
-Append `|| true` when running parallel tool calls to prevent a non-zero exit from cancelling siblings.
+Use `/test-vm [service-name]` whenever you're testing, debugging, or doing other complex/multi-step interactions with the VM.
 
 If `vsh` is unavailable, use the raw SSH command:
 
@@ -159,7 +160,7 @@ sudo systemctl --user -M $QUADLET_USERNAME@.host status $QUADLET_NAME.service
 
 ## Adding New Software
 
-Use `/add-quadlet [service-name]` for the full step-by-step checklist. The short version: each service gets a dedicated system user (sysusers.d), home directory (tmpfiles homedirs), linger entry, subid range, a `.container` quadlet file under `etc/containers/systemd/users/<uid>/`, and a Caddy route in homelab-config. For hardening directives to apply to the quadlet, use `/hardening`.
+Use `/add-quadlet [service-name]` for the full step-by-step checklist. The short version: each service gets a dedicated system user (sysusers.d), home directory (tmpfiles homedirs), linger entry, subid range, a `.container` quadlet file under `etc/containers/systemd/users/<uid>/`, and a Caddy route in homelab-config. Use `/vm-test [service-name]` for testing and troubleshooting. For hardening directives to apply to the quadlet, use `/hardening`.
 
 **Port assignment scheme:** `2<last 3 digits of UID><index>` — e.g. UID 1051 → 20510, 20511, … All ports stay in 20000–29999 (below the ephemeral port floor of 32768). Tinyproxy is an exception — it is not published to the host and is only reachable via container-internal DNS.
 
@@ -178,5 +179,5 @@ New system units (not quadlets) must also be appended to the `RUN systemctl enab
 |---|---|
 | `/add-quadlet [name]` | Full checklist for adding a new rootless quadlet service |
 | `/hardening` | Baseline hardening directives for quadlets and systemd units |
-| `/vm-debug [service]` | Guided triage for diagnosing VM/service failures |
+| `/test-vm [service]` | Guided testing/troubleshooting of new or problematic features/services |
 | `/selinux-policy` | Write, debug, and extend custom SELinux CIL policy modules |
