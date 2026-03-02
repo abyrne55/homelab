@@ -180,3 +180,7 @@ vsh "sudo journalctl -k --grep='avc:.*denied' -n 20"
   system. Check Fedora's SELinux policy documentation or the AVC denial message itself for clues
   about what type should be used. (The `seinfo` tool would help here but isn't installed in the
   image.)
+
+## Additional References
+
+- `.claude/references/fedora-bootc/building-containers.md` (lines 14–59) — overview of Containerfile build-environment constraints; useful context for understanding how `semodule -i` runs at image build time (shared host kernel, no running systemd)

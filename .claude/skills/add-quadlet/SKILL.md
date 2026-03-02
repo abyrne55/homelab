@@ -78,6 +78,15 @@ $ARGUMENTS.yourdomain.example {
 
 Do **not** open the service port in `etc/firewalld/zones/public.xml` — all external HTTP/HTTPS flows through Caddy on ports 20510/20511 only.
 
+## Additional References
+
+If in doubt about a directive or behavior, these docs may help:
+
+- `.claude/references/podman/podman-systemd.unit.5.md` (lines 291–1031) — complete [Container] directive listing with podman-run equivalents and detailed descriptions
+- `.claude/references/podman/rootless.md` — rootless Podman behavior, user namespaces, subUID/subGID semantics
+- `.claude/references/bootc/users-and-groups.md` — sysusers.d patterns, subid allocation, user/group management in a bootc image
+- `.claude/references/bootc/filesystem.md` (lines 114–154) — `/var/` layout and persistent state patterns (home directories, data mounts)
+
 ## 7. Update the allocations table in CLAUDE.md
 
 Update the service user allocations table to reflect the new user and advance the "next slot" row (UID, port, subUID range start).

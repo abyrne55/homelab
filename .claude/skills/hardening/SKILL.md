@@ -71,3 +71,9 @@ PrivateNetwork=yes        # fully isolated network namespace (only for no-networ
 - All mount-namespace directives (`PrivateTmp`, `ProtectSystem`, `ProtectHome`, `ProtectKernel*`, `ProtectControlGroups`, `PrivateDevices`) must be omitted for services that run `mount`/`umount` across multiple `ExecStart=` lines — systemd clones a fresh mount namespace per step, making mounts from one step invisible to the next. See `init-data-disk.service`.
 
 - `NoNewPrivileges=yes` and any directive implying it (`ProtectKernelTunables`, `ProtectKernelModules`, `ProtectKernelLogs`, `RestrictRealtime`, `RestrictAddressFamilies`, `PrivateDevices`) must be omitted for services that invoke binaries with SELinux domain transitions — `NO_NEW_PRIVS` blocks all transitions to non-bounded domains. See `ssh-generate-identity.service`.
+
+## Additional References
+
+If in doubt about a quadlet option, these docs may help:
+
+- `.claude/references/podman/podman-systemd.unit.5.md` (lines 443–840) — detailed descriptions of the security-relevant container options used above: `AutoUpdate`, `DropCapability`, `HealthCmd`, `NoNewPrivileges`, `Notify`, `ReadOnly`, `ReadOnlyTmpfs`
