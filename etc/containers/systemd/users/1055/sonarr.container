@@ -1,7 +1,7 @@
 [Unit]
 Description=Sonarr TV series management
-After=network-online.target
-Wants=network-online.target
+After=network-online.target sonarr-init-config.service
+Wants=network-online.target sonarr-init-config.service
 
 [Container]
 Image=lscr.io/linuxserver/sonarr:4.0.16
@@ -16,8 +16,6 @@ HealthCmd=curl -f http://localhost:8989/
 HealthStartPeriod=30s
 HealthInterval=30s
 Notify=healthy
-# Mount host credentials directory into the container so credential file paths resolve
-Volume=%d:/run/credentials:ro,z
 Environment=PUID=1055
 # PGID=1: in the rootless user namespace, container GID 1 maps to host GID 2000 (content-writers)
 # via the sonarr:2000:1 subgid entry. This gives the app process host effective GID 2000,
@@ -29,7 +27,6 @@ Environment=TZ=UTC
 [Service]
 Restart=on-failure
 RestartSec=5
-LoadCredential=qbittorrent-webui-password:/run/systemd-age-creds.sock
 
 [Install]
 WantedBy=default.target
