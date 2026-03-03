@@ -7,8 +7,9 @@ API_KEY=$(cat "${CREDENTIALS_DIRECTORY}/radarr-api-key")
 echo "Checking Radarr authentication configuration..."
 CURRENT=$(curl -sf "$RADARR_URL/api/v3/config/host" -H "X-Api-Key: $API_KEY")
 CURRENT_AUTH=$(echo "$CURRENT" | jq -r '.authenticationMethod')
+CURRENT_USER=$(echo "$CURRENT" | jq -r '.username')
 
-if [ "$CURRENT_AUTH" = "forms" ]; then
+if [ "$CURRENT_AUTH" = "forms" ] && [ "$CURRENT_USER" = "abyrne55" ]; then
   echo "Radarr Forms authentication already configured; skipping"
   exit 0
 fi
