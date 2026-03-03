@@ -17,7 +17,7 @@ echo "Enabling Forms authentication on Radarr..."
 WEBUI_PASS=$(cat "${CREDENTIALS_DIRECTORY}/radarr-webui-password")
 UPDATED=$(echo "$CURRENT" | jq \
   --arg pass "$WEBUI_PASS" \
-  '.authenticationMethod = "forms" | .authenticationRequired = "enabled" | .username = "abyrne55" | .password = $pass')
+  '.authenticationMethod = "forms" | .authenticationRequired = "enabled" | .username = "abyrne55" | .password = $pass | .passwordConfirmation = $pass')
 curl -sf -X PUT "$RADARR_URL/api/v3/config/host" \
   -H "X-Api-Key: $API_KEY" \
   -H "Content-Type: application/json" \
