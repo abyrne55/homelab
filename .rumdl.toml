@@ -7,6 +7,7 @@ disable = ["MD013"]
 exclude = [
     ".git",
     ".github",
+    ".claude/references",
     "node_modules",
     "vendor",
     "dist",

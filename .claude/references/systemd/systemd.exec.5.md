@@ -124,13 +124,11 @@ contain a `..` path component.
  `systemd-soft-reboot.service(8)`), in case the
  service is configured to survive it.
 
- :::: example
- ::: title
- Mounting logging sockets into root environment
- :::
+ **Example 1. Mounting logging sockets into root environment**
 
+ ```text
  BindReadOnlyPaths=/dev/log /run/systemd/journal/socket /run/systemd/journal/stdout
- ::::
+ ```
 
 `RootImage=`
 
@@ -953,29 +951,26 @@ contain a `..` path component.
  manager, i.e. the user's instance of `user@.service`. After making
  such changes, make sure to restart the user's service manager.
 
- Directive `ulimit` equivalent Unit Notes
+ **Resource limit directives, their equivalent `ulimit` shell commands and the unit used**
 
- ------------------ --------------------- ---------------------------- ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
- LimitCPU= ulimit -t Seconds \-
- LimitFSIZE= ulimit -f Bytes \-
- LimitDATA= ulimit -d Bytes Do not use. This limits the allowed address range, not memory use! Defaults to unlimited and should not be lowered. To limit memory use, see `MemoryMax=` in `systemd.resource-control(5)`.
- LimitSTACK= ulimit -s Bytes \-
- LimitCORE= ulimit -c Bytes \-
- LimitRSS= ulimit -m Bytes Do not use. No effect on Linux.
- LimitNOFILE= ulimit -n Number of File Descriptors Do not use. Be careful when raising the soft limit above 1024, since `select(2)` cannot function with file descriptors above 1023 on Linux. Nowadays, the hard limit defaults to 524288, a very high value compared to historical defaults. Typically applications should increase their soft limit to the hard limit on their own, if they are OK with working with file descriptors above 1023, i.e. do not use `select(2)`. Note that file descriptors are nowadays accounted like any other form of memory, thus there should not be any need to lower the hard limit. Use `MemoryMax=` to control overall service memory use, including file descriptor memory.
- LimitAS= ulimit -v Bytes Do not use. This limits the allowed address range, not memory use! Defaults to unlimited and should not be lowered. To limit memory use, see `MemoryMax=` in `systemd.resource-control(5)`.
- LimitNPROC= ulimit -u Number of Processes This limit is enforced based on the number of processes belonging to the user. Typically it is better to track processes per service, i.e. use `TasksMax=`, see `systemd.resource-control(5)`.
- LimitMEMLOCK= ulimit -l Bytes \-
- LimitLOCKS= ulimit -x Number of Locks \-
- LimitSIGPENDING= ulimit -i Number of Queued Signals \-
- LimitMSGQUEUE= ulimit -q Bytes \-
- LimitNICE= ulimit -e Nice Level \-
- LimitRTPRIO= ulimit -r Realtime Priority \-
- LimitRTTIME= ulimit -R Microseconds \-
-
- : Resource limit directives, their equivalent `ulimit` shell
- commands and the unit used
+ | Directive | `ulimit` equivalent | Unit | Notes |
+ |-----------|---------------------|------|-------|
+ | `LimitCPU=` | `ulimit -t` | Seconds | - |
+ | `LimitFSIZE=` | `ulimit -f` | Bytes | - |
+ | `LimitDATA=` | `ulimit -d` | Bytes | Do not use. This limits the allowed address range, not memory use! Defaults to unlimited and should not be lowered. To limit memory use, see `MemoryMax=` in `systemd.resource-control(5)`. |
+ | `LimitSTACK=` | `ulimit -s` | Bytes | - |
+ | `LimitCORE=` | `ulimit -c` | Bytes | - |
+ | `LimitRSS=` | `ulimit -m` | Bytes | Do not use. No effect on Linux. |
+ | `LimitNOFILE=` | `ulimit -n` | Number of File Descriptors | Do not use. Be careful when raising the soft limit above 1024, since `select(2)` cannot function with file descriptors above 1023 on Linux. Nowadays, the hard limit defaults to 524288, a very high value compared to historical defaults. Typically applications should increase their soft limit to the hard limit on their own, if they are OK with working with file descriptors above 1023, i.e. do not use `select(2)`. Note that file descriptors are nowadays accounted like any other form of memory, thus there should not be any need to lower the hard limit. Use `MemoryMax=` to control overall service memory use, including file descriptor memory. |
+ | `LimitAS=` | `ulimit -v` | Bytes | Do not use. This limits the allowed address range, not memory use! Defaults to unlimited and should not be lowered. To limit memory use, see `MemoryMax=` in `systemd.resource-control(5)`. |
+ | `LimitNPROC=` | `ulimit -u` | Number of Processes | This limit is enforced based on the number of processes belonging to the user. Typically it is better to track processes per service, i.e. use `TasksMax=`, see `systemd.resource-control(5)`. |
+ | `LimitMEMLOCK=` | `ulimit -l` | Bytes | - |
+ | `LimitLOCKS=` | `ulimit -x` | Number of Locks | - |
+ | `LimitSIGPENDING=` | `ulimit -i` | Number of Queued Signals | - |
+ | `LimitMSGQUEUE=` | `ulimit -q` | Bytes | - |
+ | `LimitNICE=` | `ulimit -e` | Nice Level | - |
+ | `LimitRTPRIO=` | `ulimit -r` | Realtime Priority | - |
+ | `LimitRTTIME=` | `ulimit -R` | Microseconds | - |
 
 `UMask=`
 
@@ -1009,13 +1004,11 @@ contain a `..` path component.
  set, or if the empty value is assigned, the inherited value is not
  changed.
 
- :::: example
- ::: title
- Add DAX pages to the dump filter
- :::
+ **Example 2. Add DAX pages to the dump filter**
 
+ ```text
  CoredumpFilter=default private-dax shared-dax
- ::::
+ ```
 
 `KeyringMode=`
 
@@ -1128,7 +1121,7 @@ contain a `..` path component.
 
 : Controls the CPU affinity of the executed processes. Takes a list of
  CPU indices or ranges separated by either whitespace or commas.
- Alternatively, takes a special \"numa\" value in which case systemd
+ Alternatively, takes a special "numa" value in which case systemd
  automatically derives allowed CPU range based on the value of
  `NUMAMask=` option. CPU ranges are specified by the lower and upper
  CPU indices separated by a dash. This option may be specified more
@@ -1151,7 +1144,7 @@ contain a `..` path component.
 : Controls the NUMA node list which will be applied alongside with
  selected NUMA policy. Takes a list of NUMA nodes and has the same
  syntax as a list of CPUs for `CPUAffinity=` option or special
- \"all\" value which will include all available NUMA nodes in the
+ "all" value which will include all available NUMA nodes in the
  mask. Note that the list of NUMA nodes is not required for `default`
  and `local` policies and for `preferred` policy we expect a single
  NUMA node.
@@ -1274,22 +1267,20 @@ services hence.
 
  If `DynamicUser=` is used, and if the kernel version supports
  [id-mapped mounts](https://lwn.net/Articles/896255/), the specified
- directories will be owned by \"nobody\" in the host namespace and
+ directories will be owned by "nobody" in the host namespace and
  will be mapped to (and will be owned by) the service's UID/GID in
  its own namespace. For backward compatibility, existing directories
  created without id-mapped mounts will be kept untouched.
 
- Directory Below path for system units Below path for user units Environment variable set
+ **Automatic directory creation and environment variables**
 
- --------------------------- ----------------------------- --------------------------- ----------------------------
-
- `RuntimeDirectory=` `/run/` `$XDG_RUNTIME_DIR` `$RUNTIME_DIRECTORY`
- `StateDirectory=` `/var/lib/` `$XDG_STATE_HOME` `$STATE_DIRECTORY`
- `CacheDirectory=` `/var/cache/` `$XDG_CACHE_HOME` `$CACHE_DIRECTORY`
- `LogsDirectory=` `/var/log/` `$XDG_STATE_HOME``/log/` `$LOGS_DIRECTORY`
- `ConfigurationDirectory=` `/etc/` `$XDG_CONFIG_HOME` `$CONFIGURATION_DIRECTORY`
-
- : Automatic directory creation and environment variables
+ | Directory | Below path for system units | Below path for user units | Environment variable set |
+ |-----------|----------------------------|--------------------------|--------------------------|
+ | `RuntimeDirectory=` | `/run/` | `$XDG_RUNTIME_DIR` | `$RUNTIME_DIRECTORY` |
+ | `StateDirectory=` | `/var/lib/` | `$XDG_STATE_HOME` | `$STATE_DIRECTORY` |
+ | `CacheDirectory=` | `/var/cache/` | `$XDG_CACHE_HOME` | `$CACHE_DIRECTORY` |
+ | `LogsDirectory=` | `/var/log/` | `$XDG_STATE_HOME/log/` | `$LOGS_DIRECTORY` |
+ | `ConfigurationDirectory=` | `/etc/` | `$XDG_CONFIG_HOME` | `$CONFIGURATION_DIRECTORY` |
 
  In case of `RuntimeDirectory=` the innermost subdirectories are
  removed when the unit is stopped. It is possible to preserve the
@@ -1402,7 +1393,7 @@ services hence.
 : Specifies the access mode of the directories specified in
  `RuntimeDirectory=`, `StateDirectory=`, `CacheDirectory=`,
  `LogsDirectory=`, or `ConfigurationDirectory=`, respectively, as an
- octal number. Defaults to `0755`. See \"Permissions\" in
+ octal number. Defaults to `0755`. See "Permissions" in
  `path_resolution(7)` for a discussion of the meaning
  of permission bits.
 
@@ -1623,17 +1614,15 @@ services hence.
  dependency, unless `DefaultDependencies=no` and/or
  `RootDirectory=/RootImage=` are specified.
 
- Other Settings tmpfs on /var/tmp/ \$TMPVAR implied dependencies
+ **Summary for `PrivateTmp=disconnected`**
 
- --------------------------------------------------- -------------------- ---------------- ------------------------
-
- (none) yes (unset) `WantsMountsFor=/var/`
- `RootDirectory=/RootImage=` yes (unset) (none)
- `DefaultDependency=no`, `RequiresMountsFor=/var/` yes (unset) (none)
- `DefaultDependency=no`, `WantsMountsFor=/var/` yes (unset) (none)
- `DefaultDependency=no` no `$TMPDIR=/tmp` (none)
-
- : Summary for `PrivateTmp=disconnected`
+ | Other Settings | tmpfs on /var/tmp/ | $TMPDIR | Implied dependencies |
+ |----------------|--------------------|---------|----------------------|
+ | (none) | yes | (unset) | `WantsMountsFor=/var/` |
+ | `RootDirectory=/RootImage=` | yes | (unset) | (none) |
+ | `DefaultDependency=no`, `RequiresMountsFor=/var/` | yes | (unset) | (none) |
+ | `DefaultDependency=no`, `WantsMountsFor=/var/` | yes | (unset) | (none) |
+ | `DefaultDependency=no` | no | `$TMPDIR=/tmp` | (none) |
 
  Note that the implementation of this setting might be impossible
  (for example if mount namespaces are not available), and the unit
@@ -1899,7 +1888,7 @@ services hence.
  be a high, dynamically assigned UID) or from inside the unit (where
  it will be 0). Also note that this mode will enable file system UID
  mapping for the file systems this service accesses, mapping the
- \"foreign\" UID range on disk to the selected dynamic UID range at
+ "foreign" UID range on disk to the selected dynamic UID range at
  runtime.
 
  When this setting is set up by a per-user instance of the service
@@ -2119,20 +2108,18 @@ services hence.
  filesystems are provided. A set starts with `@` character, followed
  by name of the set.
 
- Set Description
+ **Currently predefined filesystem sets**
 
- -------------------- ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
- \@basic-api Basic filesystem API.
- \@auxiliary-api Auxiliary filesystem API.
- \@common-block Common block device filesystems.
- \@historical-block Historical block device filesystems.
- \@network Well-known network filesystems.
- \@privileged-api Privileged filesystem API.
- \@temporary Temporary filesystems: tmpfs, ramfs.
- \@known All known filesystems defined by the kernel. This list is defined statically in systemd based on a kernel version that was available when this systemd version was released. It will become progressively more out-of-date as the kernel is updated.
-
- : Currently predefined filesystem sets
+ | Set | Description |
+ |-----|-------------|
+ | `@basic-api` | Basic filesystem API. |
+ | `@auxiliary-api` | Auxiliary filesystem API. |
+ | `@common-block` | Common block device filesystems. |
+ | `@historical-block` | Historical block device filesystems. |
+ | `@network` | Well-known network filesystems. |
+ | `@privileged-api` | Privileged filesystem API. |
+ | `@temporary` | Temporary filesystems: tmpfs, ramfs. |
+ | `@known` | All known filesystems defined by the kernel. This list is defined statically in systemd based on a kernel version that was available when this systemd version was released. It will become progressively more out-of-date as the kernel is updated. |
 
  Use `systemd-analyze(1)`'s `filesystems` command to
  retrieve a list of filesystems defined on the local system.
@@ -2310,7 +2297,7 @@ services hence.
  and `shmat(2)` system calls with `SHM_EXEC` set. Note
  that this option is incompatible with programs and libraries that
  generate program code dynamically at runtime, including JIT
- execution engines, executable stacks, and code \"trampoline\"
+ execution engines, executable stacks, and code "trampoline"
  feature of various C compilers. This option improves service
  security, as it makes harder for software exploits to change running
  code dynamically. However, the protection can be circumvented, if
@@ -2508,41 +2495,39 @@ services hence.
  of system calls are provided. A group starts with `@` character,
  followed by name of the set.
 
- Set Description
+ **Currently predefined system call sets**
 
- ------------------ ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
- \@aio Asynchronous I/O (`io_setup(2)`, `io_submit(2)`, and related calls)
- \@basic-io System calls for basic I/O: reading, writing, seeking, file descriptor duplication and closing (`read(2)`, `write(2)`, and related calls)
- \@chown Changing file ownership (`chown(2)`, `fchownat(2)`, and related calls)
- \@clock System calls for changing the system clock (`adjtimex(2)`, `settimeofday(2)`, and related calls)
- \@cpu-emulation System calls for CPU emulation functionality (`vm86(2)` and related calls)
- \@debug Debugging, performance monitoring and tracing functionality (`ptrace(2)`, `perf_event_open(2)` and related calls)
- \@file-system File system operations: opening, creating files and directories for read and write, renaming and removing them, reading file properties, or creating hard and symbolic links
- \@io-event Event loop system calls (`poll(2)`, `select(2)`, `epoll(7)`, `eventfd(2)` and related calls)
- \@ipc Pipes, SysV IPC, POSIX Message Queues and other IPC (`mq_overview(7)`, `svipc(7)`)
- \@keyring Kernel keyring access (`keyctl(2)` and related calls)
- \@memlock Locking of memory in RAM (`mlock(2)`, `mlockall(2)` and related calls)
- \@module Loading and unloading of kernel modules (`init_module(2)`, `delete_module(2)` and related calls)
- \@mount Mounting and unmounting of file systems (`mount(2)`, `chroot(2)`, and related calls)
- \@network-io Socket I/O (including local AF_UNIX): `socket(7)`, `unix(7)`
- \@obsolete Unusual, obsolete or unimplemented (`create_module(2)`, `gtty(2)`, ...)
- \@pkey System calls that deal with memory protection keys (`pkeys(7)`)
- \@privileged All system calls which need super-user capabilities (`capabilities(7)`)
- \@process Process control, execution, namespacing operations (`clone(2)`, `kill(2)`, `namespaces(7)`, ...)
- \@raw-io Raw I/O port access (`ioperm(2)`, `iopl(2)`, `pciconfig_read()`, ...)
- \@reboot System calls for rebooting and reboot preparation (`reboot(2)`, `kexec()`, ...)
- \@resources System calls for changing resource limits, memory and scheduling parameters (`setrlimit(2)`, `setpriority(2)`, ...)
- \@sandbox System calls for sandboxing programs (`seccomp(2)`, Landlock system calls, ...)
- \@setuid System calls for changing user ID and group ID credentials, (`setuid(2)`, `setgid(2)`, `setresuid(2)`, ...)
- \@signal System calls for manipulating and handling process signals (`signal(2)`, `sigprocmask(2)`, ...)
- \@swap System calls for enabling/disabling swap devices (`swapon(2)`, `swapoff(2)`)
- \@sync Synchronizing files and memory to disk (`fsync(2)`, `msync(2)`, and related calls)
- \@system-service A reasonable set of system calls used by common system services, excluding any special purpose calls. This is the recommended starting point for allow-listing system calls for system services, as it contains what is typically needed by system services, but excludes overly specific interfaces. For example, the following APIs are excluded: `@clock`, `@mount`, `@swap`, `@reboot`.
- \@timer System calls for scheduling operations by time (`alarm(2)`, `timer_create(2)`, ...)
- \@known All system calls defined by the kernel. This list is defined statically in systemd based on a kernel version that was available when this systemd version was released. It will become progressively more out-of-date as the kernel is updated.
-
- : Currently predefined system call sets
+ | Set | Description |
+ |-----|-------------|
+ | `@aio` | Asynchronous I/O (`io_setup(2)`, `io_submit(2)`, and related calls) |
+ | `@basic-io` | System calls for basic I/O: reading, writing, seeking, file descriptor duplication and closing (`read(2)`, `write(2)`, and related calls) |
+ | `@chown` | Changing file ownership (`chown(2)`, `fchownat(2)`, and related calls) |
+ | `@clock` | System calls for changing the system clock (`adjtimex(2)`, `settimeofday(2)`, and related calls) |
+ | `@cpu-emulation` | System calls for CPU emulation functionality (`vm86(2)` and related calls) |
+ | `@debug` | Debugging, performance monitoring and tracing functionality (`ptrace(2)`, `perf_event_open(2)` and related calls) |
+ | `@file-system` | File system operations: opening, creating files and directories for read and write, renaming and removing them, reading file properties, or creating hard and symbolic links |
+ | `@io-event` | Event loop system calls (`poll(2)`, `select(2)`, `epoll(7)`, `eventfd(2)` and related calls) |
+ | `@ipc` | Pipes, SysV IPC, POSIX Message Queues and other IPC (`mq_overview(7)`, `svipc(7)`) |
+ | `@keyring` | Kernel keyring access (`keyctl(2)` and related calls) |
+ | `@memlock` | Locking of memory in RAM (`mlock(2)`, `mlockall(2)` and related calls) |
+ | `@module` | Loading and unloading of kernel modules (`init_module(2)`, `delete_module(2)` and related calls) |
+ | `@mount` | Mounting and unmounting of file systems (`mount(2)`, `chroot(2)`, and related calls) |
+ | `@network-io` | Socket I/O (including local AF_UNIX): `socket(7)`, `unix(7)` |
+ | `@obsolete` | Unusual, obsolete or unimplemented (`create_module(2)`, `gtty(2)`, ...) |
+ | `@pkey` | System calls that deal with memory protection keys (`pkeys(7)`) |
+ | `@privileged` | All system calls which need super-user capabilities (`capabilities(7)`) |
+ | `@process` | Process control, execution, namespacing operations (`clone(2)`, `kill(2)`, `namespaces(7)`, ...) |
+ | `@raw-io` | Raw I/O port access (`ioperm(2)`, `iopl(2)`, `pciconfig_read()`, ...) |
+ | `@reboot` | System calls for rebooting and reboot preparation (`reboot(2)`, `kexec()`, ...) |
+ | `@resources` | System calls for changing resource limits, memory and scheduling parameters (`setrlimit(2)`, `setpriority(2)`, ...) |
+ | `@sandbox` | System calls for sandboxing programs (`seccomp(2)`, Landlock system calls, ...) |
+ | `@setuid` | System calls for changing user ID and group ID credentials, (`setuid(2)`, `setgid(2)`, `setresuid(2)`, ...) |
+ | `@signal` | System calls for manipulating and handling process signals (`signal(2)`, `sigprocmask(2)`, ...) |
+ | `@swap` | System calls for enabling/disabling swap devices (`swapon(2)`, `swapoff(2)`) |
+ | `@sync` | Synchronizing files and memory to disk (`fsync(2)`, `msync(2)`, and related calls) |
+ | `@system-service` | A reasonable set of system calls used by common system services, excluding any special purpose calls. This is the recommended starting point for allow-listing system calls for system services, as it contains what is typically needed by system services, but excludes overly specific interfaces. For example, the following APIs are excluded: `@clock`, `@mount`, `@swap`, `@reboot`. |
+ | `@timer` | System calls for scheduling operations by time (`alarm(2)`, `timer_create(2)`, ...) |
+ | `@known` | All system calls defined by the kernel. This list is defined statically in systemd based on a kernel version that was available when this systemd version was released. It will become progressively more out-of-date as the kernel is updated. |
 
  Note, that as new system calls are added to the kernel, additional
  system calls might be added to the groups above. Contents of the
@@ -2652,13 +2637,13 @@ services hence.
 `Environment=`
 
 : Sets environment variables for executed processes. Each line is
- unquoted using the rules described in \"Quoting\" section in
+ unquoted using the rules described in "Quoting" section in
  `systemd.syntax(7)` and becomes a list of variable
  assignments. If you need to assign a value containing spaces or the
  equals sign to a variable, put quotes around the whole assignment.
  Variable expansion is not performed inside the strings and the `$`
  character has no special meaning. Specifier expansion is performed,
- see the \"Specifiers\" section in `systemd.unit(5)`.
+ see the "Specifiers" section in `systemd.unit(5)`.
 
  This option may be specified more than once, in which case all
  listed variables will be set. If the same variable is listed twice,
@@ -2812,7 +2797,7 @@ services hence.
  the service manager itself (such as `$NOTIFY_SOCKET` and such), or
  set by a PAM module (in case `PAMName=` is used).
 
- See \"Environment Variables in Spawned Processes\" below for a
+ See "Environment Variables in Spawned Processes" below for a
  description of how those settings combine to form the inherited
  environment. See `environ(7)` for general information
  about environment variables.
@@ -2978,7 +2963,7 @@ services hence.
  If the standard output (or error output, see below) of a unit is
  connected to the journal or the kernel log buffer, the unit will
  implicitly gain a dependency of type `After=` on
- `systemd-journald.socket` (also see the \"Implicit Dependencies\"
+ `systemd-journald.socket` (also see the "Implicit Dependencies"
  section above). Also note that, in this case, stdout (or stderr, see
  below) will be an `AF_UNIX` stream socket, and not a pipe or FIFO
  that can be reopened. This means when executing shell scripts the
@@ -3097,7 +3082,7 @@ services hence.
  journal field concept. Even though the underlying journal
  implementation permits binary field values, this setting accepts
  only valid UTF-8 values. To include space characters in a journal
- field value, enclose the assignment in double quotes (\"). The usual
+ field value, enclose the assignment in double quotes ("). The usual
  specifiers are expanded in all assignments (see below). Note that
  this setting is not only useful for attaching additional metadata to
  log records of a unit, but given that all fields and values are
@@ -3116,7 +3101,7 @@ services hence.
  within the interval are dropped until the interval is over. A
  message about the number of dropped messages is generated. The time
  specification for `LogRateLimitIntervalSec=` may be specified in the
- following units: \"s\", \"min\", \"h\", \"ms\", \"us\". See
+ following units: "s", "min", "h", "ms", "us". See
  `systemd.time(7)` for details. The default settings
  are set by `RateLimitIntervalSec=` and `RateLimitBurst=` configured
  in `journald.conf(5)`. Note that this only applies to
@@ -3197,7 +3182,7 @@ services hence.
 
 `SyslogIdentifier=`
 
-: Sets the process name (\"`syslog` tag\") to prefix log lines sent to
+: Sets the process name ("`syslog` tag") to prefix log lines sent to
  the logging system or the kernel log buffer with. If not set,
  defaults to the process name of the executed process. This option is
  only useful when `StandardOutput=` or `StandardError=` are set to
@@ -3772,25 +3757,23 @@ manager or generated internally for each invoked process:
 
 : Only used for the service unit type. This environment variable is
  passed to all `ExecStop=` and `ExecStopPost=` processes, and encodes
- the service \"result\". Currently, the following values are defined:
+ the service "result". Currently, the following values are defined:
 
- Value Meaning
+ **Defined `$SERVICE_RESULT` values**
 
- ------------------- ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
- `success` The service ran successfully and exited cleanly.
- `protocol` A protocol violation occurred: the service did not take the steps required by its unit configuration (specifically what is configured in its `Type=` setting).
- `timeout` One of the steps timed out.
- `exit-code` Service process exited with a non-zero exit code; see `$EXIT_CODE` below for the actual exit code returned.
- `signal` A service process was terminated abnormally by a signal, without dumping core. See `$EXIT_CODE` below for the actual signal causing the termination.
- `core-dump` A service process terminated abnormally with a signal and dumped core. See `$EXIT_CODE` below for the signal causing the termination.
- `watchdog` Watchdog keep-alive ping was enabled for the service, but the deadline was missed.
- `exec-condition` Service did not run because `ExecCondition=` failed (that is its command exited with an exit status of 1 through 254 (inclusive)).
- `oom-kill` A service process was terminated by the Out-Of-Memory (OOM) killer.
- `start-limit-hit` A start limit was defined for the unit and it was hit, causing the unit to fail to start. See `systemd.unit(5)`'s `StartLimitIntervalSec=` and `StartLimitBurst=` for details.
- `resources` A catch-all condition in case a system operation failed.
-
- : Defined `$SERVICE_RESULT` values
+ | Value | Meaning |
+ |-------|---------|
+ | `success` | The service ran successfully and exited cleanly. |
+ | `protocol` | A protocol violation occurred: the service did not take the steps required by its unit configuration (specifically what is configured in its `Type=` setting). |
+ | `timeout` | One of the steps timed out. |
+ | `exit-code` | Service process exited with a non-zero exit code; see `$EXIT_CODE` below for the actual exit code returned. |
+ | `signal` | A service process was terminated abnormally by a signal, without dumping core. See `$EXIT_CODE` below for the actual signal causing the termination. |
+ | `core-dump` | A service process terminated abnormally with a signal and dumped core. See `$EXIT_CODE` below for the signal causing the termination. |
+ | `watchdog` | Watchdog keep-alive ping was enabled for the service, but the deadline was missed. |
+ | `exec-condition` | Service did not run because `ExecCondition=` failed (that is its command exited with an exit status of 1 through 254 (inclusive)). |
+ | `oom-kill` | A service process was terminated by the Out-Of-Memory (OOM) killer. |
+ | `start-limit-hit` | A start limit was defined for the unit and it was hit, causing the unit to fail to start. See `systemd.unit(5)`'s `StartLimitIntervalSec=` and `StartLimitBurst=` for details. |
+ | `resources` | A catch-all condition in case a system operation failed. |
 
  This environment variable is useful to monitor failure or successful
  termination of a service. Even though this variable is available in
@@ -3964,167 +3947,164 @@ specification and by the systemd service manager itself are used.
 
 The following basic service exit codes are defined by the C library.
 
- Exit Code Symbolic Name Description
+**Basic C library exit codes**
 
- ----------- ---------------- ---------------------------------------
-
- 0 `EXIT_SUCCESS` Generic success code.
- 1 `EXIT_FAILURE` Generic failure or unspecified error.
-
- : Basic C library exit codes
+| Exit Code | Symbolic Name | Description |
+|-----------|---------------|-------------|
+| 0 | `EXIT_SUCCESS` | Generic success code. |
+| 1 | `EXIT_FAILURE` | Generic failure or unspecified error. |
 
 The following service exit codes are defined by the [LSB
 specification](https://refspecs.linuxbase.org/LSB_5.0.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html).
 
- Exit Code Symbolic Name Description
+**LSB service exit codes**
 
- ----------- ------------------------ ---------------------------------------
-
- 2 `EXIT_INVALIDARGUMENT` Invalid or excess arguments.
- 3 `EXIT_NOTIMPLEMENTED` Unimplemented feature.
- 4 `EXIT_NOPERMISSION` The user has insufficient privileges.
- 5 `EXIT_NOTINSTALLED` The program is not installed.
- 6 `EXIT_NOTCONFIGURED` The program is not configured.
- 7 `EXIT_NOTRUNNING` The program is not running.
-
- : LSB service exit codes
+| Exit Code | Symbolic Name | Description |
+|-----------|---------------|-------------|
+| 2 | `EXIT_INVALIDARGUMENT` | Invalid or excess arguments. |
+| 3 | `EXIT_NOTIMPLEMENTED` | Unimplemented feature. |
+| 4 | `EXIT_NOPERMISSION` | The user has insufficient privileges. |
+| 5 | `EXIT_NOTINSTALLED` | The program is not installed. |
+| 6 | `EXIT_NOTCONFIGURED` | The program is not configured. |
+| 7 | `EXIT_NOTRUNNING` | The program is not running. |
 
 The LSB specification suggests that error codes 200 and above are
 reserved for implementations. Some of them are used by the service
 manager to indicate problems during process invocation:
 
- Exit Code Symbolic Name Description
+**systemd-specific exit codes**
 
- ----------- -------------------------------- ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
- 200 `EXIT_CHDIR` Changing to the requested working directory failed. See `WorkingDirectory=` above.
- 201 `EXIT_NICE` Failed to set up process scheduling priority (nice level). See `Nice=` above.
- 202 `EXIT_FDS` Failed to close unwanted file descriptors, or to adjust passed file descriptors.
- 203 `EXIT_EXEC` The actual process execution failed (specifically, the `execve(2)` system call). Most likely this is caused by a missing or non-accessible executable file.
- 204 `EXIT_MEMORY` Failed to perform an action due to memory shortage.
- 205 `EXIT_LIMITS` Failed to adjust resource limits. See `LimitCPU=` and related settings above.
- 206 `EXIT_OOM_ADJUST` Failed to adjust the OOM setting. See `OOMScoreAdjust=` above.
- 207 `EXIT_SIGNAL_MASK` Failed to set process signal mask.
- 208 `EXIT_STDIN` Failed to set up standard input. See `StandardInput=` above.
- 209 `EXIT_STDOUT` Failed to set up standard output. See `StandardOutput=` above.
- 210 `EXIT_CHROOT` Failed to change root directory (`chroot(2)`). See `RootDirectory=`/`RootImage=` above.
- 211 `EXIT_IOPRIO` Failed to set up IO scheduling priority. See `IOSchedulingClass=`/`IOSchedulingPriority=` above.
- 212 `EXIT_TIMERSLACK` Failed to set up timer slack. See `TimerSlackNSec=` above.
- 213 `EXIT_SECUREBITS` Failed to set process secure bits. See `SecureBits=` above.
- 214 `EXIT_SETSCHEDULER` Failed to set up CPU scheduling. See `CPUSchedulingPolicy=`/`CPUSchedulingPriority=` above.
- 215 `EXIT_CPUAFFINITY` Failed to set up CPU affinity. See `CPUAffinity=` above.
- 216 `EXIT_GROUP` Failed to determine or change group credentials. See `Group=`/`SupplementaryGroups=` above.
- 217 `EXIT_USER` Failed to determine or change user credentials, or to set up user namespacing. See `User=`/`PrivateUsers=` above.
- 218 `EXIT_CAPABILITIES` Failed to drop capabilities, or apply ambient capabilities. See `CapabilityBoundingSet=`/`AmbientCapabilities=` above.
- 219 `EXIT_CGROUP` Setting up the service control group failed.
- 220 `EXIT_SETSID` Failed to create new process session.
- 221 `EXIT_CONFIRM` Execution has been cancelled by the user. See the `systemd.confirm_spawn=` kernel command line setting on `kernel-command-line(7)` for details.
- 222 `EXIT_STDERR` Failed to set up standard error output. See `StandardError=` above.
- 224 `EXIT_PAM` Failed to set up PAM session. See `PAMName=` above.
- 225 `EXIT_NETWORK` Failed to set up network namespacing. See `PrivateNetwork=` above.
- 226 `EXIT_NAMESPACE` Failed to set up mount, UTS, or IPC namespacing. See `ReadOnlyPaths=`, `ProtectHostname=`, `PrivateIPC=`, and related settings above.
- 227 `EXIT_NO_NEW_PRIVILEGES` Failed to disable new privileges. See `NoNewPrivileges=yes` above.
- 228 `EXIT_SECCOMP` Failed to apply system call filters. See `SystemCallFilter=` and related settings above.
- 229 `EXIT_SELINUX_CONTEXT` Determining or changing SELinux context failed. See `SELinuxContext=` above.
- 230 `EXIT_PERSONALITY` Failed to set up an execution domain (personality). See `Personality=` above.
- 231 `EXIT_APPARMOR_PROFILE` Failed to prepare changing AppArmor profile. See `AppArmorProfile=` above.
- 232 `EXIT_ADDRESS_FAMILIES` Failed to restrict address families. See `RestrictAddressFamilies=` above.
- 233 `EXIT_RUNTIME_DIRECTORY` Setting up runtime directory failed. See `RuntimeDirectory=` and related settings above.
- 235 `EXIT_CHOWN` Failed to adjust socket ownership. Used for socket units only.
- 236 `EXIT_SMACK_PROCESS_LABEL` Failed to set SMACK label. See `SmackProcessLabel=` above.
- 237 `EXIT_KEYRING` Failed to set up kernel keyring.
- 238 `EXIT_STATE_DIRECTORY` Failed to set up unit's state directory. See `StateDirectory=` above.
- 239 `EXIT_CACHE_DIRECTORY` Failed to set up unit's cache directory. See `CacheDirectory=` above.
- 240 `EXIT_LOGS_DIRECTORY` Failed to set up unit's logging directory. See `LogsDirectory=` above.
- 241 `EXIT_CONFIGURATION_DIRECTORY` Failed to set up unit's configuration directory. See `ConfigurationDirectory=` above.
- 242 `EXIT_NUMA_POLICY` Failed to set up unit's NUMA memory policy. See `NUMAPolicy=` and `NUMAMask=` above.
- 243 `EXIT_CREDENTIALS` Failed to set up unit's credentials. See `ImportCredential=`, `LoadCredential=` and `SetCredential=` above.
- 245 `EXIT_BPF` Failed to apply BPF restrictions. See `RestrictFileSystems=` above.
-
- : systemd-specific exit codes
+| Exit Code | Symbolic Name | Description |
+|-----------|---------------|-------------|
+| 200 | `EXIT_CHDIR` | Changing to the requested working directory failed. See `WorkingDirectory=` above. |
+| 201 | `EXIT_NICE` | Failed to set up process scheduling priority (nice level). See `Nice=` above. |
+| 202 | `EXIT_FDS` | Failed to close unwanted file descriptors, or to adjust passed file descriptors. |
+| 203 | `EXIT_EXEC` | The actual process execution failed (specifically, the `execve(2)` system call). Most likely this is caused by a missing or non-accessible executable file. |
+| 204 | `EXIT_MEMORY` | Failed to perform an action due to memory shortage. |
+| 205 | `EXIT_LIMITS` | Failed to adjust resource limits. See `LimitCPU=` and related settings above. |
+| 206 | `EXIT_OOM_ADJUST` | Failed to adjust the OOM setting. See `OOMScoreAdjust=` above. |
+| 207 | `EXIT_SIGNAL_MASK` | Failed to set process signal mask. |
+| 208 | `EXIT_STDIN` | Failed to set up standard input. See `StandardInput=` above. |
+| 209 | `EXIT_STDOUT` | Failed to set up standard output. See `StandardOutput=` above. |
+| 210 | `EXIT_CHROOT` | Failed to change root directory (`chroot(2)`). See `RootDirectory=`/`RootImage=` above. |
+| 211 | `EXIT_IOPRIO` | Failed to set up IO scheduling priority. See `IOSchedulingClass=`/`IOSchedulingPriority=` above. |
+| 212 | `EXIT_TIMERSLACK` | Failed to set up timer slack. See `TimerSlackNSec=` above. |
+| 213 | `EXIT_SECUREBITS` | Failed to set process secure bits. See `SecureBits=` above. |
+| 214 | `EXIT_SETSCHEDULER` | Failed to set up CPU scheduling. See `CPUSchedulingPolicy=`/`CPUSchedulingPriority=` above. |
+| 215 | `EXIT_CPUAFFINITY` | Failed to set up CPU affinity. See `CPUAffinity=` above. |
+| 216 | `EXIT_GROUP` | Failed to determine or change group credentials. See `Group=`/`SupplementaryGroups=` above. |
+| 217 | `EXIT_USER` | Failed to determine or change user credentials, or to set up user namespacing. See `User=`/`PrivateUsers=` above. |
+| 218 | `EXIT_CAPABILITIES` | Failed to drop capabilities, or apply ambient capabilities. See `CapabilityBoundingSet=`/`AmbientCapabilities=` above. |
+| 219 | `EXIT_CGROUP` | Setting up the service control group failed. |
+| 220 | `EXIT_SETSID` | Failed to create new process session. |
+| 221 | `EXIT_CONFIRM` | Execution has been cancelled by the user. See the `systemd.confirm_spawn=` kernel command line setting on `kernel-command-line(7)` for details. |
+| 222 | `EXIT_STDERR` | Failed to set up standard error output. See `StandardError=` above. |
+| 224 | `EXIT_PAM` | Failed to set up PAM session. See `PAMName=` above. |
+| 225 | `EXIT_NETWORK` | Failed to set up network namespacing. See `PrivateNetwork=` above. |
+| 226 | `EXIT_NAMESPACE` | Failed to set up mount, UTS, or IPC namespacing. See `ReadOnlyPaths=`, `ProtectHostname=`, `PrivateIPC=`, and related settings above. |
+| 227 | `EXIT_NO_NEW_PRIVILEGES` | Failed to disable new privileges. See `NoNewPrivileges=yes` above. |
+| 228 | `EXIT_SECCOMP` | Failed to apply system call filters. See `SystemCallFilter=` and related settings above. |
+| 229 | `EXIT_SELINUX_CONTEXT` | Determining or changing SELinux context failed. See `SELinuxContext=` above. |
+| 230 | `EXIT_PERSONALITY` | Failed to set up an execution domain (personality). See `Personality=` above. |
+| 231 | `EXIT_APPARMOR_PROFILE` | Failed to prepare changing AppArmor profile. See `AppArmorProfile=` above. |
+| 232 | `EXIT_ADDRESS_FAMILIES` | Failed to restrict address families. See `RestrictAddressFamilies=` above. |
+| 233 | `EXIT_RUNTIME_DIRECTORY` | Setting up runtime directory failed. See `RuntimeDirectory=` and related settings above. |
+| 235 | `EXIT_CHOWN` | Failed to adjust socket ownership. Used for socket units only. |
+| 236 | `EXIT_SMACK_PROCESS_LABEL` | Failed to set SMACK label. See `SmackProcessLabel=` above. |
+| 237 | `EXIT_KEYRING` | Failed to set up kernel keyring. |
+| 238 | `EXIT_STATE_DIRECTORY` | Failed to set up unit's state directory. See `StateDirectory=` above. |
+| 239 | `EXIT_CACHE_DIRECTORY` | Failed to set up unit's cache directory. See `CacheDirectory=` above. |
+| 240 | `EXIT_LOGS_DIRECTORY` | Failed to set up unit's logging directory. See `LogsDirectory=` above. |
+| 241 | `EXIT_CONFIGURATION_DIRECTORY` | Failed to set up unit's configuration directory. See `ConfigurationDirectory=` above. |
+| 242 | `EXIT_NUMA_POLICY` | Failed to set up unit's NUMA memory policy. See `NUMAPolicy=` and `NUMAMask=` above. |
+| 243 | `EXIT_CREDENTIALS` | Failed to set up unit's credentials. See `ImportCredential=`, `LoadCredential=` and `SetCredential=` above. |
+| 245 | `EXIT_BPF` | Failed to apply BPF restrictions. See `RestrictFileSystems=` above. |
 
 Finally, the BSD operating systems define a set of exit codes, typically
 defined on Linux systems too:
 
- Exit Code Symbolic Name Description
+**BSD exit codes**
 
- ----------- ------------------ ---------------------------------------------
-
- 64 `EX_USAGE` Command line usage error
- 65 `EX_DATAERR` Data format error
- 66 `EX_NOINPUT` Cannot open input
- 67 `EX_NOUSER` Addressee unknown
- 68 `EX_NOHOST` Host name unknown
- 69 `EX_UNAVAILABLE` Service unavailable
- 70 `EX_SOFTWARE` internal software error
- 71 `EX_OSERR` System error (e.g., cannot fork)
- 72 `EX_OSFILE` Critical OS file missing
- 73 `EX_CANTCREAT` Cannot create (user) output file
- 74 `EX_IOERR` Input/output error
- 75 `EX_TEMPFAIL` Temporary failure; user is invited to retry
- 76 `EX_PROTOCOL` Remote error in protocol
- 77 `EX_NOPERM` Permission denied
- 78 `EX_CONFIG` Configuration error
-
- : BSD exit codes
+| Exit Code | Symbolic Name | Description |
+|-----------|---------------|-------------|
+| 64 | `EX_USAGE` | Command line usage error |
+| 65 | `EX_DATAERR` | Data format error |
+| 66 | `EX_NOINPUT` | Cannot open input |
+| 67 | `EX_NOUSER` | Addressee unknown |
+| 68 | `EX_NOHOST` | Host name unknown |
+| 69 | `EX_UNAVAILABLE` | Service unavailable |
+| 70 | `EX_SOFTWARE` | Internal software error |
+| 71 | `EX_OSERR` | System error (e.g., cannot fork) |
+| 72 | `EX_OSFILE` | Critical OS file missing |
+| 73 | `EX_CANTCREAT` | Cannot create (user) output file |
+| 74 | `EX_IOERR` | Input/output error |
+| 75 | `EX_TEMPFAIL` | Temporary failure; user is invited to retry |
+| 76 | `EX_PROTOCOL` | Remote error in protocol |
+| 77 | `EX_NOPERM` | Permission denied |
+| 78 | `EX_CONFIG` | Configuration error |
 
 ## Examples
 
-:::: example
-::: title
-`$MONITOR_*` usage
-:::
+**Example 3. `$MONITOR_*` usage**
 
 A service `myfailer.service` which can trigger an `OnFailure=`
 dependency.
 
- [Unit]
- Description=Service which can trigger an OnFailure= dependency
- OnFailure=myhandler.service
+```ini
+[Unit]
+Description=Service which can trigger an OnFailure= dependency
+OnFailure=myhandler.service
 
- [Service]
- ExecStart=/bin/myprogram
+[Service]
+ExecStart=/bin/myprogram
+```
 
 A service `mysuccess.service` which can trigger an `OnSuccess=`
 dependency.
 
- [Unit]
- Description=Service which can trigger an OnSuccess= dependency
- OnSuccess=myhandler.service
+```ini
+[Unit]
+Description=Service which can trigger an OnSuccess= dependency
+OnSuccess=myhandler.service
 
- [Service]
- ExecStart=/bin/mysecondprogram
+[Service]
+ExecStart=/bin/mysecondprogram
+```
 
 A service `myhandler.service` which can be triggered by any of the above
 services.
 
- [Unit]
- Description=Acts on service failing or succeeding
+```ini
+[Unit]
+Description=Acts on service failing or succeeding
 
- [Service]
- ExecStart=/bin/bash -c "echo $MONITOR_SERVICE_RESULT $MONITOR_EXIT_CODE $MONITOR_EXIT_STATUS $MONITOR_INVOCATION_ID $MONITOR_UNIT"
+[Service]
+ExecStart=/bin/bash -c "echo $MONITOR_SERVICE_RESULT $MONITOR_EXIT_CODE $MONITOR_EXIT_STATUS $MONITOR_INVOCATION_ID $MONITOR_UNIT"
+```
 
 If `myfailer.service` were to run and exit in failure, then
 `myhandler.service` would be triggered and the monitor variables would
 be set as follows:
 
- MONITOR_SERVICE_RESULT=exit-code
- MONITOR_EXIT_CODE=exited
- MONITOR_EXIT_STATUS=1
- MONITOR_INVOCATION_ID=cc8fdc149b2b4ca698d4f259f4054236
- MONITOR_UNIT=myfailer.service
+```text
+MONITOR_SERVICE_RESULT=exit-code
+MONITOR_EXIT_CODE=exited
+MONITOR_EXIT_STATUS=1
+MONITOR_INVOCATION_ID=cc8fdc149b2b4ca698d4f259f4054236
+MONITOR_UNIT=myfailer.service
+```
 
-If `mysuccess.service` were to 100 330k 100 330k 0 0 91919 0 0:00:03
-0:00:03 \--:\--:\-- 91920 run and exit in success, then
+If `mysuccess.service` were to run and exit in success, then
 `myhandler.service` would be triggered and the monitor variables would
 be set as follows:
 
- MONITOR_SERVICE_RESULT=success
- MONITOR_EXIT_CODE=exited
- MONITOR_EXIT_STATUS=0
- MONITOR_INVOCATION_ID=6ab9af147b8c4a3ebe36e7a5f8611697
- MONITOR_UNIT=mysuccess.service
-::::
+```text
+MONITOR_SERVICE_RESULT=success
+MONITOR_EXIT_CODE=exited
+MONITOR_EXIT_STATUS=0
+MONITOR_INVOCATION_ID=6ab9af147b8c4a3ebe36e7a5f8611697
+MONITOR_UNIT=mysuccess.service
+```
 
 ## See Also
 

@@ -1,6 +1,6 @@
 # Reference Documentation
 
-Last updated: 2026-03-02
+Last updated: 2026-03-03
 Sources: Podman v5.8.0 (<https://docs.podman.io/>) · bootc v1.13.0 (<https://bootc-dev.github.io/bootc/>) · Fedora bootc docs (<https://docs.fedoraproject.org/en-US/bootc/>) · systemd (<https://systemd.io/>)
 
 If today's date is more than ~3 months past the date above, suggest that the user refresh the reference docs.
@@ -37,6 +37,7 @@ If today's date is more than ~3 months past the date above, suggest that the use
 | File | When to consult |
 |---|---|
 | `systemd.exec.5.md` | Writing or reviewing systemd service unit files — execution environment, security settings, resource limits, credential handling, environment variables |
+| `systemd.unit.5.md` | Writing or reviewing systemd unit files — [Unit] and [Install] section options, dependencies, conditions, specifiers, drop-ins, unit search paths |
 
 ## When to Consult These Docs
 
@@ -48,3 +49,4 @@ If today's date is more than ~3 months past the date above, suggest that the use
 - Consult `debugging-toolbx.md` when diagnosing issues on a live bootc system using toolbox containers.
 - Consult `dynamic-reconfiguration.md` when considering live (non-image) changes to a running system, especially for firewall or `/etc` modifications.
 - Consult `systemd.exec.5.md` when writing or reviewing systemd service units — do not rely on memory for execution directives, security options, resource controls, or environment variable handling.
+- Consult `systemd.unit.5.md` when writing or reviewing systemd unit files — unit dependencies, ordering, conditions, specifiers, drop-in structure, or [Unit]/[Install] options.
