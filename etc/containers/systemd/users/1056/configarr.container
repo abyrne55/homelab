@@ -1,0 +1,29 @@
+[Unit]
+Description=Configarr - TRaSH-Guides sync for Sonarr/Radarr
+After=homelab-config-sync.service
+
+[Container]
+Image=ghcr.io/raydak-labs/configarr:1.23
+AutoUpdate=registry
+
+Environment=TZ=UTC
+Environment=CONFIG_LOCATION=/app/config/config.yml
+
+# Config from homelab-config repo
+Volume=/var/lib/homelab-config/configarr:/app/config:ro,Z
+# Repo cache on data disk
+Volume=/var/mnt/data/.configarr/repos:/app/repos:rw,Z
+# Credentials dir
+Volume=%d:/run/credentials:ro,z
+
+LoadCredential=sonarr-api-key:/run/systemd-age-creds.sock
+LoadCredential=radarr-api-key:/run/systemd-age-creds.sock
+LoadCredential=qbittorrent-webui-password:/run/systemd-age-creds.sock
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
+Restart=no
+
+[Install]
+WantedBy=default.target
