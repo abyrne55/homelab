@@ -1,0 +1,26 @@
+#!/bin/bash
+set -euo pipefail
+
+RADARR_URL="http://localhost:20540"
+API_KEY=$(cat "${CREDENTIALS_DIRECTORY}/radarr-api-key")
+
+echo "Checking Radarr authentication configuration..."
+CURRENT=$(curl -sf "$RADARR_URL/api/v3/config/host" -H "X-Api-Key: $API_KEY")
+CURRENT_AUTH=$(echo "$CURRENT" | jq -r '.authenticationMethod')
+
+if [ "$CURRENT_AUTH" = "forms" ]; then
+  echo "Radarr Forms authentication already configured; skipping"
+  exit 0
+fi
+
+echo "Enabling Forms authentication on Radarr..."
+WEBUI_PASS=$(cat "${CREDENTIALS_DIRECTORY}/radarr-webui-password")
+UPDATED=$(echo "$CURRENT" | jq \
+  --arg pass "$WEBUI_PASS" \
+  '.authenticationMethod = "forms" | .authenticationRequired = "enabled" | .username = "abyrne55" | .password = $pass')
+curl -sf -X PUT "$RADARR_URL/api/v3/config/host" \
+  -H "X-Api-Key: $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "$UPDATED"
+
+echo "Radarr Forms authentication configured successfully"

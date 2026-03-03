@@ -1,7 +1,7 @@
 [Unit]
 Description=Radarr media management
 After=network-online.target radarr-init-config.service
-Wants=network-online.target radarr-init-config.service
+Wants=network-online.target radarr-init-config.service radarr-configure.service
 
 [Container]
 Image=lscr.io/linuxserver/radarr:6.0.4

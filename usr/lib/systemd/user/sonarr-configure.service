@@ -1,0 +1,12 @@
+[Unit]
+Description=Configure Sonarr Forms authentication
+PartOf=sonarr.service
+After=sonarr.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/sonarr-configure
+LoadCredential=sonarr-api-key:/run/systemd-age-creds.sock
+LoadCredential=sonarr-webui-password:/run/systemd-age-creds.sock
+Restart=on-failure
+RestartSec=10

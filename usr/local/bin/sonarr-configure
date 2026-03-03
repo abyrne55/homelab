@@ -1,0 +1,26 @@
+#!/bin/bash
+set -euo pipefail
+
+SONARR_URL="http://localhost:20550"
+API_KEY=$(cat "${CREDENTIALS_DIRECTORY}/sonarr-api-key")
+
+echo "Checking Sonarr authentication configuration..."
+CURRENT=$(curl -sf "$SONARR_URL/api/v3/config/host" -H "X-Api-Key: $API_KEY")
+CURRENT_AUTH=$(echo "$CURRENT" | jq -r '.authenticationMethod')
+
+if [ "$CURRENT_AUTH" = "forms" ]; then
+  echo "Sonarr Forms authentication already configured; skipping"
+  exit 0
+fi
+
+echo "Enabling Forms authentication on Sonarr..."
+WEBUI_PASS=$(cat "${CREDENTIALS_DIRECTORY}/sonarr-webui-password")
+UPDATED=$(echo "$CURRENT" | jq \
+  --arg pass "$WEBUI_PASS" \
+  '.authenticationMethod = "forms" | .authenticationRequired = "enabled" | .username = "abyrne55" | .password = $pass')
+curl -sf -X PUT "$SONARR_URL/api/v3/config/host" \
+  -H "X-Api-Key: $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "$UPDATED"
+
+echo "Sonarr Forms authentication configured successfully"

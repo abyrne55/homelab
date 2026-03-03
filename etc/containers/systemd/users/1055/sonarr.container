@@ -1,7 +1,7 @@
 [Unit]
 Description=Sonarr TV series management
 After=network-online.target sonarr-init-config.service
-Wants=network-online.target sonarr-init-config.service
+Wants=network-online.target sonarr-init-config.service sonarr-configure.service
 
 [Container]
 Image=lscr.io/linuxserver/sonarr:4.0.16
