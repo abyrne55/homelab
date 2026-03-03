@@ -16,14 +16,13 @@ Volume=/var/mnt/data/.configarr/repos:/app/repos:rw,Z
 # Credentials dir
 Volume=%d:/run/credentials:ro,z
 
-LoadCredential=sonarr-api-key:/run/systemd-age-creds.sock
-LoadCredential=radarr-api-key:/run/systemd-age-creds.sock
-LoadCredential=qbittorrent-webui-password:/run/systemd-age-creds.sock
-
 [Service]
 Type=oneshot
 RemainAfterExit=no
 Restart=no
+LoadCredential=sonarr-api-key:/run/systemd-age-creds.sock
+LoadCredential=radarr-api-key:/run/systemd-age-creds.sock
+LoadCredential=qbittorrent-webui-password:/run/systemd-age-creds.sock
 
 [Install]
 WantedBy=default.target
