@@ -26,7 +26,6 @@ A few execution parameters result in additional, automatic dependencies
 to be added:
 
 - Units with `WorkingDirectory=`, `RootDirectory=`, `RootImage=`,
-
   `RuntimeDirectory=`, `StateDirectory=`, `CacheDirectory=`,
   `LogsDirectory=` or `ConfigurationDirectory=` set automatically gain
   dependencies of type `Requires=` and `After=` on all mount units
@@ -34,7 +33,6 @@ to be added:
   them listed explicitly in `RequiresMountsFor=`.
 
 - Units with `PrivateTmp=yes` automatically gain dependencies of type
-
   `Wants=` and `After=` on all mounts required to access `/tmp/` and
   `/var/tmp/` and an automatic `After=` dependency on
   `systemd-tmpfiles-setup.service(8)`, unless
@@ -44,7 +42,6 @@ to be added:
   `PrivateTmp=yes` is converted to `PrivateTmp=disconnected`.
 
 - Units with `PrivateTmp=disconnected` automatically gain dependencies
-
   of type `Wants=` and `After=` on the mount required to access `/var/`,
   unless `DefaultDependencies=no` and/or `RootDirectory=`/`RootImage=`
   are specified. If `DefaultDependencies=no` is specified, and a
@@ -53,13 +50,11 @@ to be added:
   `/tmp/` is reused for `/var/tmp/` by setting `$TMPDIR` appropriately.
 
 - Units whose standard output or error output is connected to `journal`
-
   or `kmsg` (or their combinations with console output, see below)
   automatically acquire dependencies of type `After=` on
   `systemd-journald.socket`.
 
 - Units using `LogNamespace=` will automatically gain ordering and
-
   requirement dependencies on the two socket units associated with
   `systemd-journald@.service` instances.
 
@@ -3548,7 +3543,6 @@ For each invoked process the list of environment variables set is
 compiled from the following sources:
 
 - Variables globally configured for the service manager, using the
-
   `DefaultEnvironment=` setting in
   `systemd-system.conf(5)`, the kernel command line
   option `systemd.setenv=` understood by `systemd(1)`, or
@@ -3557,17 +3551,14 @@ compiled from the following sources:
 - Variables defined by the service manager itself (see the list below).
 
 - Variables set in the service manager's own environment variable block
-
   (subject to `PassEnvironment=` for the system service manager).
 
 - Variables set via `Environment=` in the unit file.
 
 - Variables read from files specified via `EnvironmentFile=` in the unit
-
   file.
 
 - Variables set by any PAM modules in case `PAMName=` is in effect,
-
   cf. `pam_env(8)`.
 
 If the same environment variable is set by multiple of these sources,
@@ -3828,7 +3819,6 @@ manager or generated internally for each invoked process:
 - `start-limit-hit`: not set / not set
 
 - `resources`: any of the above / any of the above
-
   Note: the process may be terminated by a signal not sent by systemd.
   In particular, the process may send an arbitrary signal to itself in a
   handler for any of the non-maskable signals. Nevertheless, in the
@@ -3836,7 +3826,6 @@ manager or generated internally for each invoked process:
   sends have been included. Moreover, using `SuccessExitStatus=`,
   additional exit statuses may be declared to indicate clean
   termination, which is not reflected by this table.
-
   : Summary of possible service result variable values
 
 `$MONITOR_SERVICE_RESULT`; `$MONITOR_EXIT_CODE`; `$MONITOR_EXIT_STATUS`; `$MONITOR_INVOCATION_ID`; `$MONITOR_UNIT`

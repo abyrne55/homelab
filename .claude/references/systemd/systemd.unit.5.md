@@ -574,10 +574,8 @@ The following snippet (highlighted) allows a unit (e.g. `foo.service`) to be ena
 
     [Unit]
     Description=Foo
-
     [Service]
     ExecStart=/usr/sbin/foo-daemon
-
     [Install]
     WantedBy=multi-user.target
 
@@ -600,12 +598,10 @@ Suppose there is a vendor-supplied unit `/usr/lib/systemd/system/httpd.service` 
     After=remote-fs.target sqldb.service
     Requires=sqldb.service
     AssertPathExists=/srv/webserver
-
     [Service]
     Type=notify
     ExecStart=/usr/sbin/some-fancy-httpd-server
     Nice=5
-
     [Install]
     WantedBy=multi-user.target
 
@@ -618,13 +614,11 @@ The first possibility is to copy the unit file to `/etc/systemd/system/httpd.ser
     After=remote-fs.target sqldb.service memcached.service
     Requires=sqldb.service memcached.service
     AssertPathExists=/srv/www
-
     [Service]
     Type=notify
     ExecStart=/usr/sbin/some-fancy-httpd-server
     Nice=0
     PrivateTmp=yes
-
     [Install]
     WantedBy=multi-user.target
 
@@ -636,7 +630,6 @@ Alternatively, the administrator could create a drop-in file `/etc/systemd/syste
     # Reset all assertions and then re-add the condition we want
     AssertPathExists=
     AssertPathExists=/srv/www
-
     [Service]
     Nice=0
     PrivateTmp=yes
@@ -651,7 +644,6 @@ Top level per-type drop-ins can be used to change some aspect of all units of a 
 
     [Unit]
     Description=My Failure Handler For %i
-
     [Service]
     Type=oneshot
     # Perform some special action for when %i exits unexpectedly.
