@@ -1,0 +1,12 @@
+[Unit]
+Description=Initialize Sonarr config.xml with API key
+ConditionUser=sonarr
+ConditionPathExists=!/var/mnt/data/.sonarr/config/config.xml
+Before=sonarr.service
+PartOf=sonarr.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+LoadCredential=sonarr-api-key:/run/systemd-age-creds.sock
+ExecStart=/usr/local/bin/sonarr-init-config
