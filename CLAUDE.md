@@ -134,7 +134,7 @@ Use `/test-vm [service-name]` whenever you're testing, debugging, or doing other
 If `vsh` is unavailable, use the raw SSH command:
 
 ```bash
-ssh -i ./secrets/core/id_ed25519 -p 2222 -o LogLevel=QUIET -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o PreferredAuthentications=publickey core@127.0.0.1 -- "<your command here>" || true
+ssh -i ./secrets/core/id_ed25519 -p 2222 -o LogLevel=QUIET -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o PreferredAuthentications=publickey core@127.0.0.1 -- "<your command here>"
 ```
 
 Use `hl` (baked into the image at `/usr/local/bin/hl`) to manage rootless quadlets:
@@ -155,7 +155,7 @@ hl users                             # list discovered service users
 hl help                              # full usage
 ```
 
-The underlying pattern (useful when `hl` is unavailable) is:
+**Always prefer to use `hl` instead of using `systemctl` or `journalctl` directly.** If `hl` is unable to complete a certain task, double check `hl help` to ensure you're specifying the correct flags. If that fails, you may use underlying commands like the following:
 
 ```bash
 sudo systemctl --user -M $QUADLET_USERNAME@.host status $QUADLET_NAME.service

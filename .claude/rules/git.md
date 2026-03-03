@@ -18,7 +18,5 @@
 ## Merging PRs
 
 - **Before merging:** Verify all GitHub checks have passed.
-- **Merge strategy:**
-  - **Squash merge** for multi-commit PRs (default).
-  - **Rebase merge** for small, single-commit PRs (e.g., version bumps, trivial fixes).
+- **Merge strategy: Always **squash merge** PRs and delete the PR branch (`gh pr merge --squash --delete-branch`)
   - **Never use merge commits.**
