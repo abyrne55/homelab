@@ -1,0 +1,2 @@
+# False positive: base64-encoded Rick Roll in systemd.exec(5) QEMU example
+.claude/references/systemd/systemd.exec.5.md:generic-api-key:3412
