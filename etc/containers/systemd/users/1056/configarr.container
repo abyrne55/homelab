@@ -19,7 +19,10 @@ Volume=%d:/run/credentials:ro,z
 [Service]
 Type=oneshot
 RemainAfterExit=no
-Restart=no
+ExecStartPre=/bin/bash -c 'curl -so /dev/null --max-time 5 http://localhost:20550/ || { echo "Sonarr not ready"; exit 1; }'
+ExecStartPre=/bin/bash -c 'curl -so /dev/null --max-time 5 http://localhost:20540/ || { echo "Radarr not ready"; exit 1; }'
+Restart=on-failure
+RestartSec=30
 LoadCredential=sonarr-api-key:/run/systemd-age-creds.sock
 LoadCredential=radarr-api-key:/run/systemd-age-creds.sock
 LoadCredential=qbittorrent-webui-password:/run/systemd-age-creds.sock
