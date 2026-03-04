@@ -153,10 +153,6 @@ $(BUILD_DIR)/secrets.iso:
 run-vm: $(BUILD_DIR)/qcow2/disk.qcow2 $(BUILD_DIR)/data.qcow2 $(BUILD_DIR)/secrets.iso
 	@if socat /dev/null TCP:127.0.0.1:$(MONITOR_PORT) 2>/dev/null; then \
 		echo "QEMU is already running"; \
-	elif [ -f $(BUILD_DIR)/qemu.pid ] && kill -0 $$(cat $(BUILD_DIR)/qemu.pid) 2>/dev/null; then \
-		echo "QEMU is already running"; \
-	elif pgrep -f "qemu-system-aarch64.*$(BUILD_DIR)/qcow2/disk.qcow2" > /dev/null 2>&1; then \
-		echo "QEMU is already running"; \
 	else \
 		$(MAKE) _start-qemu; \
 	fi
@@ -164,10 +160,6 @@ run-vm: $(BUILD_DIR)/qcow2/disk.qcow2 $(BUILD_DIR)/data.qcow2 $(BUILD_DIR)/secre
 # Run VM built from GHCR image (faster than local build)
 run-vm-from-ghcr: $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2 $(BUILD_DIR)/data.qcow2 $(BUILD_DIR)/secrets.iso
 	@if socat /dev/null TCP:127.0.0.1:$(MONITOR_PORT) 2>/dev/null; then \
-		echo "QEMU is already running"; \
-	elif [ -f $(BUILD_DIR)/qemu.pid ] && kill -0 $$(cat $(BUILD_DIR)/qemu.pid) 2>/dev/null; then \
-		echo "QEMU is already running"; \
-	elif pgrep -f "qemu-system-aarch64.*$(BUILD_DIR)/qcow2/disk.qcow2" > /dev/null 2>&1; then \
 		echo "QEMU is already running"; \
 	else \
 		$(MAKE) _start-qemu; \
@@ -189,7 +181,7 @@ _start-qemu:
 		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::80-:80,hostfwd=tcp::443-:443 \
 		-drive if=virtio,file=$(BUILD_DIR)/qcow2/disk.qcow2,snapshot=on \
 		-drive if=virtio,file=$(BUILD_DIR)/data.qcow2 \
-		$(shell [ -s $(BUILD_DIR)/secrets.iso ] && echo "-drive file=$(BUILD_DIR)/secrets.iso,format=raw,if=virtio,readonly=on,media=cdrom,id=secrets") & echo $$! > $(BUILD_DIR)/qemu.pid; disown
+		$(shell [ -s $(BUILD_DIR)/secrets.iso ] && echo "-drive file=$(BUILD_DIR)/secrets.iso,format=raw,if=virtio,readonly=on,media=cdrom,id=secrets") & disown
 	@echo "QEMU running in background. Serial output: $(BUILD_DIR)/serial.log"
 
 # SSH options
@@ -199,16 +191,8 @@ SSH_OPTS := -o LogLevel=QUIET -o StrictHostKeyChecking=no -o UserKnownHostsFile=
 # Internal target to check if VM is running
 .PHONY: _check-vm-running
 _check-vm-running:
-	@if socat /dev/null TCP:127.0.0.1:$(MONITOR_PORT) 2>/dev/null; then \
-		: ; \
-	elif [ -f $(BUILD_DIR)/qemu.pid ] && kill -0 $$(cat $(BUILD_DIR)/qemu.pid) 2>/dev/null; then \
-		: ; \
-	elif pgrep -f "qemu-system-aarch64.*$(BUILD_DIR)/qcow2/disk.qcow2" > /dev/null 2>&1; then \
-		: ; \
-	else \
-		echo "ERROR: VM is not running. Start it with 'make run-vm' or 'make run-vm-from-ghcr' first."; \
-		exit 1; \
-	fi
+	@socat /dev/null TCP:127.0.0.1:$(MONITOR_PORT) 2>/dev/null || \
+		{ echo "ERROR: VM is not running. Start it with 'make run-vm' or 'make run-vm-from-ghcr' first."; exit 1; }
 
 # SSH into the running VM (waits for SSH to become available)
 ssh-vm: _check-vm-running
@@ -273,13 +257,7 @@ await-ghcr:
 
 # Stop the VM
 stop-vm:
-	@if socat /dev/null TCP:127.0.0.1:$(MONITOR_PORT) 2>/dev/null; then \
-		echo quit | socat - TCP:127.0.0.1:$(MONITOR_PORT) 2>/dev/null; \
-	elif [ -f $(BUILD_DIR)/qemu.pid ]; then \
-		kill $$(cat $(BUILD_DIR)/qemu.pid) 2>/dev/null; \
-	else \
-		pkill -f "qemu-system-aarch64.*$(BUILD_DIR)/qcow2/disk.qcow2" 2>/dev/null; \
-	fi; rm -f $(BUILD_DIR)/qemu.pid; true
+	-echo quit | socat - TCP:127.0.0.1:$(MONITOR_PORT) 2>/dev/null
 
 # Reboot the VM
 reboot-vm: _check-vm-running
