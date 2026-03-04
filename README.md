@@ -106,6 +106,7 @@ hl help                              # full usage
 | `TAG` | `latest` | Container image tag |
 | `SSH_PORT` | `2222` | Host port forwarded to VM SSH |
 | `DATA_DISK_SIZE` | `3G` | Size of the persistent data disk |
+| `MONITOR_PORT` | `4444` | localhost TCP port for the QEMU monitor |
 
 QEMU always forwards host ports 80 and 443 to the VM (which Caddy listens on via firewalld forwarding). These are not configurable.
 
@@ -113,9 +114,10 @@ QEMU always forwards host ports 80 and 443 to the VM (which Caddy listens on via
 
 - [Podman](https://podman.io/) - container build and runtime
 - [QEMU](https://www.qemu.org/) - VM emulation (`qemu-system-aarch64`)
+- [socat](https://github.com/nicowillis/socat) - used to communicate with the QEMU monitor (`stop-vm`, `clean`)
 
 On macOS with Homebrew:
 
 ```bash
-brew install podman qemu
+brew install podman qemu socat
 ```
