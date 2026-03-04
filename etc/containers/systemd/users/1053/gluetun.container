@@ -22,7 +22,7 @@ Environment=WIREGUARD_ADDRESSES_SECRETFILE=/run/credentials/mullvad-wireguard-ad
 Volume=%d:/run/credentials:ro,z
 HealthCmd=/gluetun-entrypoint healthcheck
 HealthStartPeriod=120s
-HealthInterval=10s
+HealthInterval=30s
 Notify=healthy
 
 [Service]
