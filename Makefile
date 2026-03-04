@@ -13,6 +13,9 @@ QEMU_BIOS ?= $(shell brew --prefix qemu)/share/qemu/edk2-aarch64-code.fd
 SSH_PORT ?= 2222
 MONITOR_PORT ?= 4444
 
+# Set DEBUG=1 for unfiltered output from build commands
+DEBUG ?=
+
 # Phony targets (convenience aliases and non-file targets)
 .PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm vm-switch await-ghcr stop-vm reboot-vm clean verify-systemd
 
@@ -86,6 +89,7 @@ $(BUILD_DIR)/.image-built: Containerfile $(wildcard quadlets/*) $(wildcard syste
 
 # Build qcow2 image using bootc-image-builder
 $(BUILD_DIR)/qcow2/disk.qcow2: $(BUILD_DIR)/.image-built
+ifdef DEBUG
 	podman run \
 		--rm \
 		-it \
@@ -99,10 +103,28 @@ $(BUILD_DIR)/qcow2/disk.qcow2: $(BUILD_DIR)/.image-built
 		--use-librepo=True \
 		localhost/$(IMAGE_NAME):$(TAG) \
 		--rootfs btrfs
+else
+	@echo "Building qcow2 image from localhost/$(IMAGE_NAME):$(TAG)..."
+	@podman run \
+		--rm \
+		-i \
+		--privileged \
+		--pull=newer \
+		--security-opt label=type:unconfined_t \
+		-v $(BUILD_DIR):/output \
+		-v /var/lib/containers/storage:/var/lib/containers/storage \
+		quay.io/centos-bootc/bootc-image-builder:latest \
+		--type qcow2 \
+		--use-librepo=True \
+		localhost/$(IMAGE_NAME):$(TAG) \
+		--rootfs btrfs 2>&1 \
+	| awk '{ gsub(/\033\[[0-9;?]*[A-Za-z]/,"") } /Message:|[Ee]rror|[Ff]ail/ { gsub(/^[[:space:]]+|[[:space:]]+$$/,""); if (!length || $$0 in seen) next; seen[$$0]=1; print }'
+endif
 
 # Build qcow2 image from GHCR (skips local container build)
 $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2:
 	mkdir -p $(BUILD_DIR)
+ifdef DEBUG
 	podman pull $(REMOTE_IMAGE)
 	podman run \
 		--rm \
@@ -117,6 +139,25 @@ $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2:
 		--use-librepo=True \
 		$(REMOTE_IMAGE) \
 		--rootfs btrfs
+else
+	@echo "Pulling $(REMOTE_IMAGE)..."
+	@podman pull $(REMOTE_IMAGE) 2>&1 | grep -Ev 'Copying (blob|config) sha256'
+	@echo "Building qcow2 disk image..."
+	@podman run \
+		--rm \
+		-i \
+		--privileged \
+		--pull=newer \
+		--security-opt label=type:unconfined_t \
+		-v $(BUILD_DIR):/output \
+		-v /var/lib/containers/storage:/var/lib/containers/storage \
+		quay.io/centos-bootc/bootc-image-builder:latest \
+		--type qcow2 \
+		--use-librepo=True \
+		$(REMOTE_IMAGE) \
+		--rootfs btrfs 2>&1 \
+	| awk '{ gsub(/\033\[[0-9;?]*[A-Za-z]/,"") } /Message:|[Ee]rror|[Ff]ail/ { gsub(/^[[:space:]]+|[[:space:]]+$$/,""); if (!length || $$0 in seen) next; seen[$$0]=1; print }'
+endif
 	@# Rename the created disk to disk-from-ghcr.qcow2
 	@mv $(BUILD_DIR)/qcow2/disk.qcow2 $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2
 	@# Create a symlink so run-vm can use the same disk path
