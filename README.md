@@ -106,15 +106,8 @@ hl help                              # full usage
 | `TAG` | `latest` | Container image tag |
 | `SSH_PORT` | `2222` | Host port forwarded to VM SSH |
 | `DATA_DISK_SIZE` | `3G` | Size of the persistent data disk |
-| `DETACH` | `true` | Run QEMU in background (`false` for foreground) |
 
 QEMU always forwards host ports 80 and 443 to the VM (which Caddy listens on via firewalld forwarding). These are not configurable.
-
-Example:
-
-```bash
-make run-vm DETACH=false
-```
 
 ## Dependencies
 
