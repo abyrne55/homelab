@@ -1,0 +1,12 @@
+[Unit]
+Description=Daily Configarr TRaSH-Guides sync
+ConditionUser=configarr
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=5m
+Unit=configarr.service
+
+[Install]
+WantedBy=timers.target

@@ -107,8 +107,6 @@ ssh -i ./secrets/core/id_ed25519 -p 2222 \
   core@127.0.0.1 -- "<your command here>"
 ```
 
-Append `|| true` when running parallel tool calls to prevent a non-zero exit from cancelling sibling calls.
-
 ## Common patterns
 
 - **`statfs /var/mnt/data/.<service>/config: no such file or directory`** → data disk config dir not created; `init-data-disk.service` only runs on fresh disk init. Fix: `sudo mkdir -p /var/mnt/data/.<service>/config && sudo chown -R <uid>:<uid> /var/mnt/data/.<service>`, then `hl restart <service>`

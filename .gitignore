@@ -40,3 +40,6 @@ docs/
 *.qcow2
 *.raw
 *.tar
+
+# Temporary files
+.tmp/

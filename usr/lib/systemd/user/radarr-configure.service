@@ -1,0 +1,12 @@
+[Unit]
+Description=Configure Radarr Forms authentication
+PartOf=radarr.service
+After=radarr.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/radarr-configure
+LoadCredential=radarr-api-key:/run/systemd-age-creds.sock
+LoadCredential=radarr-webui-password:/run/systemd-age-creds.sock
+Restart=on-failure
+RestartSec=10

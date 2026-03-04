@@ -10,8 +10,11 @@ DATA_DISK_SIZE ?= 3G
 
 # QEMU configuration
 QEMU_BIOS ?= $(shell brew --prefix qemu)/share/qemu/edk2-aarch64-code.fd
-DETACH ?= true
 SSH_PORT ?= 2222
+MONITOR_PORT ?= 4444
+
+# Set DEBUG=1 for unfiltered output from build commands
+DEBUG ?=
 
 # Phony targets (convenience aliases and non-file targets)
 .PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm vm-switch await-ghcr stop-vm reboot-vm clean verify-systemd
@@ -86,6 +89,7 @@ $(BUILD_DIR)/.image-built: Containerfile $(wildcard quadlets/*) $(wildcard syste
 
 # Build qcow2 image using bootc-image-builder
 $(BUILD_DIR)/qcow2/disk.qcow2: $(BUILD_DIR)/.image-built
+ifdef DEBUG
 	podman run \
 		--rm \
 		-it \
@@ -99,10 +103,28 @@ $(BUILD_DIR)/qcow2/disk.qcow2: $(BUILD_DIR)/.image-built
 		--use-librepo=True \
 		localhost/$(IMAGE_NAME):$(TAG) \
 		--rootfs btrfs
+else
+	@echo "Building qcow2 image from localhost/$(IMAGE_NAME):$(TAG)..."
+	@podman run \
+		--rm \
+		-i \
+		--privileged \
+		--pull=newer \
+		--security-opt label=type:unconfined_t \
+		-v $(BUILD_DIR):/output \
+		-v /var/lib/containers/storage:/var/lib/containers/storage \
+		quay.io/centos-bootc/bootc-image-builder:latest \
+		--type qcow2 \
+		--use-librepo=True \
+		localhost/$(IMAGE_NAME):$(TAG) \
+		--rootfs btrfs 2>&1 \
+	| awk '{ gsub(/\033\[[0-9;?]*[A-Za-z]/,"") } /Message:|[Ee]rror|[Ff]ail/ { gsub(/^[[:space:]]+|[[:space:]]+$$/,""); if (!length || $$0 in seen) next; seen[$$0]=1; print }'
+endif
 
 # Build qcow2 image from GHCR (skips local container build)
 $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2:
 	mkdir -p $(BUILD_DIR)
+ifdef DEBUG
 	podman pull $(REMOTE_IMAGE)
 	podman run \
 		--rm \
@@ -117,6 +139,25 @@ $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2:
 		--use-librepo=True \
 		$(REMOTE_IMAGE) \
 		--rootfs btrfs
+else
+	@echo "Pulling $(REMOTE_IMAGE)..."
+	@podman pull $(REMOTE_IMAGE) 2>&1 | grep -Ev 'Copying (blob|config) sha256'
+	@echo "Building qcow2 disk image..."
+	@podman run \
+		--rm \
+		-i \
+		--privileged \
+		--pull=newer \
+		--security-opt label=type:unconfined_t \
+		-v $(BUILD_DIR):/output \
+		-v /var/lib/containers/storage:/var/lib/containers/storage \
+		quay.io/centos-bootc/bootc-image-builder:latest \
+		--type qcow2 \
+		--use-librepo=True \
+		$(REMOTE_IMAGE) \
+		--rootfs btrfs 2>&1 \
+	| awk '{ gsub(/\033\[[0-9;?]*[A-Za-z]/,"") } /Message:|[Ee]rror|[Ff]ail/ { gsub(/^[[:space:]]+|[[:space:]]+$$/,""); if (!length || $$0 in seen) next; seen[$$0]=1; print }'
+endif
 	@# Rename the created disk to disk-from-ghcr.qcow2
 	@mv $(BUILD_DIR)/qcow2/disk.qcow2 $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2
 	@# Create a symlink so run-vm can use the same disk path
@@ -151,7 +192,7 @@ $(BUILD_DIR)/secrets.iso:
 
 # Run the qcow2 image in QEMU (checks if already running)
 run-vm: $(BUILD_DIR)/qcow2/disk.qcow2 $(BUILD_DIR)/data.qcow2 $(BUILD_DIR)/secrets.iso
-	@if pgrep -f "qemu-system-aarch64.*$(BUILD_DIR)/qcow2/disk.qcow2" > /dev/null; then \
+	@if socat /dev/null TCP:127.0.0.1:$(MONITOR_PORT) 2>/dev/null; then \
 		echo "QEMU is already running"; \
 	else \
 		$(MAKE) _start-qemu; \
@@ -159,7 +200,7 @@ run-vm: $(BUILD_DIR)/qcow2/disk.qcow2 $(BUILD_DIR)/data.qcow2 $(BUILD_DIR)/secre
 
 # Run VM built from GHCR image (faster than local build)
 run-vm-from-ghcr: $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2 $(BUILD_DIR)/data.qcow2 $(BUILD_DIR)/secrets.iso
-	@if pgrep -f "qemu-system-aarch64.*$(BUILD_DIR)/qcow2/disk.qcow2" > /dev/null; then \
+	@if socat /dev/null TCP:127.0.0.1:$(MONITOR_PORT) 2>/dev/null; then \
 		echo "QEMU is already running"; \
 	else \
 		$(MAKE) _start-qemu; \
@@ -168,7 +209,6 @@ run-vm-from-ghcr: $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2 $(BUILD_DIR)/data.qcow
 # Internal target to actually start QEMU
 .PHONY: _start-qemu
 _start-qemu:
-ifeq ($(DETACH),true)
 	qemu-system-aarch64 \
 		-M accel=hvf \
 		-cpu host \
@@ -178,26 +218,12 @@ ifeq ($(DETACH),true)
 		-serial file:$(BUILD_DIR)/serial.log \
 		-display none \
 		-machine virt \
+		-monitor tcp:127.0.0.1:$(MONITOR_PORT),server,nowait \
 		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::80-:80,hostfwd=tcp::443-:443 \
 		-drive if=virtio,file=$(BUILD_DIR)/qcow2/disk.qcow2,snapshot=on \
 		-drive if=virtio,file=$(BUILD_DIR)/data.qcow2 \
 		$(shell [ -s $(BUILD_DIR)/secrets.iso ] && echo "-drive file=$(BUILD_DIR)/secrets.iso,format=raw,if=virtio,readonly=on,media=cdrom,id=secrets") & disown
 	@echo "QEMU running in background. Serial output: $(BUILD_DIR)/serial.log"
-else
-	qemu-system-aarch64 \
-		-M accel=hvf \
-		-cpu host \
-		-smp 2 \
-		-m 4096 \
-		-bios $(QEMU_BIOS) \
-		-serial stdio \
-		-display none \
-		-machine virt \
-		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::80-:80,hostfwd=tcp::443-:443 \
-		-drive if=virtio,file=$(BUILD_DIR)/qcow2/disk.qcow2,snapshot=on \
-		-drive if=virtio,file=$(BUILD_DIR)/data.qcow2 \
-		$(shell [ -s $(BUILD_DIR)/secrets.iso ] && echo "-drive file=$(BUILD_DIR)/secrets.iso,format=raw,if=virtio,readonly=on,media=cdrom,id=secrets")
-endif
 
 # SSH options
 SSH_HOST := 127.0.0.1
@@ -206,10 +232,8 @@ SSH_OPTS := -o LogLevel=QUIET -o StrictHostKeyChecking=no -o UserKnownHostsFile=
 # Internal target to check if VM is running
 .PHONY: _check-vm-running
 _check-vm-running:
-	@if ! pgrep -f "qemu-system-aarch64.*$(BUILD_DIR)/qcow2/disk.qcow2" > /dev/null; then \
-		echo "ERROR: VM is not running. Start it with 'make run-vm' or 'make run-vm-from-ghcr' first."; \
-		exit 1; \
-	fi
+	@socat /dev/null TCP:127.0.0.1:$(MONITOR_PORT) 2>/dev/null || \
+		{ echo "ERROR: VM is not running. Start it with 'make run-vm' or 'make run-vm-from-ghcr' first."; exit 1; }
 
 # SSH into the running VM (waits for SSH to become available)
 ssh-vm: _check-vm-running
@@ -253,7 +277,7 @@ await-ghcr:
 	MAX_RETRIES=12; \
 	RETRY_DELAY=5; \
 	for i in $$(seq 1 $$MAX_RETRIES); do \
-		RUN_ID=$$(gh run list --commit $$COMMIT_SHA --limit 1 --json databaseId --jq '.[] | .databaseId' 2>/dev/null); \
+		RUN_ID=$$(gh run list --workflow container-build.yml --commit $$COMMIT_SHA --limit 1 --json databaseId --jq '.[] | .databaseId' 2>/dev/null); \
 		if [ -n "$$RUN_ID" ]; then \
 			echo "Found workflow run $$RUN_ID"; \
 			gh run watch --compact --exit-status $$RUN_ID; \
@@ -274,7 +298,7 @@ await-ghcr:
 
 # Stop the VM
 stop-vm:
-	-pkill -f "qemu-system-aarch64.*$(BUILD_DIR)/qcow2/disk.qcow2"
+	-echo quit | socat - TCP:127.0.0.1:$(MONITOR_PORT) 2>/dev/null
 
 # Reboot the VM
 reboot-vm: _check-vm-running

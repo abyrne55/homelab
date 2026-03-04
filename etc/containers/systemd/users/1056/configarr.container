@@ -1,0 +1,32 @@
+[Unit]
+Description=Configarr - TRaSH-Guides sync for Sonarr/Radarr
+After=homelab-config-sync.service
+
+[Container]
+Image=ghcr.io/raydak-labs/configarr:1.23
+AutoUpdate=registry
+
+Environment=TZ=UTC
+Environment=CONFIG_LOCATION=/app/config/config.yml
+
+# Config from homelab-config repo
+Volume=/var/lib/homelab-config/configarr:/app/config:ro,z
+# Repo cache on data disk
+Volume=/var/mnt/data/.configarr/repos:/app/repos:rw,Z
+# Credentials dir
+Volume=%d:/run/credentials:ro,z
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
+ExecStartPre=/bin/bash -c 'API_KEY=$(cat ${CREDENTIALS_DIRECTORY}/sonarr-api-key); curl -sf --max-time 5 http://localhost:20550/api/v3/system/status -H "X-Api-Key: $API_KEY" > /dev/null || { echo "Sonarr API not ready"; exit 1; }'
+ExecStartPre=/bin/bash -c 'API_KEY=$(cat ${CREDENTIALS_DIRECTORY}/radarr-api-key); curl -sf --max-time 5 http://localhost:20540/api/v3/system/status -H "X-Api-Key: $API_KEY" > /dev/null || { echo "Radarr API not ready"; exit 1; }'
+ExecStartPre=/bin/bash -c 'PASSWORD=$(cat ${CREDENTIALS_DIRECTORY}/qbittorrent-webui-password); curl -sf --max-time 5 -X POST http://localhost:20530/api/v2/auth/login --data-urlencode "username=admin" --data-urlencode "password=$PASSWORD" | grep -q "Ok." || { echo "qBittorrent WebUI not ready or auth failed"; exit 1; }'
+Restart=on-failure
+RestartSec=30
+LoadCredential=sonarr-api-key:/run/systemd-age-creds.sock
+LoadCredential=radarr-api-key:/run/systemd-age-creds.sock
+LoadCredential=qbittorrent-webui-password:/run/systemd-age-creds.sock
+
+[Install]
+WantedBy=default.target

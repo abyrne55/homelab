@@ -1,7 +1,7 @@
 [Unit]
 Description=Sonarr TV series management
 After=network-online.target sonarr-init-config.service
-Wants=network-online.target sonarr-init-config.service
+Wants=network-online.target sonarr-init-config.service sonarr-configure.service
 
 [Container]
 Image=lscr.io/linuxserver/sonarr:4.0.16
@@ -13,7 +13,7 @@ NoNewPrivileges=true
 # DropCapability=all intentionally omitted: linuxserver s6 init calls setgroups()
 # to switch from root to PUID/PGID, which requires CAP_SETGID inside the container
 HealthCmd=curl -f http://localhost:8989/
-HealthStartPeriod=30s
+HealthStartPeriod=60s
 HealthInterval=30s
 Notify=healthy
 Environment=PUID=1055

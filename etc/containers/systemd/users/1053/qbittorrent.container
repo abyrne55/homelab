@@ -18,7 +18,7 @@ Environment=WEBUI_PORT=20530
 Volume=/var/mnt/data/.qbittorrent/config:/config:Z
 Volume=/var/mnt/data/content/torrents:/downloads:Z
 HealthCmd=curl -f http://localhost:20530/
-HealthStartPeriod=30s
+HealthStartPeriod=60s
 HealthInterval=30s
 Notify=healthy
 NoNewPrivileges=true
