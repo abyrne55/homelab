@@ -9,6 +9,13 @@
 
 - **Write operations** (commit, push, rebase, merge): Always run **unsandboxed** (with `dangerouslyDisableSandbox: true`).
 - **Read operations** (status, log, diff): Safe to run in sandbox.
+- If you need to commit to external repos (e.g., homelab-config), use the `-C` flag, e.g., `git -C ~/src/homelab-config/ commit`. Don't use `cd ... && git ...`.
+
+## Commit/PR Descriptions
+
+- **Always write commit messages and PR descriptions to `.tmp/` files** — never use heredoc or multi-line `-m` syntax
+- `git commit -F .tmp/commit-message.txt`
+- `gh pr create -t "My Pull Request" -F .tmp/pr-description.md`
 
 ## GitHub Integration
 
