@@ -236,7 +236,7 @@ await-ghcr:
 	MAX_RETRIES=12; \
 	RETRY_DELAY=5; \
 	for i in $$(seq 1 $$MAX_RETRIES); do \
-		RUN_ID=$$(gh run list --workflow container.yml --commit $$COMMIT_SHA --limit 1 --json databaseId --jq '.[] | .databaseId' 2>/dev/null); \
+		RUN_ID=$$(gh run list --workflow container-build.yml --commit $$COMMIT_SHA --limit 1 --json databaseId --jq '.[] | .databaseId' 2>/dev/null); \
 		if [ -n "$$RUN_ID" ]; then \
 			echo "Found workflow run $$RUN_ID"; \
 			gh run watch --compact --exit-status $$RUN_ID; \
