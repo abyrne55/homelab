@@ -1,0 +1,78 @@
+#!/bin/bash
+set -euo pipefail
+
+PROWLARR_URL="http://localhost:20570"
+API_KEY=$(cat "${CREDENTIALS_DIRECTORY}/prowlarr-api-key")
+
+echo "Checking Prowlarr authentication configuration..."
+CURRENT=$(curl -sf "$PROWLARR_URL/api/v1/config/host" -H "X-Api-Key: $API_KEY")
+CURRENT_AUTH=$(echo "$CURRENT" | jq -r '.authenticationMethod')
+CURRENT_USER=$(echo "$CURRENT" | jq -r '.username')
+
+if [ "$CURRENT_AUTH" = "forms" ] && [ "$CURRENT_USER" = "abyrne55" ]; then
+  echo "Prowlarr Forms authentication already configured; skipping"
+else
+  echo "Enabling Forms authentication on Prowlarr..."
+  WEBUI_PASS=$(cat "${CREDENTIALS_DIRECTORY}/prowlarr-webui-password")
+  UPDATED=$(echo "$CURRENT" | jq \
+    --arg pass "$WEBUI_PASS" \
+    '.authenticationMethod = "forms" | .authenticationRequired = "enabled" | .username = "abyrne55" | .password = $pass | .passwordConfirmation = $pass')
+  curl -sf -X PUT "$PROWLARR_URL/api/v1/config/host" \
+    -H "X-Api-Key: $API_KEY" \
+    -H "Content-Type: application/json" \
+    -d "$UPDATED"
+  echo "Prowlarr Forms authentication configured successfully"
+fi
+
+echo "Checking Prowlarr app connections..."
+APPS=$(curl -sf "$PROWLARR_URL/api/v1/applications" -H "X-Api-Key: $API_KEY")
+
+SONARR_KEY=$(cat "${CREDENTIALS_DIRECTORY}/sonarr-api-key")
+if echo "$APPS" | jq -e '.[] | select(.implementation == "Sonarr")' > /dev/null 2>&1; then
+  echo "Sonarr already registered in Prowlarr; skipping"
+else
+  echo "Registering Sonarr in Prowlarr..."
+  curl -sf -X POST "$PROWLARR_URL/api/v1/applications" \
+    -H "X-Api-Key: $API_KEY" \
+    -H "Content-Type: application/json" \
+    -d "$(jq -n \
+      --arg key "$SONARR_KEY" \
+      '{
+        name: "Sonarr",
+        implementation: "Sonarr",
+        configContract: "SonarrSettings",
+        syncLevel: "fullSync",
+        fields: [
+          {name: "prowlarrUrl", value: "http://localhost:20570"},
+          {name: "baseUrl", value: "http://localhost:20550"},
+          {name: "apiKey", value: $key},
+          {name: "syncCategories", value: [5000, 5010, 5020, 5030, 5040, 5045, 5050, 5090]}
+        ]
+      }')"
+  echo "Sonarr registered successfully"
+fi
+
+RADARR_KEY=$(cat "${CREDENTIALS_DIRECTORY}/radarr-api-key")
+if echo "$APPS" | jq -e '.[] | select(.implementation == "Radarr")' > /dev/null 2>&1; then
+  echo "Radarr already registered in Prowlarr; skipping"
+else
+  echo "Registering Radarr in Prowlarr..."
+  curl -sf -X POST "$PROWLARR_URL/api/v1/applications" \
+    -H "X-Api-Key: $API_KEY" \
+    -H "Content-Type: application/json" \
+    -d "$(jq -n \
+      --arg key "$RADARR_KEY" \
+      '{
+        name: "Radarr",
+        implementation: "Radarr",
+        configContract: "RadarrSettings",
+        syncLevel: "fullSync",
+        fields: [
+          {name: "prowlarrUrl", value: "http://localhost:20570"},
+          {name: "baseUrl", value: "http://localhost:20540"},
+          {name: "apiKey", value: $key},
+          {name: "syncCategories", value: [2000, 2010, 2020, 2030, 2040, 2045, 2050, 2060, 2070, 2080, 2090]}
+        ]
+      }')"
+  echo "Radarr registered successfully"
+fi

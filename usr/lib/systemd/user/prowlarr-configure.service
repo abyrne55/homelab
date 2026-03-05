@@ -1,0 +1,14 @@
+[Unit]
+Description=Configure Prowlarr Forms authentication and app connections
+PartOf=prowlarr.service
+After=prowlarr.service
+
+[Service]
+Type=oneshot
+LoadCredential=prowlarr-api-key:/run/systemd-age-creds.sock
+LoadCredential=prowlarr-webui-password:/run/systemd-age-creds.sock
+LoadCredential=sonarr-api-key:/run/systemd-age-creds.sock
+LoadCredential=radarr-api-key:/run/systemd-age-creds.sock
+ExecStart=/usr/local/bin/prowlarr-configure
+Restart=on-failure
+RestartSec=10
