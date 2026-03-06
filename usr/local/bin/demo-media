@@ -1,0 +1,35 @@
+#!/bin/bash
+set -euo pipefail
+
+QBIT_URL="http://localhost:20530"
+TORRENT_HASH="9a059ad38b0cd8a50ae8203232b9fbac940b9fac"
+MAGNET="magnet:?xt=urn:btih:9a059ad38b0cd8a50ae8203232b9fbac940b9fac&dn=Big%20Buck%20Bunny%20%282008%29%20%5Bimdbid-tt1254207%5D%20-%20%5BWebDL-1080p%5D%5Bx264%5D%5BAAC%202.0%5D&xl=390925667&tr=http%3A%2F%2Fbt1.archive.org%3A6969%2Fannounce&tr=http%3A%2F%2Fbt2.archive.org%3A6969%2Fannounce&ws=http://ia600307.us.archive.org/28/items/&ws=http://ia800307.us.archive.org/28/items/&ws=https://archive.org/download/"
+COOKIE_JAR=$(mktemp)
+cleanup() { rm -f "$COOKIE_JAR"; }
+trap cleanup EXIT
+
+WEBUI_PASS=$(cat "${CREDENTIALS_DIRECTORY}/qbittorrent-webui-password")
+
+RESPONSE=$(curl -sf -c "$COOKIE_JAR" -X POST "$QBIT_URL/api/v2/auth/login" \
+  --data-urlencode "username=admin" \
+  --data-urlencode "password=$WEBUI_PASS")
+
+if [ "$RESPONSE" != "Ok." ]; then
+  echo "Login failed: $RESPONSE" >&2
+  exit 1
+fi
+
+# Check if torrent already present
+EXISTING=$(curl -sf -b "$COOKIE_JAR" "$QBIT_URL/api/v2/torrents/info?hashes=$TORRENT_HASH")
+if [ "$EXISTING" != "[]" ]; then
+  echo "Demo torrent already present; nothing to do"
+  exit 0
+fi
+
+echo "Adding demo torrent..."
+curl -sf -b "$COOKIE_JAR" -X POST "$QBIT_URL/api/v2/torrents/add" \
+  --data-urlencode "urls=$MAGNET" \
+  --data-urlencode "category=radarr" \
+  --data-urlencode "savepath=/downloads/movies/"
+
+echo "Demo torrent added successfully"

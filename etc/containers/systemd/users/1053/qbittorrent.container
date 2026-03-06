@@ -3,6 +3,7 @@ Description=qBittorrent torrent client
 After=gluetun.service
 Requires=gluetun.service
 Wants=qbittorrent-configure.service
+Wants=demo-media.service
 
 [Container]
 Image=lscr.io/linuxserver/qbittorrent:latest
