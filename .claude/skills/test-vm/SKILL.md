@@ -77,9 +77,9 @@ vsh hl logs -s $ARGUMENTS -n 200
 vsh hl ps -u $ARGUMENTS
 vsh "hl sudo $ARGUMENTS -- <cmd>"                          # exec into container
 vsh "hl sudo -u $ARGUMENTS <container> -- <cmd>"           # exec (explicit user)
-# For podman commands other than exec (e.g. logs, inspect):
-vsh "sudo su - $ARGUMENTS -s /bin/sh -c 'XDG_RUNTIME_DIR=/run/user/\$(id -u) podman logs <container-name>'"
 ```
+
+For raw podman commands when `hl` is unavailable, use the `/fallback-cmd` skill.
 
 ## 7. Check credentials (if service uses age-encrypted secrets)
 
@@ -95,17 +95,9 @@ The `systemd-age-creds` log shows each credential request (service name, UID, cr
 
 ---
 
-## Raw SSH fallback (if `vsh` is unavailable)
+## Fallback Commands
 
-```bash
-ssh -i ./secrets/core/id_ed25519 -p 2222 \
-  -o LogLevel=QUIET \
-  -o StrictHostKeyChecking=no \
-  -o UserKnownHostsFile=/dev/null \
-  -o IdentitiesOnly=yes \
-  -o PreferredAuthentications=publickey \
-  core@127.0.0.1 -- "<your command here>"
-```
+If `vsh` is unavailable, use the `/fallback-cmd` skill to access raw SSH and systemctl/journalctl/podman commands.
 
 ## Common patterns
 

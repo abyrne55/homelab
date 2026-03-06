@@ -13,9 +13,10 @@
 
 ## Commit/PR Descriptions
 
-- **Always write commit messages and PR descriptions to `.tmp/` files** — never use heredoc or multi-line `-m` syntax
-- `git commit -F .tmp/commit-message.txt`
-- `gh pr create -t "My Pull Request" -F .tmp/pr-description.md`
+- **Always write commit messages and PR descriptions to `.tmp/commit-[random_string].txt` or `.tmp/pr-[random_string].md` using your Write() tool**
+  — Never use `cat`, heredoc, or multi-line `-m` syntax, and never use command substitution like `$(cat ...)`
+- `git commit -F .tmp/commit-123abc.txt`
+- `gh pr create --title "My Pull Request" --body-file .tmp/pr-123abc.md`
 
 ## GitHub Integration
 
