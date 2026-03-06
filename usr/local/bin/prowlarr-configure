@@ -84,12 +84,13 @@ if echo "$INDEXERS" | jq -e '.[] | select(.definitionName == "internetarchive")'
   echo "Internet Archive indexer already configured; skipping"
 else
   echo "Adding Internet Archive indexer..."
-  curl -sf -X POST "$PROWLARR_URL/api/v1/indexer" \
+  # Create disabled first — Prowlarr skips the connection test for disabled indexers
+  NEW=$(curl -sf -X POST "$PROWLARR_URL/api/v1/indexer" \
     -H "X-Api-Key: $API_KEY" \
     -H "Content-Type: application/json" \
     -d "$(jq -n '{
       name: "Internet Archive",
-      enable: true,
+      enable: false,
       priority: 25,
       appProfileId: 1,
       protocol: "torrent",
@@ -99,6 +100,13 @@ else
         {name: "definitionFile", value: "internetarchive"},
         {name: "baseUrl", value: "https://archive.org/"}
       ]
-    }')"
-  echo "Internet Archive indexer added successfully"
+    }')")
+  NEW_ID=$(echo "$NEW" | jq '.id')
+  echo "Internet Archive indexer created (id: $NEW_ID); enabling..."
+  # Enabling triggers a connection test — best effort, don't fail if it times out
+  curl -s -X PUT "$PROWLARR_URL/api/v1/indexer/$NEW_ID" \
+    -H "X-Api-Key: $API_KEY" \
+    -H "Content-Type: application/json" \
+    -d "$(echo "$NEW" | jq '.enable = true')" > /dev/null || true
+  echo "Internet Archive indexer configured successfully"
 fi
