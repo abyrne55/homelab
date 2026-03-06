@@ -1,0 +1,27 @@
+[Unit]
+Description=Prowlarr indexer manager
+After=network-online.target prowlarr-init-config.service
+Wants=network-online.target prowlarr-init-config.service prowlarr-configure.service
+
+[Container]
+Image=lscr.io/linuxserver/prowlarr:2.3.0
+PublishPort=20570:9696
+Volume=/var/mnt/data/.prowlarr/config:/config:Z
+AutoUpdate=registry
+NoNewPrivileges=true
+# DropCapability=all intentionally omitted: linuxserver s6 init calls setgroups()
+# to switch from root to PUID/PGID, which requires CAP_SETGID inside the container
+HealthCmd=curl -f http://localhost:9696/
+HealthStartPeriod=60s
+HealthInterval=30s
+Notify=healthy
+Environment=PUID=1057
+Environment=PGID=1057
+Environment=TZ=UTC
+
+[Service]
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

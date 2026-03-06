@@ -11,17 +11,28 @@ CURRENT_USER=$(echo "$CURRENT" | jq -r '.username')
 
 if [ "$CURRENT_AUTH" = "forms" ] && [ "$CURRENT_USER" = "abyrne55" ]; then
   echo "Sonarr Forms authentication already configured; skipping"
-  exit 0
+else
+  echo "Enabling Forms authentication on Sonarr..."
+  WEBUI_PASS=$(cat "${CREDENTIALS_DIRECTORY}/sonarr-webui-password")
+  UPDATED=$(echo "$CURRENT" | jq \
+    --arg pass "$WEBUI_PASS" \
+    '.authenticationMethod = "forms" | .authenticationRequired = "enabled" | .username = "abyrne55" | .password = $pass | .passwordConfirmation = $pass')
+  curl -sf -X PUT "$SONARR_URL/api/v3/config/host" \
+    -H "X-Api-Key: $API_KEY" \
+    -H "Content-Type: application/json" \
+    -d "$UPDATED"
+  echo "Sonarr Forms authentication configured successfully"
 fi
 
-echo "Enabling Forms authentication on Sonarr..."
-WEBUI_PASS=$(cat "${CREDENTIALS_DIRECTORY}/sonarr-webui-password")
-UPDATED=$(echo "$CURRENT" | jq \
-  --arg pass "$WEBUI_PASS" \
-  '.authenticationMethod = "forms" | .authenticationRequired = "enabled" | .username = "abyrne55" | .password = $pass | .passwordConfirmation = $pass')
-curl -sf -X PUT "$SONARR_URL/api/v3/config/host" \
-  -H "X-Api-Key: $API_KEY" \
-  -H "Content-Type: application/json" \
-  -d "$UPDATED"
-
-echo "Sonarr Forms authentication configured successfully"
+echo "Checking Sonarr root folder configuration..."
+ROOT_FOLDER_COUNT=$(curl -sf "$SONARR_URL/api/v3/rootfolder" -H "X-Api-Key: $API_KEY" | jq 'length')
+if [ "$ROOT_FOLDER_COUNT" -gt 0 ]; then
+  echo "Sonarr root folder already configured; skipping"
+else
+  echo "Adding root folder /content/media/tv..."
+  curl -sf -X POST "$SONARR_URL/api/v3/rootfolder" \
+    -H "X-Api-Key: $API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{"path":"/content/media/tv"}'
+  echo "Sonarr root folder configured successfully"
+fi

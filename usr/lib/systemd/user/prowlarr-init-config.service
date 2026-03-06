@@ -1,0 +1,12 @@
+[Unit]
+Description=Initialize Prowlarr config.xml with API key
+ConditionUser=prowlarr
+ConditionPathExists=!/var/mnt/data/.prowlarr/config/config.xml
+Before=prowlarr.service
+PartOf=prowlarr.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+LoadCredential=prowlarr-api-key:/run/systemd-age-creds.sock
+ExecStart=/usr/local/bin/prowlarr-init-config
