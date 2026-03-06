@@ -90,6 +90,7 @@ else
     -d "$(jq -n '{
       name: "Internet Archive",
       enable: true,
+      priority: 25,
       appProfileId: 1,
       protocol: "torrent",
       implementation: "Cardigann",
