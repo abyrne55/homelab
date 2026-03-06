@@ -76,3 +76,28 @@ else
       }')"
   echo "Radarr registered successfully"
 fi
+
+echo "Checking Prowlarr indexers..."
+INDEXERS=$(curl -sf "$PROWLARR_URL/api/v1/indexer" -H "X-Api-Key: $API_KEY")
+
+if echo "$INDEXERS" | jq -e '.[] | select(.definitionName == "internetarchive")' > /dev/null 2>&1; then
+  echo "Internet Archive indexer already configured; skipping"
+else
+  echo "Adding Internet Archive indexer..."
+  curl -sf -X POST "$PROWLARR_URL/api/v1/indexer" \
+    -H "X-Api-Key: $API_KEY" \
+    -H "Content-Type: application/json" \
+    -d "$(jq -n '{
+      name: "Internet Archive",
+      enable: true,
+      appProfileId: 1,
+      protocol: "torrent",
+      implementation: "Cardigann",
+      configContract: "CardigannSettings",
+      fields: [
+        {name: "definitionFile", value: "internetarchive"},
+        {name: "baseUrl", value: "https://archive.org/"}
+      ]
+    }')"
+  echo "Internet Archive indexer added successfully"
+fi
