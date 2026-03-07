@@ -1,0 +1,31 @@
+#!/bin/bash
+set -euo pipefail
+
+RADARR_URL="http://localhost:20540"
+TMDB_ID=10378
+API_KEY=$(cat "${CREDENTIALS_DIRECTORY}/radarr-api-key")
+
+# Check if movie already in collection
+EXISTING=$(curl -sf "$RADARR_URL/api/v3/movie?tmdbIds=$TMDB_ID" \
+  -H "X-Api-Key: $API_KEY")
+if [ "$(echo "$EXISTING" | jq 'length')" -gt 0 ]; then
+  echo "Demo movie already in Radarr collection; nothing to do"
+  exit 0
+fi
+
+echo "Adding Big Buck Bunny to Radarr collection..."
+curl -sf -X POST "$RADARR_URL/api/v3/movie" \
+  -H "X-Api-Key: $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tmdbId": 10378,
+    "title": "Big Buck Bunny",
+    "year": 2008,
+    "qualityProfileId": 4,
+    "rootFolderPath": "/content/media/movies",
+    "monitored": false,
+    "minimumAvailability": "released",
+    "addOptions": {"searchForMovie": false}
+  }'
+
+echo "Big Buck Bunny added to Radarr successfully"

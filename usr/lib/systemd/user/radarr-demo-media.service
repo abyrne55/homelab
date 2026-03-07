@@ -1,0 +1,11 @@
+[Unit]
+Description=Add demo media movie to Radarr collection
+PartOf=radarr.service
+After=radarr-configure.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/radarr-demo-media
+LoadCredential=radarr-api-key:/run/systemd-age-creds.sock
+Restart=on-failure
+RestartSec=10
