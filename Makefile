@@ -7,6 +7,7 @@ REMOTE_IMAGE ?= ghcr.io/abyrne55/homelab:$(shell git branch --show-current)
 BUILD_DIR ?= ./build
 CORE_SSH_KEY ?= ./secrets/core/id_ed25519
 DATA_DISK_SIZE ?= 3G
+ROOT_DISK_SIZE ?= 15G
 
 # QEMU configuration
 QEMU_BIOS ?= $(shell brew --prefix qemu)/share/qemu/edk2-aarch64-code.fd
@@ -98,7 +99,6 @@ ifdef DEBUG
 		--security-opt label=type:unconfined_t \
 		-v $(BUILD_DIR):/output \
 		-v /var/lib/containers/storage:/var/lib/containers/storage \
-		-v $(CURDIR)/config.toml:/config.toml:ro \
 		quay.io/centos-bootc/bootc-image-builder:latest \
 		--type qcow2 \
 		--use-librepo=True \
@@ -114,7 +114,6 @@ else
 		--security-opt label=type:unconfined_t \
 		-v $(BUILD_DIR):/output \
 		-v /var/lib/containers/storage:/var/lib/containers/storage \
-		-v $(CURDIR)/config.toml:/config.toml:ro \
 		quay.io/centos-bootc/bootc-image-builder:latest \
 		--type qcow2 \
 		--use-librepo=True \
@@ -122,6 +121,8 @@ else
 		--rootfs btrfs 2>&1 \
 	| awk '{ gsub(/\033\[[0-9;?]*[A-Za-z]/,"") } /Message:|[Ee]rror|[Ff]ail/ { gsub(/^[[:space:]]+|[[:space:]]+$$/,""); if (!length || $$0 in seen) next; seen[$$0]=1; print }'
 endif
+	@echo "Resizing root disk to $(ROOT_DISK_SIZE)..."
+	@qemu-img resize $(BUILD_DIR)/qcow2/disk.qcow2 $(ROOT_DISK_SIZE)
 
 # Build qcow2 image from GHCR (skips local container build)
 $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2:
@@ -136,7 +137,6 @@ ifdef DEBUG
 		--security-opt label=type:unconfined_t \
 		-v $(BUILD_DIR):/output \
 		-v /var/lib/containers/storage:/var/lib/containers/storage \
-		-v $(CURDIR)/config.toml:/config.toml:ro \
 		quay.io/centos-bootc/bootc-image-builder:latest \
 		--type qcow2 \
 		--use-librepo=True \
@@ -154,7 +154,6 @@ else
 		--security-opt label=type:unconfined_t \
 		-v $(BUILD_DIR):/output \
 		-v /var/lib/containers/storage:/var/lib/containers/storage \
-		-v $(CURDIR)/config.toml:/config.toml:ro \
 		quay.io/centos-bootc/bootc-image-builder:latest \
 		--type qcow2 \
 		--use-librepo=True \
@@ -166,6 +165,8 @@ endif
 	@mv $(BUILD_DIR)/qcow2/disk.qcow2 $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2
 	@# Create a symlink so run-vm can use the same disk path
 	@ln -sf disk-from-ghcr.qcow2 $(BUILD_DIR)/qcow2/disk.qcow2
+	@echo "Resizing root disk to $(ROOT_DISK_SIZE)..."
+	@qemu-img resize $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2 $(ROOT_DISK_SIZE)
 
 # Create data disk for media storage (formatted on first boot)
 $(BUILD_DIR)/data.qcow2:
