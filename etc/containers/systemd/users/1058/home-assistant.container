@@ -1,12 +1,13 @@
 [Unit]
 Description=Home Assistant
-After=network-online.target
-Wants=network-online.target
+After=network-online.target homelab-config-sync.service
+Wants=network-online.target homelab-config-sync.service
 
 [Container]
 Image=ghcr.io/home-assistant/home-assistant:2026.3
 PublishPort=20580:8123
 Volume=/var/mnt/data/.home-assistant/config:/config:Z
+Volume=/var/lib/homelab-config/home-assistant/configuration.yaml:/config/configuration.yaml:Z,ro
 AutoUpdate=registry
 NoNewPrivileges=true
 # DropCapability=all intentionally omitted: HA runs as root internally and
