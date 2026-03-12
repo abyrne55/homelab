@@ -44,7 +44,8 @@ ExecStart=/usr/bin/mkdir -p \
   /var/mnt/.data-init/.sonarr/config \
   /var/mnt/.data-init/.configarr/repos \
   /var/mnt/.data-init/.prowlarr/config \
-  /var/mnt/.data-init/.home-assistant/config
+  /var/mnt/.data-init/.home-assistant/config \
+  /var/mnt/.data-init/.home-assistant/matter-server
 ExecStart=/usr/bin/chown -R 1052:1052 /var/mnt/.data-init/.jellyfin
 ExecStart=/usr/bin/chown -R 1053:1053 /var/mnt/.data-init/.qbittorrent
 ExecStart=/usr/bin/chown -R 1054:1054 /var/mnt/.data-init/.radarr
