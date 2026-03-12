@@ -1,7 +1,8 @@
 [Unit]
 Description=Home Assistant
-After=network-online.target homelab-config-sync.service
-Wants=network-online.target homelab-config-sync.service
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/var/lib/homelab-config/home-assistant/configuration.yaml
 
 [Container]
 Image=ghcr.io/home-assistant/home-assistant:2026.3
