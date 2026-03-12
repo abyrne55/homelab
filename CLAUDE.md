@@ -53,7 +53,8 @@ Quick file-level index — consult this before exploring the repo.
 | sonarr | 1055 | 20550 | 493216 | 20551 |
 | configarr | 1056 | none (no UI) | 558752 | — |
 | prowlarr | 1057 | 20570 | 624288 | 20571 |
-| **next slot** | **1058** | **20580** | **689824** | — |
+| home-assistant | 1058 | 20580 | 689824 | 20581 |
+| **next slot** | **1059** | **20590** | **755360** | — |
 
 **Containerfile `systemctl enable` line** — when adding a new *system* unit, append it here. Quadlets are auto-discovered by podman-quadlet and do not need to be listed.
 

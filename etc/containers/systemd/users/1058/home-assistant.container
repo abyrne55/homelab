@@ -1,0 +1,25 @@
+[Unit]
+Description=Home Assistant
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=ghcr.io/home-assistant/home-assistant:2026.3
+PublishPort=20580:8123
+Volume=/var/mnt/data/.home-assistant/config:/config:Z
+AutoUpdate=registry
+NoNewPrivileges=true
+# DropCapability=all intentionally omitted: HA runs as root internally and
+# needs capabilities for hardware/network integration features
+HealthCmd=curl -f http://localhost:8123/
+HealthStartPeriod=60s
+HealthInterval=30s
+Notify=healthy
+Environment=TZ=UTC
+
+[Service]
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
