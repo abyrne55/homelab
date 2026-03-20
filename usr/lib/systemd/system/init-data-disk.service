@@ -43,13 +43,16 @@ ExecStart=/usr/bin/mkdir -p \
   /var/mnt/.data-init/.radarr/config \
   /var/mnt/.data-init/.sonarr/config \
   /var/mnt/.data-init/.configarr/repos \
-  /var/mnt/.data-init/.prowlarr/config
+  /var/mnt/.data-init/.prowlarr/config \
+  /var/mnt/.data-init/.home-assistant/config \
+  /var/mnt/.data-init/.home-assistant/matter-server
 ExecStart=/usr/bin/chown -R 1052:1052 /var/mnt/.data-init/.jellyfin
 ExecStart=/usr/bin/chown -R 1053:1053 /var/mnt/.data-init/.qbittorrent
 ExecStart=/usr/bin/chown -R 1054:1054 /var/mnt/.data-init/.radarr
 ExecStart=/usr/bin/chown -R 1055:1055 /var/mnt/.data-init/.sonarr
 ExecStart=/usr/bin/chown -R 1056:1056 /var/mnt/.data-init/.configarr
 ExecStart=/usr/bin/chown -R 1057:1057 /var/mnt/.data-init/.prowlarr
+ExecStart=/usr/bin/chown -R 1058:1058 /var/mnt/.data-init/.home-assistant
 # Set content-writers (GID 2000) as group for entire content tree
 ExecStart=/usr/bin/chown -R :2000 /var/mnt/.data-init/content
 # Override UID for service-specific subdirs (group stays 2000)

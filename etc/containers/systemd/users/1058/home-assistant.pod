@@ -1,0 +1,8 @@
+[Unit]
+Description=Home Assistant pod (HA + Matter server)
+
+[Pod]
+PublishPort=20580:8123
+
+[Install]
+WantedBy=default.target

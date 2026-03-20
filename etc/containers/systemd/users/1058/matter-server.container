@@ -1,0 +1,19 @@
+[Unit]
+Description=Matter Server
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=ghcr.io/matter-js/python-matter-server:8.1
+Pod=home-assistant.pod
+Volume=/var/mnt/data/.home-assistant/matter-server:/data:Z
+AutoUpdate=registry
+NoNewPrivileges=true
+
+[Service]
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=infinity
+
+[Install]
+WantedBy=default.target
