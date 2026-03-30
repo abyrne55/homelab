@@ -7,7 +7,7 @@ Wants=network-online.target
 What=192.168.0.167:/volume1/media-stg
 Where=/var/mnt/media
 Type=nfs
-Options=defaults,_netdev,context=system_u:object_r:container_file_t:s0
+Options=defaults,_netdev,nfsvers=4.1,nconnect=4,noatime,rsize=131072,wsize=131072,context=system_u:object_r:container_file_t:s0
 TimeoutSec=30
 
 [Install]
