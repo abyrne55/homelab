@@ -4,7 +4,7 @@ After=network-online.target
 Wants=network-online.target
 
 [Mount]
-What=192.168.0.167:/media-stg
+What=192.168.0.167:/volume1/media-stg
 Where=/var/mnt/media
 Type=nfs
 Options=defaults,_netdev,context=system_u:object_r:container_file_t:s0
