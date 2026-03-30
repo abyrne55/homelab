@@ -19,6 +19,7 @@ ExecStart=wg set wg-nas \
         persistent-keepalive 25
 ExecStart=ip address add 10.8.0.3/32 dev wg-nas
 ExecStart=ip link set wg-nas up mtu 1420
+ExecStart=ip route add 10.8.0.1/32 dev wg-nas
 ExecStop=ip link delete wg-nas
 
 [Install]
