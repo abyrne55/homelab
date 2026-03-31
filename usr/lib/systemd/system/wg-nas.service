@@ -7,6 +7,20 @@ Before=var-mnt-data.mount
 [Service]
 Type=oneshot
 RemainAfterExit=yes
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+LockPersonality=yes
+RestrictRealtime=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateDevices=yes
+# ip/wg use AF_NETLINK to configure network interfaces via the kernel;
+# PrivateNetwork=yes must NOT be set as it would disconnect AF_NETLINK
+RestrictAddressFamilies=AF_UNIX AF_NETLINK
 LoadCredential=wg-nas-private-key:%t/systemd-age-creds.sock
 LoadCredential=wg-nas-preshared-key:%t/systemd-age-creds.sock
 ExecStart=ip link add wg-nas type wireguard
