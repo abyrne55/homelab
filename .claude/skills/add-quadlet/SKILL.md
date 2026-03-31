@@ -17,7 +17,7 @@ Add Quadlet: $ARGUMENTS
 - [ ] 3. linger tmpfiles entry
 - [ ] 4. subids tmpfiles entry
 - [ ] 5. .container quadlet file
-- [ ] 6. init-data-disk.service (if data disk config dir needed)
+- [ ] 6. service-state-dirs.conf entry (for /var/local/lib/<service>/ state dir)
 - [ ] 7. Caddy route in homelab-config
 - [ ] 8. Allocations table updated in CLAUDE.md
 ```
@@ -67,23 +67,30 @@ For credential access, use the hardcoded `/run/` path — **not** `%t/`. In user
 LoadCredential=credential-name:/run/systemd-age-creds.sock
 ```
 
-## 6. Add a data disk entry to `init-data-disk.service`
+## 6. Add service state directory to `service-state-dirs.conf`
 
-**File:** `usr/lib/systemd/system/init-data-disk.service`
+**File:** `usr/lib/tmpfiles.d/service-state-dirs.conf`
 
-If the service stores config or data on the data disk (`/var/mnt/data/`), add its directory to the `mkdir -p` block and add a `chown` step:
+Service state (config DB, cache, app data) lives in `/var/local/lib/<service>/` — local disk, always available. Add a `d` entry:
+
+```text
+d /var/local/lib/$ARGUMENTS 0750 <uid> <uid> - -
+```
+
+This is created at every boot by systemd-tmpfiles before any services start.
+
+If the service also needs to write to the NFS content share (`/var/mnt/data/`), add its content directories to `init-content-dirs.service` instead. That service only runs after the NFS mount is up, and uses `chmod 0777` (NFS does UID passthrough so `chown` is not applicable):
 
 ```ini
 ExecStart=/usr/bin/mkdir -p \
-  ...
-  /var/mnt/.data-init/.$ARGUMENTS/config
-ExecStart=/usr/bin/chown -R <uid>:<uid> /var/mnt/.data-init/.$ARGUMENTS
+  /var/mnt/data/content/$ARGUMENTS
+ExecStart=/usr/bin/chmod 0777 /var/mnt/data/content/$ARGUMENTS
 ```
 
-> **Note:** This service only runs on fresh disk initialization (`ConditionPathExists=!/dev/disk/by-label/data`). For an existing test VM, manually run:
+> **Note:** For an existing test VM, manually create the state dir:
 >
 > ```bash
-> sudo mkdir -p /var/mnt/data/.$ARGUMENTS/config && sudo chown -R <uid>:<uid> /var/mnt/data/.$ARGUMENTS
+> sudo mkdir -p /var/local/lib/$ARGUMENTS && sudo chown -R <uid>:<uid> /var/local/lib/$ARGUMENTS
 > ```
 
 ## 7. Add a Caddy route (in homelab-config)

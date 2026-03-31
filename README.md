@@ -16,13 +16,16 @@ This repo builds a [bootc](https://containers.github.io/bootc/)-based system ima
 ## Included Services
 
 - **Caddy** - Reverse proxy and gateway for all HTTP/HTTPS services. Runs as a rootless Podman quadlet under a dedicated `caddy` user (UID 1051). Listens on internal ports 8080 (HTTP) and 8443 (HTTPS), published to host ports 20510 and 20511. Firewalld forwards external 80 → 20510 and 443 → 20511, so all web traffic enters through Caddy. Routes requests to backend services by hostname. Config (`Caddyfile`) lives in the private `homelab-config` repo.
-- **Jellyfin** - Media server. Runs as a rootless Podman quadlet under a dedicated `jellyfin` user (UID 1052). Not directly exposed externally — accessed via Caddy by hostname. State and media live on a persistent data disk at `/var/mnt/data`.
+- **Jellyfin** - Media server. Runs as a rootless Podman quadlet under a dedicated `jellyfin` user (UID 1052). Not directly exposed externally — accessed via Caddy by hostname. Service state lives in `/var/local/lib/jellyfin/`; media is served from the NFS content share at `/var/mnt/data`.
 - **Tinyproxy** - Forward proxy (jellynet isolation). Allows Jellyfin to fetch metadata/artwork from approved external domains while keeping it off the main network. Config and domain allowlist live in the private `homelab-config` repo.
 - **Jellarr** - Declarative Jellyfin configuration manager. Bootstraps an API key into Jellyfin's SQLite database on first boot, then applies `config.yml` (users, libraries, startup settings) via the Jellyfin API. Re-runs daily via a systemd timer. Config lives in the private `homelab-config` repo.
-- **qBittorrent** - Torrent client. Runs as a rootless Podman quadlet under a dedicated `qbittorrent` user (UID 1053). Not directly exposed externally — accessed via Caddy by hostname. All traffic is routed through Gluetun. State and downloads live on the data disk at `/var/mnt/data/content/`.
+- **qBittorrent** - Torrent client. Runs as a rootless Podman quadlet under a dedicated `qbittorrent` user (UID 1053). Not directly exposed externally — accessed via Caddy by hostname. All traffic is routed through Gluetun. Service state lives in `/var/local/lib/qbittorrent/`; downloads go to the NFS content share at `/var/mnt/data/content/`.
   - **Gluetun** - Mullvad WireGuard VPN client. Runs alongside qBittorrent in a shared pod so that all torrent traffic is tunnelled through the VPN. WireGuard credentials are loaded at runtime from `homelab-secrets` via `systemd-age-creds`.
-- **Radarr** - Movie collection manager. Runs as a rootless Podman quadlet under a dedicated `radarr` user (UID 1054). Not directly exposed externally — accessed via Caddy by hostname. Integrates with qBittorrent to automate movie downloads; hardlinks completed downloads into the media library. State and media live on the data disk at `/var/mnt/data/content/`.
-- **Sonarr** - TV series collection manager. Runs as a rootless Podman quadlet under a dedicated `sonarr` user (UID 1055). Not directly exposed externally — accessed via Caddy by hostname. Integrates with qBittorrent to automate TV show downloads; hardlinks completed downloads into the media library. State and media live on the data disk at `/var/mnt/data/content/`.
+- **Radarr** - Movie collection manager. Runs as a rootless Podman quadlet under a dedicated `radarr` user (UID 1054). Not directly exposed externally — accessed via Caddy by hostname. Integrates with qBittorrent to automate movie downloads; hardlinks completed downloads into the media library. Service state lives in `/var/local/lib/radarr/`; media is on the NFS content share at `/var/mnt/data/content/`.
+- **Sonarr** - TV series collection manager. Runs as a rootless Podman quadlet under a dedicated `sonarr` user (UID 1055). Not directly exposed externally — accessed via Caddy by hostname. Integrates with qBittorrent to automate TV show downloads; hardlinks completed downloads into the media library. Service state lives in `/var/local/lib/sonarr/`; media is on the NFS content share at `/var/mnt/data/content/`.
+- **Configarr** - TRaSH-Guides sync. Runs as a rootless Podman quadlet under a dedicated `configarr` user (UID 1056). No web UI — runs on a timer to push quality profiles and custom formats from TRaSH-Guides into Radarr and Sonarr. Config lives in the private `homelab-config` repo.
+- **Prowlarr** - Indexer manager. Runs as a rootless Podman quadlet under a dedicated `prowlarr` user (UID 1057). Not directly exposed externally — accessed via Caddy by hostname. Manages torrent indexers and syncs them to Radarr and Sonarr.
+- **Home Assistant** - Home automation platform. Runs as a rootless Podman pod under a dedicated `home-assistant` user (UID 1058), alongside a **python-matter-server** sidecar for Matter/Thread device support. Not directly exposed externally — accessed via Caddy by hostname. Config is mounted read-only from the private `homelab-config` repo.
 
 ## Three-Repository Pattern
 
@@ -40,10 +43,11 @@ minutes. Both use the SSH keypair at `/var/lib/git-ssh/id_ed25519` as a read-onl
 
 ## Disk Architecture
 
-The VM uses two disks:
+The VM uses a single root disk; content is served from a remote NAS over NFS:
 
-- **Root disk** - Read-only system image (runs in snapshot mode, changes discarded on reboot)
-- **Data disk** - Persistent storage mounted at `/var/mnt/data` for media files, torrents, usenet, and app state
+- **Root disk** - Read-only system image (runs in snapshot mode, changes discarded on reboot). Default size is 15G to accommodate large container images (e.g., Home Assistant).
+- **Service state** - Each service stores its config and cache in `/var/local/lib/<service>/` on the root disk's persistent `/var/` partition. Always available, independent of network.
+- **Content share** - Media, downloads, and shared content live at `/var/mnt/data`, which is an NFSv4.1 share mounted over a WireGuard VPN tunnel to the NAS. `wg-nas.service` establishes the tunnel at boot; `var-mnt-data.mount` then mounts the NFS volume. Content directories are initialized on first mount by `init-content-dirs.service`.
 
 ## Secrets Management
 
@@ -105,7 +109,8 @@ hl help                              # full usage
 | `IMAGE_NAME` | `homelab` | Container image name |
 | `TAG` | `latest` | Container image tag |
 | `SSH_PORT` | `2222` | Host port forwarded to VM SSH |
-| `DATA_DISK_SIZE` | `3G` | Size of the persistent data disk |
+| `ROOT_DISK_SIZE` | `15G` | Size of the root disk image |
+| `DATA_DISK_SIZE` | `3G` | Size of the local data disk attached in QEMU (dev/test only) |
 | `MONITOR_PORT` | `4444` | localhost TCP port for the QEMU monitor |
 
 QEMU always forwards host ports 80 and 443 to the VM (which Caddy listens on via firewalld forwarding). These are not configurable.

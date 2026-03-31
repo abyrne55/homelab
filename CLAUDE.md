@@ -33,12 +33,13 @@ Quick file-level index — consult this before exploring the repo.
 | `Makefile` | All dev operations: build, QEMU run, SSH, vm-switch, await-ghcr |
 | `etc/containers/systemd/users/<uid>/` | Rootless quadlet definitions, one directory per service user |
 | `etc/firewalld/zones/public.xml` | Firewall rules — only Caddy's ports (20510, 20511) should be open |
-| `usr/lib/systemd/system/` | System-level units (boot orchestration, secrets, git sync) |
+| `usr/lib/systemd/system/` | System-level units (boot orchestration, secrets, git sync, NFS mount, WireGuard) |
 | `usr/lib/sysusers.d/` | User/group definitions — one file per user, named `NN-username-user.conf` |
 | `usr/lib/tmpfiles.d/quadlet-users-homedirs.conf` | Home + Podman directory trees for all quadlet users |
 | `usr/lib/tmpfiles.d/quadlet-users-linger.conf` | Linger entries (one per quadlet user) |
 | `usr/lib/tmpfiles.d/quadlet-users-subids.conf` | subUID/subGID ranges for rootless Podman |
-| `usr/lib/tmpfiles.d/` (other files) | Data disk mount points, git known-hosts, homelab-config dir |
+| `usr/lib/tmpfiles.d/service-state-dirs.conf` | `/var/local/lib/<service>/` dirs for per-service state (config/cache) |
+| `usr/lib/tmpfiles.d/` (other files) | NFS mount point, git known-hosts, homelab-config dir |
 | `usr/local/bin/` | Scripts baked into the image (`hl`, `secrets-inject`, `qbittorrent-configure`, …) |
 | `selinux/` | Custom SELinux policy modules (`.cil` files) |
 
@@ -73,6 +74,16 @@ Two top-level directories mirror their target filesystem counterparts, with a de
   - `usr/local/bin/` - OS-level CLI tools baked into the image (e.g., `hl`, `qbittorrent-configure`)
 - `selinux/` - Custom SELinux policy modules (`.cil` files) for container and systemd permissions
 - `build/` - Generated artifacts (.gitignored and deleted upon `make clean`)
+
+**Persistent storage split:**
+
+| Location | What lives there | Always available? |
+|---|---|---|
+| `/var/local/lib/<service>/` | Service state: config DB, cache, app data | Yes — local disk |
+| `/var/mnt/data/` | Content: media files, downloads | Only when NFS/WireGuard is up |
+
+`/var/local/lib/` dirs are created at boot by `usr/lib/tmpfiles.d/service-state-dirs.conf`. `/var/mnt/data` is an NFSv4.1 share mounted over a WireGuard VPN tunnel to the NAS — see `usr/lib/systemd/system/wg-nas.service` and `var-mnt-data.mount`.
+
 - `secrets/` - Pre-generated keys for injection into QEMU VM (.gitignored)
   - These secrets are injected into the VM during development for convenience. On the Raspberry Pi, unique credentials will be generated on first boot
 
@@ -168,6 +179,9 @@ Use `/add-quadlet [service-name]` for the full step-by-step checklist. The short
 | qbittorrent | 1053 | 20530 | 20530 | No — via Caddy only |
 | radarr | 1054 | 20540 | 7878 | No — via Caddy only |
 | sonarr | 1055 | 20550 | 8989 | No — via Caddy only |
+| configarr | 1056 | none (no UI) | — | No |
+| prowlarr | 1057 | 20570 | 9696 | No — via Caddy only |
+| home-assistant | 1058 | 20580 | 8123 | No — via Caddy only |
 
 New system units (not quadlets) must also be appended to the `RUN systemctl enable` line in `Containerfile`.
 
