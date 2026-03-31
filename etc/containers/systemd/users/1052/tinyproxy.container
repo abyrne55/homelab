@@ -1,5 +1,6 @@
 [Unit]
 Description=Tinyproxy forward proxy (internet bridge for jellynet)
+ConditionPathIsDirectory=/var/lib/homelab-config/tinyproxy
 
 [Container]
 Image=ghcr.io/abyrne55/tinyproxy-homelab:main
@@ -16,6 +17,7 @@ HealthCmd=CMD /bin/curl -sf -x http://127.0.0.1:8888 http://tinyproxy.stats/
 HealthStartPeriod=5s
 HealthInterval=30s
 HealthRetries=3
+Notify=healthy
 
 [Service]
 ExecStartPre=/usr/bin/cosign verify --certificate-identity-regexp='https://github.com/abyrne55/tinyproxy-homelab/.*' --certificate-oidc-issuer='https://token.actions.githubusercontent.com' ghcr.io/abyrne55/tinyproxy-homelab:main

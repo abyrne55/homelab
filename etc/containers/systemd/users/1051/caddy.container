@@ -20,6 +20,7 @@ HealthStartPeriod=10s
 HealthInterval=30s
 ReadOnly=true
 ReadOnlyTmpfs=true
+Notify=healthy
 Volume=/var/lib/homelab-config/caddy:/etc/caddy:ro,z
 PublishPort=20510:8080
 PublishPort=20511:8443
