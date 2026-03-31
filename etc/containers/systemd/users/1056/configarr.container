@@ -1,10 +1,13 @@
 [Unit]
 Description=Configarr - TRaSH-Guides sync for Sonarr/Radarr
 After=homelab-config-sync.service
+ConditionPathIsDirectory=/var/lib/homelab-config/configarr
 
 [Container]
 Image=ghcr.io/raydak-labs/configarr:1.23
 AutoUpdate=registry
+NoNewPrivileges=true
+DropCapability=all
 
 Environment=TZ=UTC
 Environment=CONFIG_LOCATION=/app/config/config.yml

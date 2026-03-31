@@ -1,6 +1,7 @@
 [Unit]
 Description=Jellarr - Jellyfin declarative configuration manager
 After=jellarr-bootstrap.service jellyfin.service
+ConditionPathIsDirectory=/var/lib/homelab-config/jellarr
 
 [Container]
 Image=ghcr.io/venkyr77/jellarr:v0.1.0
