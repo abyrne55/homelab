@@ -6,8 +6,8 @@ Wants=network-online.target sonarr-init-config.service sonarr-configure.service
 [Container]
 Image=lscr.io/linuxserver/sonarr:4.0.16
 PublishPort=20550:8989
-Volume=/var/mnt/data/content:/content:rw,Z
-Volume=/var/mnt/data/.sonarr/config:/config:Z
+Volume=/var/mnt/data/content:/content:rw,z
+Volume=/var/local/lib/sonarr/config:/config:Z
 AutoUpdate=registry
 NoNewPrivileges=true
 # DropCapability=all intentionally omitted: linuxserver s6 init calls setgroups()

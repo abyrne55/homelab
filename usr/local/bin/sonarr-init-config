@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-config_path=/var/mnt/data/.sonarr/config/config.xml
+config_path=/var/local/lib/sonarr/config/config.xml
 if [[ -f "$config_path" ]]; then
   echo "config.xml already exists, skipping"
   exit 0

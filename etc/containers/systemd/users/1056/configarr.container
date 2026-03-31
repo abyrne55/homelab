@@ -12,7 +12,7 @@ Environment=CONFIG_LOCATION=/app/config/config.yml
 # Config from homelab-config repo
 Volume=/var/lib/homelab-config/configarr:/app/config:ro,z
 # Repo cache on data disk
-Volume=/var/mnt/data/.configarr/repos:/app/repos:rw,Z
+Volume=/var/local/lib/configarr/repos:/app/repos:rw,Z
 # Credentials dir
 Volume=%d:/run/credentials:ro,z
 

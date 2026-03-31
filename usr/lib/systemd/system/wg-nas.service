@@ -2,7 +2,7 @@
 Description=WireGuard VPN tunnel to NAS
 After=network-online.target
 Wants=network-online.target
-Before=var-mnt-media.mount
+Before=var-mnt-data.mount
 
 [Service]
 Type=oneshot

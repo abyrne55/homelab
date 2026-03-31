@@ -6,8 +6,8 @@ Wants=network-online.target radarr-init-config.service radarr-configure.service 
 [Container]
 Image=lscr.io/linuxserver/radarr:6.0.4
 PublishPort=20540:7878
-Volume=/var/mnt/data/content:/content:rw,Z
-Volume=/var/mnt/data/.radarr/config:/config:Z
+Volume=/var/mnt/data/content:/content:rw,z
+Volume=/var/local/lib/radarr/config:/config:Z
 AutoUpdate=registry
 NoNewPrivileges=true
 # DropCapability=all intentionally omitted: linuxserver s6 init calls setgroups()

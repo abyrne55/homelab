@@ -1,12 +1,15 @@
 [Unit]
-Description=Mount external media data volume
-After=init-data-disk.service
+Description=NFS mount for NAS media share
+After=network-online.target wg-nas.service
+Wants=network-online.target
+BindsTo=wg-nas.service
 
 [Mount]
-What=/dev/disk/by-label/data
+What=10.8.0.1:/volume1/media-stg
 Where=/var/mnt/data
-Type=ext4
-Options=defaults,context=system_u:object_r:container_file_t:s0
+Type=nfs
+Options=defaults,_netdev,nfsvers=4.1,nconnect=4,noatime,rsize=131072,wsize=131072,context=system_u:object_r:container_file_t:s0
+TimeoutSec=30
 
 [Install]
 WantedBy=multi-user.target
