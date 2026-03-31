@@ -1,7 +1,7 @@
 [Unit]
 Description=Initialize Prowlarr config.xml with API key
 ConditionUser=prowlarr
-ConditionPathExists=!/var/local/lib/prowlarr/config/config.xml
+ConditionPathExists=!/var/local/lib/prowlarr/.init-done
 Before=prowlarr.service
 PartOf=prowlarr.service
 

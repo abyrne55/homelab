@@ -1,7 +1,7 @@
 [Unit]
 Description=Initialize Sonarr config.xml with API key
 ConditionUser=sonarr
-ConditionPathExists=!/var/local/lib/sonarr/config/config.xml
+ConditionPathExists=!/var/local/lib/sonarr/.init-done
 Before=sonarr.service
 PartOf=sonarr.service
 

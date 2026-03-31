@@ -1,11 +1,13 @@
 #!/bin/bash
 set -euo pipefail
 config_path=/var/local/lib/radarr/config/config.xml
-if [[ -f "$config_path" ]]; then
-  echo "config.xml already exists, skipping"
+marker=/var/local/lib/radarr/.init-done
+if [[ -f "$marker" ]]; then
+  echo "already initialized, skipping"
   exit 0
 fi
 printf '<Config>\n  <ApiKey>%s</ApiKey>\n</Config>\n' \
   "$(cat "${CREDENTIALS_DIRECTORY}/radarr-api-key")" \
   > "$config_path"
+touch "$marker"
 echo "Radarr config.xml initialized"
