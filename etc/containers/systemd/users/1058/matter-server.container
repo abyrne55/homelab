@@ -6,7 +6,7 @@ Wants=network-online.target
 [Container]
 Image=ghcr.io/matter-js/python-matter-server:8.1
 Pod=home-assistant.pod
-Volume=/var/mnt/data/.home-assistant/matter-server:/data:Z
+Volume=/var/local/lib/home-assistant/matter-server:/data:Z
 AutoUpdate=registry
 NoNewPrivileges=true
 

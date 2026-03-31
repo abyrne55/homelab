@@ -1,0 +1,32 @@
+[Unit]
+Description=Initialize content directory tree on NFS share
+After=var-mnt-data.mount
+ConditionPathExists=!/var/mnt/data/content
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+NoNewPrivileges=yes
+LockPersonality=yes
+RestrictRealtime=yes
+ExecStart=/usr/bin/mkdir -p \
+  /var/mnt/data/content/media/movies \
+  /var/mnt/data/content/media/tv \
+  /var/mnt/data/content/media/music \
+  /var/mnt/data/content/media/books \
+  /var/mnt/data/content/media/other \
+  /var/mnt/data/content/torrents/movies \
+  /var/mnt/data/content/torrents/tv \
+  /var/mnt/data/content/torrents/music \
+  /var/mnt/data/content/torrents/books \
+  /var/mnt/data/content/torrents/other \
+  /var/mnt/data/content/usenet/incomplete \
+  /var/mnt/data/content/usenet/complete/movies \
+  /var/mnt/data/content/usenet/complete/tv \
+  /var/mnt/data/content/usenet/complete/music \
+  /var/mnt/data/content/usenet/complete/books \
+  /var/mnt/data/content/usenet/complete/other
+ExecStart=/usr/bin/chmod -R 0777 /var/mnt/data/content
+
+[Install]
+WantedBy=var-mnt-data.mount

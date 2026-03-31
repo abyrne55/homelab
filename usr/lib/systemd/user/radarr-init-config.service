@@ -1,7 +1,7 @@
 [Unit]
 Description=Initialize Radarr config.xml with API key
 ConditionUser=radarr
-ConditionPathExists=!/var/mnt/data/.radarr/config/config.xml
+ConditionPathExists=!/var/local/lib/radarr/config/config.xml
 Before=radarr.service
 PartOf=radarr.service
 

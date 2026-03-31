@@ -6,7 +6,7 @@ Wants=network-online.target prowlarr-init-config.service prowlarr-configure.serv
 [Container]
 Image=lscr.io/linuxserver/prowlarr:2.3.0
 PublishPort=20570:9696
-Volume=/var/mnt/data/.prowlarr/config:/config:Z
+Volume=/var/local/lib/prowlarr/config:/config:Z
 AutoUpdate=registry
 NoNewPrivileges=true
 # DropCapability=all intentionally omitted: linuxserver s6 init calls setgroups()
