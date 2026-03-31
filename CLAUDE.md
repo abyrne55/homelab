@@ -168,7 +168,7 @@ hl help                              # full usage
 
 ## Adding New Software
 
-Use `/add-quadlet [service-name]` for the full step-by-step checklist. The short version: each service gets a dedicated system user (sysusers.d), home directory (tmpfiles homedirs), linger entry, subid range, a `.container` quadlet file under `etc/containers/systemd/users/<uid>/`, and a Caddy route in homelab-config. Use `/vm-test [service-name]` for testing and troubleshooting. For hardening directives to apply to the quadlet, use `/hardening`.
+Use `/add-quadlet [service-name]` for the full step-by-step checklist. The short version: each service gets a dedicated system user (sysusers.d), home directory (tmpfiles homedirs), linger entry, subid range, a `.container` quadlet file under `etc/containers/systemd/users/<uid>/`, and a Caddy route in homelab-config. Use `/test-vm [service-name]` for testing and troubleshooting. For hardening directives to apply to the quadlet, use `/hardening`.
 
 **Port assignment scheme:** `2<last 3 digits of UID><index>` — e.g. UID 1051 → 20510, 20511, … All ports stay in 20000–29999 (below the ephemeral port floor of 32768). Tinyproxy is an exception — it is not published to the host and is only reachable via container-internal DNS.
 
@@ -193,3 +193,4 @@ New system units (not quadlets) must also be appended to the `RUN systemctl enab
 | `/hardening` | Baseline hardening directives for quadlets and systemd units |
 | `/test-vm [service]` | Guided testing/troubleshooting of new or problematic features/services |
 | `/selinux-policy` | Write, debug, and extend custom SELinux CIL policy modules |
+| `/fallback-cmd` | Raw shell commands when `hl`/`vsh` can't complete a task |
