@@ -7,20 +7,19 @@ Before=var-mnt-data.mount
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-NoNewPrivileges=yes
+# NoNewPrivileges and directives implying it (ProtectKernelTunables,
+# ProtectKernelModules, ProtectKernelLogs, RestrictRealtime,
+# RestrictAddressFamilies, PrivateDevices) intentionally omitted:
+# ip(8) has SELinux type ifconfig_exec_t which requires a domain transition
+# from init_t to ifconfig_t. NO_NEW_PRIVS blocks all transitions to
+# non-bounded domains (avc: denied { nnp_transition }).
 PrivateTmp=yes
-ProtectKernelTunables=yes
-ProtectKernelModules=yes
-ProtectKernelLogs=yes
 ProtectControlGroups=yes
 LockPersonality=yes
-RestrictRealtime=yes
 ProtectSystem=strict
 ProtectHome=yes
-PrivateDevices=yes
-# ip/wg use AF_NETLINK to configure network interfaces via the kernel;
-# PrivateNetwork=yes must NOT be set as it would disconnect AF_NETLINK
-RestrictAddressFamilies=AF_UNIX AF_NETLINK
+# PrivateNetwork=yes must NOT be set — it disconnects AF_NETLINK, which
+# is required by ip(8) and wg(8) to configure interfaces via the kernel
 LoadCredential=wg-nas-private-key:%t/systemd-age-creds.sock
 LoadCredential=wg-nas-preshared-key:%t/systemd-age-creds.sock
 ExecStart=ip link add wg-nas type wireguard

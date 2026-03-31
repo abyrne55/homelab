@@ -18,7 +18,9 @@ ProtectSystem=strict
 ProtectHome=yes
 PrivateDevices=yes
 RestrictAddressFamilies=none
-ReadWritePaths=/var/mnt/data/content
+# /var/mnt/data/content doesn't exist yet (this service creates it), so we
+# bind-mount the NFS root instead — the subpath would fail namespace setup
+ReadWritePaths=/var/mnt/data
 ExecStart=/usr/bin/mkdir -p \
   /var/mnt/data/content/media/movies \
   /var/mnt/data/content/media/tv \
