@@ -1,13 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 config_path=/var/local/lib/prowlarr/config/config.xml
-marker=/var/local/lib/prowlarr/.init-done
-if [[ -f "$marker" ]]; then
-  echo "already initialized, skipping"
+if [[ -f "$config_path" ]]; then
+  echo "config.xml already exists, skipping"
   exit 0
 fi
 printf '<Config>\n  <ApiKey>%s</ApiKey>\n</Config>\n' \
   "$(cat "${CREDENTIALS_DIRECTORY}/prowlarr-api-key")" \
   > "$config_path"
-touch "$marker"
 echo "Prowlarr config.xml initialized"
