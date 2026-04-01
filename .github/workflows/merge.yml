@@ -9,7 +9,7 @@ permissions:
 jobs:
   merge:
     runs-on: ubuntu-slim
-    if: github.actor == 'dependabot[bot]' && github.repository == 'abyrne55/tinyproxy-homelab'
+    if: github.actor == 'dependabot[bot]' && github.repository == 'abyrne55/homelab'
 
     steps:
       - name: Dependabot metadata
