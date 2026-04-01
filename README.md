@@ -82,8 +82,6 @@ Pre-generated secrets can be injected into the VM via an optional ISO image:
 | `stop-vm` | Stop the running VM |
 | `systemd-analyze-verify` | Verify all custom systemd unit files (pulls from GHCR; useful on branches without a PR) |
 | `systemd-analyze-security` | Score all custom service units for hardening quality (pulls from GHCR; useful on branches without a PR) |
-| `systemd-analyze-verify-local` | Verify all custom systemd unit files (builds image locally) |
-| `systemd-analyze-security-local` | Score all custom service units for hardening quality (builds image locally) |
 | `systemd-analyze-local` | Run both verify and security locally, building the image once (used in CI) |
 | `clean` | Stop VM and delete all build artifacts |
 

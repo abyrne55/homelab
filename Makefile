@@ -19,7 +19,7 @@ MONITOR_PORT ?= 4444
 DEBUG ?=
 
 # Phony targets (convenience aliases and non-file targets)
-.PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm vm-switch await-ghcr stop-vm reboot-vm clean systemd-analyze-verify systemd-analyze-security systemd-analyze-verify-local systemd-analyze-security-local systemd-analyze-local _pull-remote-image _build-local-image _run-verify _run-security verify-quadlets
+.PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm vm-switch await-ghcr stop-vm reboot-vm clean systemd-analyze-verify systemd-analyze-security systemd-analyze-local _pull-remote-image _build-local-image _run-verify _run-security verify-quadlets
 
 # Default target
 .DEFAULT_GOAL := build-container
@@ -114,18 +114,11 @@ _run-security:
 systemd-analyze-verify: _pull-remote-image
 	@$(MAKE) --no-print-directory _run-verify _ANALYZE_IMAGE=$(REMOTE_IMAGE)
 
-# Run systemd-analyze verify using a locally-built image (no GHCR required).
-systemd-analyze-verify-local: _build-local-image
-	@$(MAKE) --no-print-directory _run-verify _ANALYZE_IMAGE=$(LOCAL_IMAGE)
 
 # Run systemd-analyze security on all custom .service files inside the GHCR image.
 # Prints full analysis for EXPOSED units; fails if any unit is UNSAFE.
 systemd-analyze-security: _pull-remote-image
 	@$(MAKE) --no-print-directory _run-security _ANALYZE_IMAGE=$(REMOTE_IMAGE)
-
-# Run systemd-analyze security using a locally-built image (no GHCR required).
-systemd-analyze-security-local: _build-local-image
-	@$(MAKE) --no-print-directory _run-security _ANALYZE_IMAGE=$(LOCAL_IMAGE)
 
 # Run both verify and security using a locally-built image, building the image only once.
 systemd-analyze-local: _build-local-image
