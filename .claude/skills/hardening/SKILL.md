@@ -77,7 +77,7 @@ PrivateNetwork=yes        # fully isolated network namespace (only for no-networ
 
 ## Validating hardening with systemd-analyze security
 
-Run `make systemd-analyze-security-local` to score all custom `.service` files (builds image locally, used in CI). To score against the GHCR image instead, use `make systemd-analyze-security`.
+Run `make systemd-analyze-security-local` to score all custom `.service` files (builds image locally, used in CI). To score against a pushed branch image instead (e.g. on a branch without a PR), use `make systemd-analyze-security` — it pulls from GHCR so the branch must have been pushed and built first.
 
 **Score bands:**
 
