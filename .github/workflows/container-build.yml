@@ -7,6 +7,8 @@ on:
     branches: [ "*" ]
     # Publish semver tags as releases.
     tags: [ 'v*.*.*' ]
+  pull_request:
+    branches: [ "*" ]
 
 env:
   REGISTRY: ghcr.io
@@ -94,7 +96,7 @@ jobs:
 
   systemd-analyze:
     needs: build
-    if: github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/') && github.event_name != 'schedule'
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04-arm
 
     steps:
@@ -107,9 +109,9 @@ jobs:
       - name: Verify systemd units
         run: make systemd-analyze-verify
         env:
-          REMOTE_IMAGE: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+          REMOTE_IMAGE: ghcr.io/${{ github.repository }}:${{ github.head_ref }}
 
       - name: Analyze systemd security
         run: make systemd-analyze-security
         env:
-          REMOTE_IMAGE: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+          REMOTE_IMAGE: ghcr.io/${{ github.repository }}:${{ github.head_ref }}
