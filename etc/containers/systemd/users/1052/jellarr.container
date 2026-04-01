@@ -19,9 +19,6 @@ EnvironmentFile=%t/jellarr/jellarr.env
 Type=oneshot
 LoadCredential=jellarr-api-key:/run/systemd-age-creds.sock
 LoadCredential=abyrne55-jellyfin-password:/run/systemd-age-creds.sock
-ProtectClock=yes
 ProtectHostname=yes
-RestrictSUIDSGID=yes
-SystemCallArchitectures=native
 RuntimeDirectory=jellarr
 ExecStartPre=/bin/bash -c 'printf "JELLARR_API_KEY=%%s\n" "$(tr -d "[:space:]" < "${CREDENTIALS_DIRECTORY}/jellarr-api-key")" > "${RUNTIME_DIRECTORY}/jellarr.env"'

@@ -27,10 +27,7 @@ Environment=TZ=UTC
 [Service]
 Restart=on-failure
 RestartSec=5
-ProtectClock=yes
 ProtectHostname=yes
-RestrictSUIDSGID=yes
-SystemCallArchitectures=native
 
 [Install]
 WantedBy=default.target

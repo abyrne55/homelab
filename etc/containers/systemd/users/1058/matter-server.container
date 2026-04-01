@@ -19,10 +19,7 @@ Notify=healthy
 Restart=on-failure
 RestartSec=5
 TimeoutStartSec=infinity
-ProtectClock=yes
 ProtectHostname=yes
-RestrictSUIDSGID=yes
-SystemCallArchitectures=native
 
 [Install]
 WantedBy=default.target
