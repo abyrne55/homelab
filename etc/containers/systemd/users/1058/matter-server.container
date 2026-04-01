@@ -9,6 +9,11 @@ Pod=home-assistant.pod
 Volume=/var/local/lib/home-assistant/matter-server:/data:Z
 AutoUpdate=registry
 NoNewPrivileges=true
+DropCapability=all
+HealthCmd=curl -f http://localhost:5580/info
+HealthStartPeriod=60s
+HealthInterval=30s
+Notify=healthy
 
 [Service]
 Restart=on-failure
