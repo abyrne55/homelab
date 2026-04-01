@@ -10,6 +10,10 @@ on:
   pull_request:
     branches: [ "*" ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.sha }}
+  cancel-in-progress: true
+
 env:
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
