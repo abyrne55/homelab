@@ -18,7 +18,7 @@ MONITOR_PORT ?= 4444
 DEBUG ?=
 
 # Phony targets (convenience aliases and non-file targets)
-.PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm vm-switch await-ghcr stop-vm reboot-vm clean verify-systemd
+.PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm vm-switch await-ghcr stop-vm reboot-vm clean verify-systemd verify-quadlets
 
 # Default target
 .DEFAULT_GOAL := build-container
@@ -75,8 +75,46 @@ verify-systemd: $(BUILD_DIR)/.image-built
 		exit $$EXIT_CODE'
 	@echo ""
 	@echo "Systemd unit verification complete"
-	@echo "Note: Quadlet files (.container) are not verified - they are converted to systemd units at runtime by podman-systemd-generator"
+	@echo "Note: Use 'make verify-quadlets' to validate quadlet files (.container, .volume, .network)"
 	@echo "Note: Drop-in configs (.conf) are listed but validated with their parent units at runtime"
+
+# Validate quadlet files by running podman-system-generator --dryrun against each user's quadlet directory.
+# Uses the base image directly (no local build required) with quadlet files mounted from the working tree.
+QUADLET_VALIDATOR_IMAGE ?= $(shell grep '^FROM' Containerfile | head -1 | awk '{print $$2}')
+verify-quadlets:
+	@echo "Verifying quadlet files using podman-system-generator ($(QUADLET_VALIDATOR_IMAGE))..."
+	@podman run --rm \
+		-v $(CURDIR)/etc/containers/systemd/users:/etc/containers/systemd/users:ro \
+		$(QUADLET_VALIDATOR_IMAGE) /bin/bash -c ' \
+		EXIT_CODE=0; \
+		GENERATOR=/usr/lib/systemd/system-generators/podman-system-generator; \
+		for uid_dir in $$(find /etc/containers/systemd/users -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort); do \
+			uid=$$(basename "$$uid_dir"); \
+			inputs=$$(find "$$uid_dir" -maxdepth 1 \( -name "*.container" -o -name "*.volume" -o -name "*.network" \) 2>/dev/null | sort); \
+			input_count=$$(echo "$$inputs" | grep -c . 2>/dev/null || echo 0); \
+			[ "$$input_count" -eq 0 ] && continue; \
+			echo ""; \
+			echo "=== UID $$uid ==="; \
+			for f in $$inputs; do echo "  input:  $$(basename $$f)"; done; \
+			tmpdir=$$(mktemp -d); \
+			GEN_STDERR=$$(QUADLET_UNIT_DIRS="$$uid_dir" "$$GENERATOR" --user "$$tmpdir" "$$tmpdir" "$$tmpdir" 2>&1 >/dev/null); \
+			GEN_EXIT=$$?; \
+			outputs=$$(find "$$tmpdir" -maxdepth 1 \( -name "*.service" -o -name "*.mount" -o -name "*.socket" \) 2>/dev/null | sort); \
+			output_count=$$(echo "$$outputs" | grep -c . 2>/dev/null || echo 0); \
+			for f in $$outputs; do echo "  output: $$(basename $$f)"; done; \
+			if [ -n "$$GEN_STDERR" ]; then echo "$$GEN_STDERR"; fi; \
+			if [ $$GEN_EXIT -ne 0 ]; then \
+				echo "  FAIL: generator exited $$GEN_EXIT"; \
+				EXIT_CODE=1; \
+			elif [ "$$output_count" -eq 0 ]; then \
+				echo "  FAIL: no units generated from $$input_count input file(s)"; \
+				EXIT_CODE=1; \
+			fi; \
+			rm -rf "$$tmpdir"; \
+		done; \
+		exit $$EXIT_CODE'
+	@echo ""
+	@echo "Quadlet verification complete"
 
 #
 # File-based targets with dependencies

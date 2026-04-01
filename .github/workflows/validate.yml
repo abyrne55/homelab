@@ -1,0 +1,42 @@
+name: validate
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+
+jobs:
+  quadlets:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install podman
+        run: sudo apt-get install -y podman
+
+      - name: Validate quadlet files
+        run: |
+          EXIT_CODE=0
+          GENERATOR=/usr/lib/systemd/system-generators/podman-system-generator
+
+          for uid_dir in $(find etc/containers/systemd/users -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort); do
+            uid=$(basename "$uid_dir")
+            count=$(find "$uid_dir" -maxdepth 1 \( -name "*.container" -o -name "*.volume" -o -name "*.network" \) 2>/dev/null | wc -l)
+            [ "$count" -eq 0 ] && continue
+
+            echo "=== UID $uid ($count quadlet file(s)) ==="
+            OUTPUT=$(QUADLET_UNIT_DIRS="$(pwd)/$uid_dir" "$GENERATOR" --user --dryrun 2>&1)
+            GEN_EXIT=$?
+
+            if [ $GEN_EXIT -ne 0 ]; then
+              echo "$OUTPUT"
+              echo "FAIL: generator exited $GEN_EXIT for UID $uid"
+              EXIT_CODE=1
+            else
+              echo "OK"
+            fi
+          done
+
+          exit $EXIT_CODE
