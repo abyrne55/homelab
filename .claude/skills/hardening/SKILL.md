@@ -36,9 +36,10 @@ Notify=healthy            # systemd waits for healthy state, not just process st
 
 **Known exceptions:**
 
-- `DropCapability=all` must be omitted for images that need capabilities inside the container. Use `AddCapability=` to grant only what's needed and document why. Examples:
-  - gluetun needs `NET_ADMIN`/`NET_RAW` for WireGuard
-  - linuxserver s6-based images call `setgroups()` and need `CAP_SETGID`
+- When an image needs specific capabilities, keep `DropCapability=all` and add `AddCapability=` for only what's needed — do **not** omit `DropCapability=all`. Examples:
+  - gluetun: `DropCapability=all` + `AddCapability=NET_ADMIN NET_RAW` (WireGuard tunnel + ICMP healthchecks)
+- `DropCapability=all` must be omitted entirely only for images where the required caps are unknown or broad. Document why. Example:
+  - linuxserver s6-based images call `setgroups()` and need `CAP_SETGID` — but the full set of caps used by s6 internals is not enumerable, so `DropCapability=all` is omitted
 
 ## Systemd system services
 
@@ -70,7 +71,9 @@ PrivateNetwork=yes        # fully isolated network namespace (only for no-networ
 
 - All mount-namespace directives (`PrivateTmp`, `ProtectSystem`, `ProtectHome`, `ProtectKernel*`, `ProtectControlGroups`, `PrivateDevices`) must be omitted for services that run `mount`/`umount` across multiple `ExecStart=` lines — systemd clones a fresh mount namespace per step, making mounts from one step invisible to the next. See `init-data-disk.service`.
 
-- `NoNewPrivileges=yes` and any directive implying it (`ProtectKernelTunables`, `ProtectKernelModules`, `ProtectKernelLogs`, `RestrictRealtime`, `RestrictAddressFamilies`, `PrivateDevices`) must be omitted for services that invoke binaries with SELinux domain transitions — `NO_NEW_PRIVS` blocks all transitions to non-bounded domains. See `ssh-generate-identity.service`.
+- `NoNewPrivileges=yes` and any directive implying it (`ProtectKernelTunables`, `ProtectKernelModules`, `ProtectKernelLogs`, `RestrictRealtime`, `RestrictAddressFamilies`, `PrivateDevices`) must be omitted for services that invoke binaries with SELinux domain transitions — `NO_NEW_PRIVS` blocks all transitions to non-bounded domains. See `ssh-generate-identity.service` (ssh-keygen: `ssh_keygen_exec_t → ssh_keygen_t`) and `wg-nas.service` (ip: `ifconfig_exec_t → ifconfig_t`). Symptom: `avc: denied { nnp_transition }` in the journal, exit code 203/EXEC.
+
+- `ReadWritePaths=` under `ProtectSystem=strict` requires the target path to **already exist** when the service starts — systemd sets up the bind mount during namespace initialization, before `ExecStart=` runs. If the service's purpose is to *create* that path, use the nearest existing parent instead. See `init-content-dirs.service` (`ReadWritePaths=/var/mnt/data`, not `/var/mnt/data/content`).
 
 ## Additional References
 
