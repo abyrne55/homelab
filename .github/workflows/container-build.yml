@@ -92,7 +92,7 @@ jobs:
         # against the sigstore community Fulcio instance.
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
 
-  verify-systemd:
+  systemd-analyze:
     needs: build
     runs-on: ubuntu-24.04-arm
 
@@ -104,6 +104,11 @@ jobs:
         run: sudo apt-get install -y podman
 
       - name: Verify systemd units
-        run: make verify-systemd-from-ghcr
+        run: make systemd-analyze-verify
+        env:
+          REMOTE_IMAGE: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+
+      - name: Analyze systemd security
+        run: make systemd-analyze-security
         env:
           REMOTE_IMAGE: ghcr.io/${{ github.repository }}:${{ github.ref_name }}

@@ -75,6 +75,23 @@ PrivateNetwork=yes        # fully isolated network namespace (only for no-networ
 
 - `ReadWritePaths=` under `ProtectSystem=strict` requires the target path to **already exist** when the service starts — systemd sets up the bind mount during namespace initialization, before `ExecStart=` runs. If the service's purpose is to *create* that path, use the nearest existing parent instead. See `init-content-dirs.service` (`ReadWritePaths=/var/mnt/data`, not `/var/mnt/data/content`).
 
+## Validating hardening with systemd-analyze security
+
+Run `make systemd-analyze-security` to score all custom `.service` files (pulls from GHCR).
+
+**Score bands:**
+
+| Score | Rating |
+|-------|--------|
+| 0–1.9 | OK 🙂 |
+| 2.0–3.9 | MEDIUM 😐 |
+| 4.0–5.9 | EXPOSED 😨 |
+| 6.0+ | UNSAFE 🤮 |
+
+**CI enforcement:** The `systemd-analyze` CI job fails if any service scores UNSAFE (≥ 6.0). EXPOSED units print their full analysis for visibility but do not fail the build.
+
+**Expected scores for baseline-hardened services:** OK–MEDIUM (< 4.0). Services with intentional exceptions (e.g., SELinux transitions requiring omission of `NoNewPrivileges`) will score in the EXPOSED range — document the exception in a comment in the unit file.
+
 ## Additional References
 
 If in doubt about a quadlet option, these docs may help:
