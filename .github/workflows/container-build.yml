@@ -16,7 +16,6 @@ env:
 
 jobs:
   build:
-
     runs-on: ubuntu-24.04-arm
     permissions:
       contents: read
@@ -90,20 +89,4 @@ jobs:
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
         # This step uses the identity token to provision an ephemeral certificate
         # against the sigstore community Fulcio instance.
-        run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
-
-  verify-systemd:
-    needs: build
-    runs-on: ubuntu-24.04-arm
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Install podman
-        run: sudo apt-get install -y podman
-
-      - name: Verify systemd units
-        run: make verify-systemd-from-ghcr
-        env:
-          REMOTE_IMAGE: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+        run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@"${DIGEST}"

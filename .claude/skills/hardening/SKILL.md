@@ -75,6 +75,23 @@ PrivateNetwork=yes        # fully isolated network namespace (only for no-networ
 
 - `ReadWritePaths=` under `ProtectSystem=strict` requires the target path to **already exist** when the service starts — systemd sets up the bind mount during namespace initialization, before `ExecStart=` runs. If the service's purpose is to *create* that path, use the nearest existing parent instead. See `init-content-dirs.service` (`ReadWritePaths=/var/mnt/data`, not `/var/mnt/data/content`).
 
+## Validating hardening with systemd-analyze security
+
+Run `make systemd-analyze-local` to build the image locally and run both verify and security (used in CI). To score against a pushed branch image instead (e.g. on a branch without a PR), use `make systemd-analyze-security` — it pulls from GHCR so the branch must have been pushed and built first.
+
+**Score bands:**
+
+| Score | Rating |
+|-------|--------|
+| 0–1.9 | OK 🙂 |
+| 2.0–3.9 | MEDIUM 😐 |
+| 4.0–5.9 | EXPOSED 😨 |
+| 6.0+ | UNSAFE 🤮 |
+
+**CI enforcement:** The `systemd-analyze / correctness-and-security` check (`.github/workflows/systemd-analyze.yml`) runs on PRs, builds the image locally via `make systemd-analyze-local`, and fails if any service scores UNSAFE (≥ 6.0). EXPOSED units print their full analysis for visibility but do not fail the build.
+
+**Expected scores for baseline-hardened services:** OK–MEDIUM (< 4.0). Services with intentional exceptions (e.g., SELinux transitions requiring omission of `NoNewPrivileges`) will score in the EXPOSED range — document the exception in a comment in the unit file.
+
 ## Additional References
 
 If in doubt about a quadlet option, these docs may help:

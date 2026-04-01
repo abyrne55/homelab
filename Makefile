@@ -2,6 +2,7 @@
 IMAGE_NAME ?= homelab
 TAG ?= latest
 REMOTE_IMAGE ?= ghcr.io/abyrne55/homelab:$(shell git branch --show-current)
+LOCAL_IMAGE ?= homelab:ci
 
 # Build configuration
 BUILD_DIR ?= ./build
@@ -18,7 +19,7 @@ MONITOR_PORT ?= 4444
 DEBUG ?=
 
 # Phony targets (convenience aliases and non-file targets)
-.PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm vm-switch await-ghcr stop-vm reboot-vm clean verify-systemd verify-systemd-from-ghcr _verify-systemd-impl verify-quadlets
+.PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm vm-switch await-ghcr stop-vm reboot-vm clean systemd-analyze-verify systemd-analyze-security systemd-analyze-local _pull-remote-image _build-local-image _run-verify _run-security verify-quadlets
 
 # Default target
 .DEFAULT_GOAL := build-container
@@ -34,35 +35,29 @@ build-vm-from-ghcr: $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2 $(BUILD_DIR)/data.qc
 # Verification targets
 #
 
-verify-systemd: $(BUILD_DIR)/.image-built
-	@$(MAKE) --no-print-directory _verify-systemd-impl _VERIFY_SYSTEMD_IMAGE=$(IMAGE_NAME):$(TAG)
-
-verify-systemd-from-ghcr:
+_pull-remote-image:
 	@echo "Pulling $(REMOTE_IMAGE)..."
 	@podman pull $(REMOTE_IMAGE) 2>&1 | grep -Ev 'Copying (blob|config) sha256'
-	@$(MAKE) --no-print-directory _verify-systemd-impl _VERIFY_SYSTEMD_IMAGE=$(REMOTE_IMAGE)
 
-# Internal target — use verify-systemd or verify-systemd-from-ghcr instead.
-# Mounts only our custom units from the working tree so we don't verify every OS unit in the image.
-_verify-systemd-impl:
+_build-local-image:
+	@echo "Building local image for analysis..."
+	@podman build -t $(LOCAL_IMAGE) -f Containerfile . 2>&1 | grep -Ev 'STEP [0-9]'
+
+# Internal: run verify against whatever image _ANALYZE_IMAGE is set to.
+_run-verify:
 	@echo "Verifying custom systemd unit files from this repo..."
 	@podman run --rm \
 		-v $(CURDIR)/usr/lib/systemd/system:/tmp/homelab-system:ro \
 		-v $(CURDIR)/usr/lib/systemd/user:/tmp/homelab-user:ro \
-		$(_VERIFY_SYSTEMD_IMAGE) /bin/bash -c ' \
+		$(_ANALYZE_IMAGE) /bin/bash -c ' \
 		EXIT_CODE=0; \
 		verify_dir() { \
 			local label=$$1 dir=$$2; shift 2; \
 			echo "=== $$label ==="; \
 			for unit in $$(find "$$dir" -maxdepth 1 -type f \( "$$@" \) 2>/dev/null | sort); do \
 				echo "  $$(basename $$unit)"; \
-				OUTPUT=$$(systemd-analyze verify "$$unit" 2>&1); \
-				if [ $$? -ne 0 ]; then \
-					FILTERED=$$(echo "$$OUTPUT" | grep -v "Command .man.*failed with code"); \
-					if [ -n "$$FILTERED" ]; then \
-						echo "  FAIL: $$FILTERED"; \
-						EXIT_CODE=1; \
-					fi; \
+				if ! systemd-analyze --man=no verify "$$unit" 2>&1; then \
+					EXIT_CODE=1; \
 				fi; \
 			done; \
 			echo ""; \
@@ -77,8 +72,58 @@ _verify-systemd-impl:
 		exit $$EXIT_CODE'
 	@echo ""
 	@echo "Systemd unit verification complete"
-	@echo "Note: Use '\''make verify-quadlets'\'' to validate quadlet files (.container, .volume, .network)"
+	@echo "Note: Use 'make verify-quadlets' to validate quadlet files (.container, .volume, .network)"
 	@echo "Note: Drop-in configs (.conf) are listed but validated with their parent units at runtime"
+
+# Internal: run security analysis against whatever image _ANALYZE_IMAGE is set to.
+_run-security:
+	@echo "Analyzing custom systemd service security..."
+	@podman run --rm \
+		-v $(CURDIR)/usr/lib/systemd/system:/tmp/homelab-system:ro \
+		$(_ANALYZE_IMAGE) /bin/bash -c ' \
+		EXIT_CODE=0; \
+		echo "=== System service security scores ==="; \
+		echo ""; \
+		for unit in $$(find /tmp/homelab-system -maxdepth 1 -name "*.service" 2>/dev/null | sort); do \
+			name=$$(basename "$$unit"); \
+			ANALYSIS=$$(systemd-analyze security --offline=true --no-pager "$$unit" 2>&1); \
+			SCORE=$$(echo "$$ANALYSIS" | grep -i "Overall exposure level" | sed "s/.*: //"); \
+			echo "  $$name: $$SCORE"; \
+			if echo "$$ANALYSIS" | grep -q "UNSAFE"; then \
+				echo "  FAIL: $$name scored UNSAFE. Full analysis:"; \
+				echo "$$ANALYSIS"; \
+				echo ""; \
+				EXIT_CODE=1; \
+			elif echo "$$ANALYSIS" | grep -q "EXPOSED"; then \
+				echo "  (EXPOSED - full analysis for visibility:)"; \
+				echo "$$ANALYSIS"; \
+				echo ""; \
+			fi; \
+		done; \
+		echo ""; \
+		if [ $$EXIT_CODE -eq 0 ]; then \
+			echo "All units passed security threshold (UNSAFE < 6.0)"; \
+		else \
+			echo "One or more units scored UNSAFE. Review the analysis above."; \
+		fi; \
+		exit $$EXIT_CODE'
+	@echo ""
+	@echo "Systemd security analysis complete"
+
+# Run systemd-analyze verify on all custom unit files inside the GHCR image.
+systemd-analyze-verify: _pull-remote-image
+	@$(MAKE) --no-print-directory _run-verify _ANALYZE_IMAGE=$(REMOTE_IMAGE)
+
+
+# Run systemd-analyze security on all custom .service files inside the GHCR image.
+# Prints full analysis for EXPOSED units; fails if any unit is UNSAFE.
+systemd-analyze-security: _pull-remote-image
+	@$(MAKE) --no-print-directory _run-security _ANALYZE_IMAGE=$(REMOTE_IMAGE)
+
+# Run both verify and security using a locally-built image, building the image only once.
+systemd-analyze-local: _build-local-image
+	@$(MAKE) --no-print-directory _run-verify _ANALYZE_IMAGE=$(LOCAL_IMAGE)
+	@$(MAKE) --no-print-directory _run-security _ANALYZE_IMAGE=$(LOCAL_IMAGE)
 
 # Validate quadlet files by running podman-system-generator --dryrun against each user's quadlet directory.
 # Uses the base image directly (no local build required) with quadlet files mounted from the working tree.
