@@ -18,7 +18,7 @@ MONITOR_PORT ?= 4444
 DEBUG ?=
 
 # Phony targets (convenience aliases and non-file targets)
-.PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm vm-switch await-ghcr stop-vm reboot-vm clean verify-systemd verify-quadlets
+.PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm vm-switch await-ghcr stop-vm reboot-vm clean verify-systemd verify-systemd-from-ghcr _verify-systemd-impl verify-quadlets
 
 # Default target
 .DEFAULT_GOAL := build-container
@@ -34,48 +34,50 @@ build-vm-from-ghcr: $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2 $(BUILD_DIR)/data.qc
 # Verification targets
 #
 
-# Verify all systemd unit files using systemd-analyze inside the container
-# Note: Quadlet files (.container) are not verified as they are converted to systemd units at runtime
 verify-systemd: $(BUILD_DIR)/.image-built
+	@$(MAKE) --no-print-directory _verify-systemd-impl _VERIFY_SYSTEMD_IMAGE=$(IMAGE_NAME):$(TAG)
+
+verify-systemd-from-ghcr:
+	@echo "Pulling $(REMOTE_IMAGE)..."
+	@podman pull $(REMOTE_IMAGE) 2>&1 | grep -Ev 'Copying (blob|config) sha256'
+	@$(MAKE) --no-print-directory _verify-systemd-impl _VERIFY_SYSTEMD_IMAGE=$(REMOTE_IMAGE)
+
+# Internal target — use verify-systemd or verify-systemd-from-ghcr instead.
+# Mounts only our custom units from the working tree so we don't verify every OS unit in the image.
+_verify-systemd-impl:
 	@echo "Verifying custom systemd unit files from this repo..."
-	@podman run --rm $(IMAGE_NAME):$(TAG) /bin/bash -c ' \
+	@podman run --rm \
+		-v $(CURDIR)/usr/lib/systemd/system:/tmp/homelab-system:ro \
+		-v $(CURDIR)/usr/lib/systemd/user:/tmp/homelab-user:ro \
+		$(_VERIFY_SYSTEMD_IMAGE) /bin/bash -c ' \
 		EXIT_CODE=0; \
-		echo "=== System units (/etc/systemd/system) ==="; \
-		for unit in $$(find /etc/systemd/system -maxdepth 1 -type f \( -name "*.service" -o -name "*.socket" -o -name "*.timer" -o -name "*.mount" -o -name "*.path" \) 2>/dev/null); do \
-			echo "Verifying $$unit"; \
-			OUTPUT=$$(systemd-analyze verify "$$unit" 2>&1); \
-			VERIFY_EXIT=$$?; \
-			if [ $$VERIFY_EXIT -ne 0 ]; then \
-				FILTERED=$$(echo "$$OUTPUT" | grep -v "Command .man.*failed with code"); \
-				if [ -n "$$FILTERED" ]; then \
-					echo "$$FILTERED"; \
-					EXIT_CODE=1; \
+		verify_dir() { \
+			local label=$$1 dir=$$2; shift 2; \
+			echo "=== $$label ==="; \
+			for unit in $$(find "$$dir" -maxdepth 1 -type f \( "$$@" \) 2>/dev/null | sort); do \
+				echo "  $$(basename $$unit)"; \
+				OUTPUT=$$(systemd-analyze verify "$$unit" 2>&1); \
+				if [ $$? -ne 0 ]; then \
+					FILTERED=$$(echo "$$OUTPUT" | grep -v "Command .man.*failed with code"); \
+					if [ -n "$$FILTERED" ]; then \
+						echo "  FAIL: $$FILTERED"; \
+						EXIT_CODE=1; \
+					fi; \
 				fi; \
-			fi; \
-		done; \
-		echo ""; \
-		echo "=== User units (custom only) ==="; \
-		if [ -f /usr/lib/systemd/user/caddy.socket ]; then \
-			echo "Verifying /usr/lib/systemd/user/caddy.socket"; \
-			OUTPUT=$$(systemd-analyze verify /usr/lib/systemd/user/caddy.socket 2>&1); \
-			VERIFY_EXIT=$$?; \
-			if [ $$VERIFY_EXIT -ne 0 ]; then \
-				FILTERED=$$(echo "$$OUTPUT" | grep -v "Command .man.*failed with code" | grep -v "service caddy.service not loaded"); \
-				if [ -n "$$FILTERED" ]; then \
-					echo "$$FILTERED"; \
-					EXIT_CODE=1; \
-				fi; \
-			fi; \
-		fi; \
+			done; \
+			echo ""; \
+		}; \
+		verify_dir "System units" /tmp/homelab-system -name "*.service" -o -name "*.socket" -o -name "*.timer" -o -name "*.mount" -o -name "*.path"; \
+		verify_dir "User units"   /tmp/homelab-user   -name "*.service" -o -name "*.socket" -o -name "*.timer"; \
 		echo ""; \
 		echo "=== Drop-in configs ==="; \
-		for conf in $$(find /etc/systemd/system -type f -name "*.conf" 2>/dev/null); do \
-			echo "Found: $$conf"; \
+		for conf in $$(find /tmp/homelab-system -type f -name "*.conf" 2>/dev/null | sort); do \
+			echo "  $$(basename $$(dirname $$conf))/$$(basename $$conf)"; \
 		done; \
 		exit $$EXIT_CODE'
 	@echo ""
 	@echo "Systemd unit verification complete"
-	@echo "Note: Use 'make verify-quadlets' to validate quadlet files (.container, .volume, .network)"
+	@echo "Note: Use '\''make verify-quadlets'\'' to validate quadlet files (.container, .volume, .network)"
 	@echo "Note: Drop-in configs (.conf) are listed but validated with their parent units at runtime"
 
 # Validate quadlet files by running podman-system-generator --dryrun against each user's quadlet directory.
@@ -91,8 +93,8 @@ verify-quadlets:
 		for uid_dir in $$(find /etc/containers/systemd/users -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort); do \
 			uid=$$(basename "$$uid_dir"); \
 			inputs=$$(find "$$uid_dir" -maxdepth 1 \( -name "*.container" -o -name "*.volume" -o -name "*.network" \) 2>/dev/null | sort); \
-			input_count=$$(echo "$$inputs" | grep -c . 2>/dev/null || echo 0); \
-			[ "$$input_count" -eq 0 ] && continue; \
+			[ -z "$$inputs" ] && continue; \
+			input_count=$$(echo "$$inputs" | grep -c .); \
 			echo ""; \
 			echo "=== UID $$uid ==="; \
 			for f in $$inputs; do echo "  input:  $$(basename $$f)"; done; \
@@ -100,13 +102,12 @@ verify-quadlets:
 			GEN_STDERR=$$(QUADLET_UNIT_DIRS="$$uid_dir" "$$GENERATOR" --user "$$tmpdir" "$$tmpdir" "$$tmpdir" 2>&1 >/dev/null); \
 			GEN_EXIT=$$?; \
 			outputs=$$(find "$$tmpdir" -maxdepth 1 \( -name "*.service" -o -name "*.mount" -o -name "*.socket" \) 2>/dev/null | sort); \
-			output_count=$$(echo "$$outputs" | grep -c . 2>/dev/null || echo 0); \
 			for f in $$outputs; do echo "  output: $$(basename $$f)"; done; \
 			if [ -n "$$GEN_STDERR" ]; then echo "$$GEN_STDERR"; fi; \
 			if [ $$GEN_EXIT -ne 0 ]; then \
 				echo "  FAIL: generator exited $$GEN_EXIT"; \
 				EXIT_CODE=1; \
-			elif [ "$$output_count" -eq 0 ]; then \
+			elif [ -z "$$outputs" ]; then \
 				echo "  FAIL: no units generated from $$input_count input file(s)"; \
 				EXIT_CODE=1; \
 			fi; \
