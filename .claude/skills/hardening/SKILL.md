@@ -77,7 +77,7 @@ PrivateNetwork=yes        # fully isolated network namespace (only for no-networ
 
 ## Validating hardening with systemd-analyze security
 
-Run `make systemd-analyze-security` to score all custom `.service` files (pulls from GHCR).
+Run `make systemd-analyze-security-local` to score all custom `.service` files (builds image locally, used in CI). To score against the GHCR image instead, use `make systemd-analyze-security`.
 
 **Score bands:**
 
@@ -88,7 +88,7 @@ Run `make systemd-analyze-security` to score all custom `.service` files (pulls 
 | 4.0–5.9 | EXPOSED 😨 |
 | 6.0+ | UNSAFE 🤮 |
 
-**CI enforcement:** The `systemd-analyze` CI job fails if any service scores UNSAFE (≥ 6.0). EXPOSED units print their full analysis for visibility but do not fail the build.
+**CI enforcement:** The `systemd-analyze` workflow (`.github/workflows/systemd-analyze.yml`) runs on PRs, builds the image locally, and fails if any service scores UNSAFE (≥ 6.0). EXPOSED units print their full analysis for visibility but do not fail the build.
 
 **Expected scores for baseline-hardened services:** OK–MEDIUM (< 4.0). Services with intentional exceptions (e.g., SELinux transitions requiring omission of `NoNewPrivileges`) will score in the EXPOSED range — document the exception in a comment in the unit file.
 

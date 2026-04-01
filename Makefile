@@ -2,6 +2,7 @@
 IMAGE_NAME ?= homelab
 TAG ?= latest
 REMOTE_IMAGE ?= ghcr.io/abyrne55/homelab:$(shell git branch --show-current)
+LOCAL_IMAGE ?= homelab:ci
 
 # Build configuration
 BUILD_DIR ?= ./build
@@ -18,7 +19,7 @@ MONITOR_PORT ?= 4444
 DEBUG ?=
 
 # Phony targets (convenience aliases and non-file targets)
-.PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm vm-switch await-ghcr stop-vm reboot-vm clean systemd-analyze-verify systemd-analyze-security _pull-remote-image verify-quadlets
+.PHONY: build-container build-vm build-vm-from-ghcr run-vm run-vm-from-ghcr ssh-vm vm-switch await-ghcr stop-vm reboot-vm clean systemd-analyze-verify systemd-analyze-security systemd-analyze-verify-local systemd-analyze-security-local systemd-analyze-local _pull-remote-image _build-local-image _run-verify _run-security verify-quadlets
 
 # Default target
 .DEFAULT_GOAL := build-container
@@ -38,13 +39,17 @@ _pull-remote-image:
 	@echo "Pulling $(REMOTE_IMAGE)..."
 	@podman pull $(REMOTE_IMAGE) 2>&1 | grep -Ev 'Copying (blob|config) sha256'
 
-# Run systemd-analyze verify on all custom unit files inside the GHCR image.
-systemd-analyze-verify: _pull-remote-image
+_build-local-image:
+	@echo "Building local image for analysis..."
+	@podman build -t $(LOCAL_IMAGE) -f Containerfile . 2>&1 | grep -Ev 'STEP [0-9]'
+
+# Internal: run verify against whatever image _ANALYZE_IMAGE is set to.
+_run-verify:
 	@echo "Verifying custom systemd unit files from this repo..."
 	@podman run --rm \
 		-v $(CURDIR)/usr/lib/systemd/system:/tmp/homelab-system:ro \
 		-v $(CURDIR)/usr/lib/systemd/user:/tmp/homelab-user:ro \
-		$(REMOTE_IMAGE) /bin/bash -c ' \
+		$(_ANALYZE_IMAGE) /bin/bash -c ' \
 		EXIT_CODE=0; \
 		verify_dir() { \
 			local label=$$1 dir=$$2; shift 2; \
@@ -70,13 +75,12 @@ systemd-analyze-verify: _pull-remote-image
 	@echo "Note: Use 'make verify-quadlets' to validate quadlet files (.container, .volume, .network)"
 	@echo "Note: Drop-in configs (.conf) are listed but validated with their parent units at runtime"
 
-# Run systemd-analyze security --offline on all custom .service files inside the GHCR image.
-# Prints full analysis for EXPOSED units (score 4.0–5.9); fails if any unit is UNSAFE (score >= 6.0).
-systemd-analyze-security: _pull-remote-image
+# Internal: run security analysis against whatever image _ANALYZE_IMAGE is set to.
+_run-security:
 	@echo "Analyzing custom systemd service security..."
 	@podman run --rm \
 		-v $(CURDIR)/usr/lib/systemd/system:/tmp/homelab-system:ro \
-		$(REMOTE_IMAGE) /bin/bash -c ' \
+		$(_ANALYZE_IMAGE) /bin/bash -c ' \
 		EXIT_CODE=0; \
 		echo "=== System service security scores ==="; \
 		echo ""; \
@@ -105,6 +109,28 @@ systemd-analyze-security: _pull-remote-image
 		exit $$EXIT_CODE'
 	@echo ""
 	@echo "Systemd security analysis complete"
+
+# Run systemd-analyze verify on all custom unit files inside the GHCR image.
+systemd-analyze-verify: _pull-remote-image
+	@$(MAKE) --no-print-directory _run-verify _ANALYZE_IMAGE=$(REMOTE_IMAGE)
+
+# Run systemd-analyze verify using a locally-built image (no GHCR required).
+systemd-analyze-verify-local: _build-local-image
+	@$(MAKE) --no-print-directory _run-verify _ANALYZE_IMAGE=$(LOCAL_IMAGE)
+
+# Run systemd-analyze security on all custom .service files inside the GHCR image.
+# Prints full analysis for EXPOSED units; fails if any unit is UNSAFE.
+systemd-analyze-security: _pull-remote-image
+	@$(MAKE) --no-print-directory _run-security _ANALYZE_IMAGE=$(REMOTE_IMAGE)
+
+# Run systemd-analyze security using a locally-built image (no GHCR required).
+systemd-analyze-security-local: _build-local-image
+	@$(MAKE) --no-print-directory _run-security _ANALYZE_IMAGE=$(LOCAL_IMAGE)
+
+# Run both verify and security using a locally-built image, building the image only once.
+systemd-analyze-local: _build-local-image
+	@$(MAKE) --no-print-directory _run-verify _ANALYZE_IMAGE=$(LOCAL_IMAGE)
+	@$(MAKE) --no-print-directory _run-security _ANALYZE_IMAGE=$(LOCAL_IMAGE)
 
 # Validate quadlet files by running podman-system-generator --dryrun against each user's quadlet directory.
 # Uses the base image directly (no local build required) with quadlet files mounted from the working tree.
