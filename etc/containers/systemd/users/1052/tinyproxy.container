@@ -23,6 +23,10 @@ Notify=healthy
 ExecStartPre=/usr/bin/cosign verify --certificate-identity-regexp='https://github.com/abyrne55/tinyproxy-homelab/.*' --certificate-oidc-issuer='https://token.actions.githubusercontent.com' ghcr.io/abyrne55/tinyproxy-homelab:main
 Restart=on-failure
 RestartSec=5
+ProtectClock=yes
+ProtectHostname=yes
+RestrictSUIDSGID=yes
+SystemCallArchitectures=native
 
 [Install]
 WantedBy=default.target

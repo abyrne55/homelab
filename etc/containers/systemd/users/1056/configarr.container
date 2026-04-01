@@ -22,6 +22,10 @@ Volume=%d:/run/credentials:ro,z
 [Service]
 Type=oneshot
 RemainAfterExit=no
+ProtectClock=yes
+ProtectHostname=yes
+RestrictSUIDSGID=yes
+SystemCallArchitectures=native
 ExecStartPre=/bin/bash -c 'API_KEY=$(cat ${CREDENTIALS_DIRECTORY}/sonarr-api-key); curl -sf --max-time 5 http://localhost:20550/api/v3/system/status -H "X-Api-Key: $API_KEY" > /dev/null || { echo "Sonarr API not ready"; exit 1; }'
 ExecStartPre=/bin/bash -c 'API_KEY=$(cat ${CREDENTIALS_DIRECTORY}/radarr-api-key); curl -sf --max-time 5 http://localhost:20540/api/v3/system/status -H "X-Api-Key: $API_KEY" > /dev/null || { echo "Radarr API not ready"; exit 1; }'
 ExecStartPre=/bin/bash -c 'PASSWORD=$(cat ${CREDENTIALS_DIRECTORY}/qbittorrent-webui-password); curl -sf --max-time 5 -X POST http://localhost:20530/api/v2/auth/login --data-urlencode "username=admin" --data-urlencode "password=$PASSWORD" | grep -q "Ok." || { echo "qBittorrent WebUI not ready or auth failed"; exit 1; }'

@@ -7,6 +7,10 @@ ConditionPathExists=/var/lib/homelab-config/caddy/Caddyfile
 ExecStartPre=/usr/bin/cosign verify --certificate-identity-regexp='https://github.com/abyrne55/caddy-homelab/.*' --certificate-oidc-issuer='https://token.actions.githubusercontent.com' ghcr.io/abyrne55/caddy-homelab:main
 Restart=on-failure
 RestartSec=30
+ProtectClock=yes
+ProtectHostname=yes
+RestrictSUIDSGID=yes
+SystemCallArchitectures=native
 
 [Container]
 ContainerName=caddy

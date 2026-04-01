@@ -17,6 +17,15 @@ ProtectSystem=strict
 ProtectHome=yes
 PrivateDevices=yes
 RestrictAddressFamilies=AF_UNIX
+ProtectClock=yes
+MemoryDenyWriteExecute=yes
+ProtectHostname=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+SystemCallArchitectures=native
+ProtectProc=noaccess
+ProcSubset=pid
+UMask=0077
 # /var/lib/age doesn't exist at first boot (this service creates it), so we
 # can't use the specific subpath — bind-mount setup would fail at namespace setup.
 ReadWritePaths=/var/lib

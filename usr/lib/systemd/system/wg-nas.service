@@ -18,6 +18,15 @@ ProtectControlGroups=yes
 LockPersonality=yes
 ProtectSystem=strict
 ProtectHome=yes
+ProtectClock=yes
+MemoryDenyWriteExecute=yes
+ProtectHostname=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+SystemCallArchitectures=native
+ProtectProc=noaccess
+ProcSubset=pid
+UMask=0077
 # PrivateNetwork=yes must NOT be set — it disconnects AF_NETLINK, which
 # is required by ip(8) and wg(8) to configure interfaces via the kernel
 LoadCredential=wg-nas-private-key:%t/systemd-age-creds.sock
