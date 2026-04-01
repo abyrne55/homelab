@@ -109,9 +109,9 @@ jobs:
       - name: Verify systemd units
         run: make systemd-analyze-verify
         env:
-          REMOTE_IMAGE: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+          REMOTE_IMAGE: ghcr.io/${{ github.repository }}:${{ github.head_ref }}
 
       - name: Analyze systemd security
         run: make systemd-analyze-security
         env:
-          REMOTE_IMAGE: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+          REMOTE_IMAGE: ghcr.io/${{ github.repository }}:${{ github.head_ref }}
