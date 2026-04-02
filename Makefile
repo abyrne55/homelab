@@ -49,7 +49,6 @@ _run-verify:
 	@podman run --rm \
 		-v $(CURDIR)/usr/lib/systemd/system:/tmp/homelab-system:ro \
 		-v $(CURDIR)/usr/lib/systemd/user:/tmp/homelab-user:ro \
-		-v $(CURDIR)/etc/systemd/user:/tmp/homelab-etc-user:ro \
 		$(_ANALYZE_IMAGE) /bin/bash -c ' \
 		EXIT_CODE=0; \
 		verify_dir() { \
@@ -63,9 +62,8 @@ _run-verify:
 			done; \
 			echo ""; \
 		}; \
-		verify_dir "System units"       /tmp/homelab-system    -name "*.service" -o -name "*.socket" -o -name "*.timer" -o -name "*.mount" -o -name "*.path"; \
-		verify_dir "User units (usr)"   /tmp/homelab-user      -name "*.service" -o -name "*.socket" -o -name "*.timer"; \
-		verify_dir "User units (etc)"   /tmp/homelab-etc-user  -name "*.service" -o -name "*.socket" -o -name "*.timer"; \
+		verify_dir "System units"  /tmp/homelab-system  -name "*.service" -o -name "*.socket" -o -name "*.timer" -o -name "*.mount" -o -name "*.path"; \
+		verify_dir "User units"    /tmp/homelab-user    -name "*.service" -o -name "*.socket" -o -name "*.timer"; \
 		echo ""; \
 		echo "=== Drop-in configs ==="; \
 		for conf in $$(find /tmp/homelab-system -type f -name "*.conf" 2>/dev/null | sort); do \
@@ -83,7 +81,6 @@ _run-security:
 	@podman run --rm \
 		-v $(CURDIR)/usr/lib/systemd/system:/tmp/homelab-system:ro \
 		-v $(CURDIR)/usr/lib/systemd/user:/tmp/homelab-user:ro \
-		-v $(CURDIR)/etc/systemd/user:/tmp/homelab-etc-user:ro \
 		$(_ANALYZE_IMAGE) /bin/bash -c ' \
 		EXIT_CODE=0; \
 		scan_units() { \
@@ -104,9 +101,8 @@ _run-security:
 			done; \
 			echo ""; \
 		}; \
-		scan_units "System service"      /tmp/homelab-system; \
-		scan_units "User service (usr)"  /tmp/homelab-user; \
-		scan_units "User service (etc)"  /tmp/homelab-etc-user; \
+		scan_units "System service"  /tmp/homelab-system; \
+		scan_units "User service"    /tmp/homelab-user; \
 		if [ $$EXIT_CODE -eq 0 ]; then \
 			echo "All units passed (no EXPOSED units, i.e., no badness scores ≥ 7.5)"; \
 		else \
