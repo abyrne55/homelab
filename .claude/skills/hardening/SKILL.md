@@ -115,6 +115,8 @@ RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6  # tighten to AF_UNIX for netwo
 ```ini
 PrivateNetwork=yes        # fully isolated network namespace — use for no-network services
 PrivateDevices=yes        # no access to physical devices
+IPAddressDeny=any         # pair with PrivateNetwork=yes for belt-and-suspenders network isolation
+CapabilityBoundingSet=<caps>  # strip capabilities the service doesn't need; see CAP_DAC_OVERRIDE note below
 ```
 
 **Known exceptions:**
@@ -126,12 +128,15 @@ PrivateDevices=yes        # no access to physical devices
   - Affected services: `ssh-generate-identity.service` (ssh-keygen: `ssh_keygen_exec_t → ssh_keygen_t`), `wg-nas.service` (ip: `ifconfig_exec_t → ifconfig_t`).
   - Symptom: `avc: denied { nnp_transition }` in journal, exit code 203/EXEC.
   - `wg-nas.service` keeps the non-NNP subset: `PrivateTmp`, `ProtectControlGroups`, `LockPersonality`, `ProtectSystem=strict`, `ProtectHome`, `ProtectClock`, `MemoryDenyWriteExecute`, `ProtectHostname`, `RestrictSUIDSGID`, `RestrictNamespaces`, `SystemCallArchitectures`, `ProtectProc`, `ProcSubset`, `UMask`. (The first five were already confirmed safe; `ProtectClock` and the rest don't imply NNP for root services.)
+  - `ssh-generate-identity.service` uses the same non-NNP subset plus `PrivateNetwork=yes`, `IPAddressDeny=any`, and `CapabilityBoundingSet=` (empty — ssh-keygen, install, chmod, chcon as root need no capabilities).
 
 - `PrivateNetwork=yes` must not be set on `wg-nas.service` — it disconnects `AF_NETLINK`, which `ip(8)` and `wg(8)` require to configure interfaces via the kernel.
 
 - `PrivateDevices=yes` must not be set on `secrets-inject.service` — it mounts `/dev/disk/by-label/SECRETS`.
 
 - `UMask=0077` must not be set on services that write files other users need to read. `homelab-config-sync` clones a git repo to `/var/lib/homelab-config/` that container users (e.g. caddy UID 1051) must be able to read — `UMask=0077` makes git create dirs/files as `700/600` (owner root only), causing `ConditionPathExists` guards to silently fail and services to never start on a clean boot. Services writing public-readable files should use the default root umask (0022). Services writing private data only (`homelab-secrets-sync`, `age-generate-identity`) are fine with `UMask=0077`.
+
+- `CapabilityBoundingSet=` caveat: stripping all capabilities except `CAP_SYS_ADMIN` also removes `CAP_DAC_OVERRIDE`. Without it in the bounding set, root can no longer bypass DAC permission checks on files not owned by UID 0 — this silently breaks `install`/`cp` from mounted ISOs or files created by a non-root host user. Always include `CAP_DAC_OVERRIDE` when the service reads files from external sources. Example: `secrets-inject.service` uses `CapabilityBoundingSet=CAP_SYS_ADMIN CAP_DAC_OVERRIDE`. Services that only operate on files they create (e.g. `ssh-generate-identity.service`) can use an empty `CapabilityBoundingSet=`.
 
 - `ReadWritePaths=` under `ProtectSystem=strict` requires the target path to **already exist** when the service starts — systemd sets up the bind mount during namespace initialization, before `ExecStart=` runs. If the service's purpose is to *create* that path, use the nearest existing parent instead. See `init-content-dirs.service` (`ReadWritePaths=/var/mnt/data`, not `/var/mnt/data/content`).
 
