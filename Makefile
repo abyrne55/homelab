@@ -80,27 +80,33 @@ _run-security:
 	@echo "Analyzing custom systemd service security..."
 	@podman run --rm \
 		-v $(CURDIR)/usr/lib/systemd/system:/tmp/homelab-system:ro \
+		-v $(CURDIR)/usr/lib/systemd/user:/tmp/homelab-user:ro \
 		$(_ANALYZE_IMAGE) /bin/bash -c ' \
 		EXIT_CODE=0; \
-		echo "=== System service security scores ==="; \
-		echo ""; \
-		for unit in $$(find /tmp/homelab-system -maxdepth 1 -name "*.service" 2>/dev/null | sort); do \
-			name=$$(basename "$$unit"); \
-			ANALYSIS=$$(systemd-analyze security --offline=true --no-pager "$$unit" 2>&1); \
-			SCORE=$$(echo "$$ANALYSIS" | grep -i "Overall exposure level" | sed "s/.*: //"); \
-			echo "  $$name: $$SCORE"; \
-			if echo "$$ANALYSIS" | grep -q "UNSAFE"; then \
-				echo "  FAIL: $$name scored UNSAFE. Full analysis:"; \
-				echo "$$ANALYSIS"; \
-				echo ""; \
-				EXIT_CODE=1; \
-			elif echo "$$ANALYSIS" | grep -q "EXPOSED"; then \
-				echo "  (EXPOSED - full analysis for visibility:)"; \
-				echo "$$ANALYSIS"; \
-				echo ""; \
-			fi; \
-		done; \
-		echo ""; \
+		scan_units() { \
+			local label=$$1; local dir=$$2; \
+			echo "=== $$label security scores ==="; \
+			echo ""; \
+			for unit in $$(find "$$dir" -maxdepth 1 -name "*.service" 2>/dev/null | sort); do \
+				name=$$(basename "$$unit"); \
+				ANALYSIS=$$(systemd-analyze security --offline=true --no-pager "$$unit" 2>&1); \
+				SCORE=$$(echo "$$ANALYSIS" | grep -i "Overall exposure level" | sed "s/.*: //"); \
+				echo "  $$name: $$SCORE"; \
+				if echo "$$ANALYSIS" | grep -q "UNSAFE"; then \
+					echo "  FAIL: $$name scored UNSAFE. Full analysis:"; \
+					echo "$$ANALYSIS"; \
+					echo ""; \
+					EXIT_CODE=1; \
+				elif echo "$$ANALYSIS" | grep -q "EXPOSED"; then \
+					echo "  (EXPOSED - full analysis for visibility:)"; \
+					echo "$$ANALYSIS"; \
+					echo ""; \
+				fi; \
+			done; \
+			echo ""; \
+		}; \
+		scan_units "System service" /tmp/homelab-system; \
+		scan_units "User service" /tmp/homelab-user; \
 		if [ $$EXIT_CODE -eq 0 ]; then \
 			echo "All units passed security threshold (UNSAFE < 6.0)"; \
 		else \
