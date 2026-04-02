@@ -41,6 +41,12 @@ vsh hl status -s $ARGUMENTS
 vsh hl logs -s $ARGUMENTS -n 50
 ```
 
+For user-level non-quadlet units (configure/bootstrap scripts like `radarr-configure`, `jellarr-bootstrap`):
+
+```bash
+vsh "hl logs -u radarr radarr-configure -n 50"   # -u <service-user> <unit-name>
+```
+
 ## 3. Check container health
 
 ```bash
@@ -106,6 +112,8 @@ If `vsh` is unavailable, use the `/fallback-cmd` skill to access raw SSH and sys
 - **Container unhealthy but running** → `HealthCmd` is failing; check the command manually inside the container
 - **Unit not found** → quadlet may not have been picked up; check file is in `etc/containers/systemd/users/<uid>/` with `.container` extension
 - **Port conflict** → check `hl ps` for duplicate port bindings; verify allocation table in CLAUDE.md
+- **Transient `XX...-NN.service` failures in `hl failed`** → these are short-lived `systemd-run` healthcheck runner instances; safe to ignore if the main service container is healthy
+- **Changes to configure/bootstrap scripts not taking effect** → these are `Type=oneshot` services that only run on first boot; `vm-switch` won't re-run them. Requires `make clean run-vm-from-ghcr` to get a fresh first-boot environment
 
 ## Additional References
 

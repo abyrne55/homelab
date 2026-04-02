@@ -41,3 +41,4 @@ If today's date is more than ~3 months past the date above, suggest that the use
 | `systemd.exec.5.md` | Writing or reviewing service units — do not rely on memory for execution directives, security options, resource controls, or credential handling |
 | `systemd.unit.5.md` | Writing or reviewing unit files — dependencies, ordering, conditions, specifiers, drop-ins, [Unit]/[Install] options |
 | `systemd-analyze.1.txt` | Using `systemd-analyze` subcommands: `verify` (unit validation), `security` (hardening score), `blame`/`critical-chain` (boot performance), `condition` (testing unit conditions), `cat-config`, `capability`, `syscall-filter` |
+| `systemctl.1.txt` | Using `systemctl` subcommands and flags — `show` vs `status`, `list-units`/`list-unit-files`, `--user`/`-M` flags, `set-property`, `mask`/`unmask`, exit codes, and any other subcommand or option you're not certain about |

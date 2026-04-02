@@ -159,3 +159,9 @@ sudo su - <service_user> -s /bin/sh -c "XDG_RUNTIME_DIR=/run/user/\$(id -u) podm
 - Container names are `systemd-<service-name>` (e.g., `systemd-jellyfin`), not just the service name
 - Must run in the service user's context with `XDG_RUNTIME_DIR=/run/user/$(id -u)` set
 - List available containers first: `sudo su - <user> -s /bin/sh -c "XDG_RUNTIME_DIR=/run/user/$(id -u) podman ps"`
+
+---
+
+## Reference
+
+For `systemctl` subcommands, flags, and exit codes not covered above, consult `.claude/references/systemd/systemctl.1.txt`.
