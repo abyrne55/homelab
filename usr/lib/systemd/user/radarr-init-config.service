@@ -16,6 +16,7 @@ LoadCredential=radarr-api-key:/run/systemd-age-creds.sock
 NoNewPrivileges=yes
 PrivateTmp=yes
 PrivateUsers=yes
+PrivateNetwork=yes
 
 ProtectSystem=strict
 ProtectHome=tmpfs
@@ -31,5 +32,5 @@ LockPersonality=yes
 RestrictNamespaces=yes
 RestrictRealtime=yes
 RestrictSUIDSGID=yes
-RestrictAddressFamilies=AF_UNIX
+RestrictAddressFamilies=none
 SystemCallArchitectures=native
