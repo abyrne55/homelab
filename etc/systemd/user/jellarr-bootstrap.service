@@ -12,6 +12,18 @@ Restart=on-failure
 RestartSec=30
 LoadCredential=jellarr-api-key:/run/systemd-age-creds.sock
 ExecStart=/bin/bash /etc/jellarr/jellarr-bootstrap.sh
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/var/local/lib/jellyfin/config
+LockPersonality=yes
+ProtectControlGroups=yes
+ProtectHostname=yes
+RestrictSUIDSGID=yes
+SystemCallArchitectures=native
+RestrictAddressFamilies=AF_UNIX
+# ProtectHome=yes intentionally omitted: jellarr-bootstrap calls
+# systemctl --user which communicates via /run/user/<uid>/
 
 [Install]
 WantedBy=default.target
