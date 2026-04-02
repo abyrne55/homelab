@@ -37,6 +37,3 @@ RestrictRealtime=yes
 RestrictSUIDSGID=yes
 RestrictAddressFamilies=AF_UNIX
 SystemCallArchitectures=native
-
-[Install]
-WantedBy=default.target
