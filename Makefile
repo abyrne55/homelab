@@ -56,7 +56,9 @@ _run-verify:
 			echo "=== $$label ==="; \
 			for unit in $$(find "$$dir" -maxdepth 1 -type f \( "$$@" \) 2>/dev/null | sort); do \
 				echo "  $$(basename $$unit)"; \
-				if ! systemd-analyze --man=no verify "$$unit" 2>&1; then \
+				OUTPUT=$$(systemd-analyze --man=no verify "$$unit" 2>&1); \
+				if [ $$? -ne 0 ] || echo "$$OUTPUT" | grep -qE "^.+:[0-9]+: "; then \
+					echo "$$OUTPUT"; \
 					EXIT_CODE=1; \
 				fi; \
 			done; \
