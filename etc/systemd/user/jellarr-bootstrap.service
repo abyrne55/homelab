@@ -24,6 +24,13 @@ SystemCallArchitectures=native
 RestrictAddressFamilies=AF_UNIX
 # ProtectHome=yes intentionally omitted: jellarr-bootstrap calls
 # systemctl --user which communicates via /run/user/<uid>/
+ProtectKernelModules=yes
+RestrictNamespaces=yes
+ProtectKernelLogs=yes
+RestrictRealtime=yes
+ProtectClock=yes
+ProtectProc=inivisble
+PrivateUsers=yes
 
 [Install]
 WantedBy=default.target

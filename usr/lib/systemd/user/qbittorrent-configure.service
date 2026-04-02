@@ -20,3 +20,10 @@ SystemCallArchitectures=native
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
 # ProtectHome=yes intentionally omitted: qbittorrent-configure calls
 # systemctl --user and journalctl --user which communicate via /run/user/<uid>/
+ProtectKernelModules=yes
+RestrictNamespaces=yes
+ProtectKernelLogs=yes
+RestrictRealtime=yes
+ProtectClock=yes
+ProtectProc=inivisble
+PrivateUsers=yes
