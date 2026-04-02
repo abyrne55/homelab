@@ -1,5 +1,6 @@
 [Unit]
 Description=Configure Radarr Forms authentication
+ConditionUser=radarr
 PartOf=radarr.service
 After=radarr.service
 

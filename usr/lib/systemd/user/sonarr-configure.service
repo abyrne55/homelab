@@ -1,5 +1,6 @@
 [Unit]
 Description=Configure Sonarr Forms authentication
+ConditionUser=sonarr
 PartOf=sonarr.service
 After=sonarr.service
 

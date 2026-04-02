@@ -1,5 +1,6 @@
 [Unit]
 Description=Add demo media movie to Radarr collection
+ConditionUser=radarr
 PartOf=radarr.service
 After=radarr-configure.service
 

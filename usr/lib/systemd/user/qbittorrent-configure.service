@@ -1,5 +1,6 @@
 [Unit]
 Description=Set qBittorrent permanent WebUI password on first start
+ConditionUser=qbittorrent
 PartOf=qbittorrent.service
 After=qbittorrent.service
 
