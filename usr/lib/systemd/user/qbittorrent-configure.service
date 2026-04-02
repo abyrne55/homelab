@@ -5,25 +5,30 @@ After=qbittorrent.service
 
 [Service]
 Type=oneshot
+
 ExecStart=/usr/local/bin/qbittorrent-configure
-LoadCredential=qbittorrent-webui-password:/run/systemd-age-creds.sock
+
 Restart=on-failure
 RestartSec=10
+
+LoadCredential=qbittorrent-webui-password:/run/systemd-age-creds.sock
+
 NoNewPrivileges=yes
 PrivateTmp=yes
+PrivateUsers=yes
+
 ProtectSystem=strict
-LockPersonality=yes
+ProtectHome=readonly
 ProtectControlGroups=yes
 ProtectHostname=yes
-RestrictSUIDSGID=yes
-SystemCallArchitectures=native
-RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
-# ProtectHome=yes intentionally omitted: qbittorrent-configure calls
-# systemctl --user and journalctl --user which communicate via /run/user/<uid>/
-ProtectKernelModules=yes
-RestrictNamespaces=yes
 ProtectKernelLogs=yes
-RestrictRealtime=yes
+ProtectKernelModules=yes
 ProtectClock=yes
-ProtectProc=inivisble
-PrivateUsers=yes
+ProtectProc=invisible
+
+LockPersonality=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+SystemCallArchitectures=native
