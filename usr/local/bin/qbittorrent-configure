@@ -4,8 +4,6 @@ set -euo pipefail
 QBIT_URL="http://localhost:20530"
 NEW_PASS=$(cat "${CREDENTIALS_DIRECTORY}/qbittorrent-webui-password")
 COOKIE_JAR=$(mktemp)
-cleanup() { rm -f "$COOKIE_JAR"; }
-trap cleanup EXIT
 
 # ---- censor setup ----
 _censor() {
@@ -15,9 +13,12 @@ _censor() {
         local _e; _e=$(printf '%s' "$_v" | sed 's/[\/&]/\\&/g')
         sed_args+=(-e "s/${_e}/[REDACTED]/g")
     done
-    sed "${sed_args[@]}"
+    sed -u "${sed_args[@]}"
 }
 exec > >(_censor "$NEW_PASS") 2>&1
+_CENSOR_PID=$!
+cleanup() { exec 1>&- 2>&-; wait $_CENSOR_PID; rm -f "$COOKIE_JAR"; }
+trap cleanup EXIT
 # ---- end censor setup ----
 
 # Scope journal lookup to the current qbittorrent.service invocation

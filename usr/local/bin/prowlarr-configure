@@ -18,6 +18,8 @@ _censor() {
     sed "${sed_args[@]}"
 }
 exec > >(_censor "$API_KEY" "$WEBUI_PASS" "$SONARR_KEY" "$RADARR_KEY") 2>&1
+_CENSOR_PID=$!
+trap 'exec 1>&- 2>&-; wait $_CENSOR_PID' EXIT
 # ---- end censor setup ----
 
 echo "Checking Prowlarr authentication configuration..."

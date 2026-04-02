@@ -13,9 +13,11 @@ _censor() {
         local _e; _e=$(printf '%s' "$_v" | sed 's/[\/&]/\\&/g')
         sed_args+=(-e "s/${_e}/[REDACTED]/g")
     done
-    sed "${sed_args[@]}"
+    sed -u "${sed_args[@]}"
 }
 exec > >(_censor "$API_KEY" "$WEBUI_PASS") 2>&1
+_CENSOR_PID=$!
+trap 'exec 1>&- 2>&-; wait $_CENSOR_PID' EXIT
 # ---- end censor setup ----
 
 echo "Checking Radarr authentication configuration..."
