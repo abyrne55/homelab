@@ -3,22 +3,6 @@ set -euo pipefail
 
 RADARR_URL="http://localhost:20540"
 API_KEY=$(cat "${CREDENTIALS_DIRECTORY}/radarr-api-key")
-WEBUI_PASS=$(cat "${CREDENTIALS_DIRECTORY}/radarr-webui-password")
-
-# ---- censor setup ----
-_censor() {
-    local sed_args=()
-    for _v in "$@"; do
-        [[ -z "$_v" ]] && continue
-        local _e; _e=$(printf '%s' "$_v" | sed 's/[\/&]/\\&/g')
-        sed_args+=(-e "s/${_e}/[REDACTED]/g")
-    done
-    sed -u "${sed_args[@]}"
-}
-exec > >(_censor "$API_KEY" "$WEBUI_PASS") 2>&1
-_CENSOR_PID=$!
-trap 'exec 1>&- 2>&-; wait $_CENSOR_PID' EXIT
-# ---- end censor setup ----
 
 echo "Checking Radarr authentication configuration..."
 CURRENT=$(curl -sf "$RADARR_URL/api/v3/config/host" -H "X-Api-Key: $API_KEY")
@@ -29,6 +13,7 @@ if [ "$CURRENT_AUTH" = "forms" ] && [ "$CURRENT_USER" = "abyrne55" ]; then
   echo "Radarr Forms authentication already configured; skipping"
 else
   echo "Enabling Forms authentication on Radarr..."
+  WEBUI_PASS=$(cat "${CREDENTIALS_DIRECTORY}/radarr-webui-password")
   UPDATED=$(echo "$CURRENT" | jq \
     --arg pass "$WEBUI_PASS" \
     '.authenticationMethod = "forms" | .authenticationRequired = "enabled" | .username = "abyrne55" | .password = $pass | .passwordConfirmation = $pass')

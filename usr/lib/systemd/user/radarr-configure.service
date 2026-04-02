@@ -7,7 +7,7 @@ After=radarr.service
 [Service]
 Type=oneshot
 
-ExecStart=/usr/local/bin/radarr-configure
+ExecStart=/bin/bash -o pipefail -c '/usr/local/bin/radarr-configure 2>&1 | /usr/local/bin/redact-secrets'
 
 Restart=on-failure
 RestartSec=10
