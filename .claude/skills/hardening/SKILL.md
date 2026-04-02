@@ -107,14 +107,14 @@ SystemCallArchitectures=native
 ProtectProc=noaccess
 ProcSubset=pid
 UMask=0077
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6  # tighten to AF_UNIX for network-free services
 ```
 
-**Good to add if the service allows it:**
+**Add these if the service allows it:**
 
 ```ini
-RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6  # or just AF_UNIX for network-free services
+PrivateNetwork=yes        # fully isolated network namespace — use for no-network services
 PrivateDevices=yes        # no access to physical devices
-PrivateNetwork=yes        # fully isolated network namespace (only for no-network services)
 ```
 
 **Known exceptions:**
@@ -135,22 +135,80 @@ PrivateNetwork=yes        # fully isolated network namespace (only for no-networ
 
 - `ReadWritePaths=` under `ProtectSystem=strict` requires the target path to **already exist** when the service starts — systemd sets up the bind mount during namespace initialization, before `ExecStart=` runs. If the service's purpose is to *create* that path, use the nearest existing parent instead. See `init-content-dirs.service` (`ReadWritePaths=/var/mnt/data`, not `/var/mnt/data/content`).
 
+## User-level service units (non-quadlet)
+
+These are `*.service` files in `usr/lib/systemd/user/` or `etc/systemd/user/` that run scripts/tools (init-config, configure, bootstrap) rather than containers. They run under a service user's systemd instance.
+
+**Baseline — apply to every user-level service unit:**
+
+```ini
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateUsers=yes         # works fine in user services (unlike quadlet [Service] sections)
+
+ProtectSystem=strict
+ProtectControlGroups=yes
+ProtectHostname=yes
+ProtectKernelLogs=yes
+ProtectKernelModules=yes
+ProtectClock=yes
+ProtectProc=invisible    # prefer invisible over noaccess in user context
+
+LockPersonality=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+SystemCallArchitectures=native
+```
+
+**Network isolation — always set both `PrivateNetwork=` and `RestrictAddressFamilies=`:**
+
+`PrivateNetwork=yes` creates an isolated network namespace (loopback only). `RestrictAddressFamilies=` restricts which socket families the process can even open. Use the tightest combination the service actually needs:
+
+| Service pattern | `PrivateNetwork=` | `RestrictAddressFamilies=` |
+|---|---|---|
+| No network (init-config, file writers) | `yes` | `none` |
+| Loopback only (calls localhost API) | omit | `AF_UNIX AF_INET` |
+| Internet HTTP calls (configure scripts) | omit | `AF_INET` |
+| Calls `systemctl --user` via D-Bus | omit | `AF_UNIX` |
+
+**Tailor `ProtectHome=` per service:**
+
+| Service pattern | `ProtectHome=` |
+|---|---|
+| Writes config to `/var/local/lib/…` | `tmpfs` |
+| Reads from home-adjacent paths | `readonly` |
+| Calls `systemctl --user` | **omit** (see note below) |
+
+**`ReadWritePaths=`** — required under `ProtectSystem=strict` for services that write to `/var/local/lib/<service>/config`. The path must already exist when the service starts.
+
+**Known exceptions:**
+
+- `ProtectHome=yes` **must be omitted** for services that call `systemctl --user` (e.g., `jellarr-bootstrap.service`). `ProtectHome` also hides `/run/user/<uid>/`, which is where the user D-Bus socket lives — without it, `systemctl --user` cannot communicate with the user manager.
+
+- `PrivateUsers=yes` is safe in standalone user service units. It is **not** the same as the `[Service]` section of rootless quadlet files — these units don't invoke `newuidmap` and don't set up container user namespaces, so NNP is not an issue here.
+
 ## Validating hardening with systemd-analyze security
 
 Run `make systemd-analyze-local` to build the image locally and run both verify and security (used in CI). To score against a pushed branch image instead (e.g. on a branch without a PR), use `make systemd-analyze-security` — it pulls from GHCR so the branch must have been pushed and built first.
 
-**Score bands:**
+**Score bands** (from systemd source; displayed score is internal 0–100 divided by 10):
 
-| Score | Rating |
-|-------|--------|
-| 0–1.9 | OK 🙂 |
-| 2.0–3.9 | MEDIUM 😐 |
-| 4.0–5.9 | EXPOSED 😨 |
-| 6.0+ | UNSAFE 🤮 |
+| Displayed score | Label | CI behavior |
+|---|---|---|
+| 0.0 | PERFECT | pass |
+| 0.1–0.9 | SAFE | pass |
+| 1.0–4.9 | OK | pass |
+| 5.0–7.4 | MEDIUM | pass |
+| 7.5–8.9 | EXPOSED | pass (prints full analysis for visibility) |
+| 9.0–9.9 | UNSAFE | **fail** |
+| 10.0 | DANGEROUS | **fail** |
 
-**CI enforcement:** The `systemd-analyze / correctness-and-security` check (`.github/workflows/systemd-analyze.yml`) runs on PRs, builds the image locally via `make systemd-analyze-local`, and fails if any service scores UNSAFE (≥ 6.0). EXPOSED units print their full analysis for visibility but do not fail the build.
+**CI enforcement:** The `systemd-analyze / correctness-and-security` check (`.github/workflows/systemd-analyze.yml`) runs on PRs, builds the image locally via `make systemd-analyze-local`, and fails if the output contains `"UNSAFE"` or `"DANGEROUS"` (it greps the label, not a numeric threshold).
 
-**Expected scores for baseline-hardened services:** OK–MEDIUM (< 4.0). Services with intentional exceptions (e.g., SELinux transitions requiring omission of `NoNewPrivileges`) will score in the EXPOSED range — document the exception in a comment in the unit file.
+**Expected scores for baseline-hardened services:** OK–MEDIUM (< 7.5). Services with intentional exceptions (e.g., SELinux transitions requiring omission of `NoNewPrivileges`) may score MEDIUM or EXPOSED — document the exception in a comment in the unit file.
+
+**Note on `ProtectProc=` for root services:** `systemd-analyze security` marks `ProtectProc=` as ✗ for services running as root without an active user namespace (i.e., without `PrivateUsers=yes` or `DynamicUser=yes`). The directive is still set and enforced by the kernel, but systemd-analyze doesn't credit it because the protection is reduced without namespace isolation. This is expected for root services like `wg-nas.service` that can't use `PrivateUsers` due to SELinux domain transitions.
 
 ## Additional References
 

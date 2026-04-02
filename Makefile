@@ -95,8 +95,8 @@ _run-security:
 				ANALYSIS=$$(systemd-analyze security --offline=true --no-pager "$$unit" 2>&1); \
 				SCORE=$$(echo "$$ANALYSIS" | grep -i "Overall exposure level" | sed "s/.*: //"); \
 				echo "  $$name: $$SCORE"; \
-				if echo "$$ANALYSIS" | grep -q "UNSAFE"; then \
-					echo "  FAIL: $$name scored UNSAFE. Full analysis:"; \
+				if echo "$$ANALYSIS" | grep -qE "UNSAFE|DANGEROUS"; then \
+					echo "  FAIL: $$name scored UNSAFE or DANGEROUS. Full analysis:"; \
 					echo "$$ANALYSIS"; \
 					echo ""; \
 					EXIT_CODE=1; \
@@ -112,9 +112,9 @@ _run-security:
 		scan_units "User service (usr)"  /tmp/homelab-user; \
 		scan_units "User service (etc)"  /tmp/homelab-etc-user; \
 		if [ $$EXIT_CODE -eq 0 ]; then \
-			echo "All units passed security threshold (UNSAFE < 6.0)"; \
+			echo "All units passed (no UNSAFE units, i.e., no badness scores ≥ 9.0)"; \
 		else \
-			echo "One or more units scored UNSAFE. Review the analysis above."; \
+			echo "One or more units scored UNSAFE or DANGEROUS. Review the analysis above."; \
 		fi; \
 		exit $$EXIT_CODE'
 	@echo ""
