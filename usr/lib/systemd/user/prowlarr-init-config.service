@@ -2,11 +2,35 @@
 Description=Initialize Prowlarr config.xml with API key
 ConditionUser=prowlarr
 ConditionPathExists=!/var/local/lib/prowlarr/config/config.xml
-Before=prowlarr.service
 PartOf=prowlarr.service
+Before=prowlarr.service
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-LoadCredential=prowlarr-api-key:/run/systemd-age-creds.sock
+
 ExecStart=/usr/local/bin/prowlarr-init-config
+
+LoadCredential=prowlarr-api-key:/run/systemd-age-creds.sock
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateUsers=yes
+PrivateNetwork=yes
+
+ProtectSystem=strict
+ProtectHome=tmpfs
+ProtectControlGroups=yes
+ProtectHostname=yes
+ProtectKernelLogs=yes
+ProtectKernelModules=yes
+ProtectClock=yes
+ProtectProc=invisible
+ReadWritePaths=/var/local/lib/prowlarr/config
+
+LockPersonality=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+RestrictAddressFamilies=none
+SystemCallArchitectures=native

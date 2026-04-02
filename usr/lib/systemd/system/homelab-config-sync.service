@@ -19,6 +19,18 @@ ProtectHome=yes
 ReadWritePaths=/var/lib/homelab-config
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
 PrivateDevices=yes
+ProtectClock=yes
+MemoryDenyWriteExecute=yes
+ProtectHostname=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+SystemCallArchitectures=native
+ProtectProc=noaccess
+ProcSubset=pid
+# UMask=0077 intentionally omitted: git clone creates dirs/files owned by root,
+# and they must be readable by container users (e.g. caddy UID 1051). Default
+# root umask (0022) gives 755/644 which is correct here. The SELinux label is
+# set to container_file_t by the chcon ExecStartPost step.
 
 # Set Git SSH command to use the generated key and known_hosts
 Environment="GIT_SSH_COMMAND=ssh -i /var/lib/git-ssh/id_ed25519 -o IdentitiesOnly=yes -o UserKnownHostsFile=/var/lib/git-ssh/known_hosts -o StrictHostKeyChecking=yes"

@@ -6,20 +6,6 @@ After=network-online.target
 
 [Service]
 Type=oneshot
-# NoNewPrivileges intentionally omitted: ssh-keygen has SELinux type ssh_keygen_exec_t,
-# which requires a domain transition from initrc_t to ssh_keygen_t. NO_NEW_PRIVS (set
-# explicitly or implicitly by ProtectKernelTunables=, ProtectKernelModules=,
-# ProtectKernelLogs=, RestrictRealtime=, RestrictAddressFamilies=, or PrivateDevices=)
-# blocks all SELinux transitions to non-bounded domains. Fedora's policy grants no
-# nnp_transition permission for this path, so those directives cannot be used here.
-PrivateTmp=yes
-ProtectControlGroups=yes
-LockPersonality=yes
-ProtectSystem=strict
-ProtectHome=yes
-# /var/lib/git-ssh doesn't exist at first boot (this service creates it), so we
-# can't use the specific subpath — bind-mount setup would fail at namespace setup.
-ReadWritePaths=/var/lib
 
 ExecStartPre=/usr/bin/install -d -m 0700 /var/lib/git-ssh
 # Set SELinux label to ssh_home_t so that ssh_keygen_t (the domain ssh-keygen
@@ -29,6 +15,40 @@ ExecStartPre=/usr/bin/chcon -t ssh_home_t /var/lib/git-ssh
 ExecStart=/usr/bin/ssh-keygen -t ed25519 -N "" -C "homelab-git-pull" -f /var/lib/git-ssh/id_ed25519
 ExecStartPost=/usr/bin/chmod 400 /var/lib/git-ssh/id_ed25519
 ExecStartPost=/usr/bin/chmod 444 /var/lib/git-ssh/id_ed25519.pub
+
+# NoNewPrivileges intentionally omitted: ssh-keygen has SELinux type ssh_keygen_exec_t,
+# which requires a domain transition from initrc_t to ssh_keygen_t. NO_NEW_PRIVS (set
+# explicitly or implicitly by ProtectKernelTunables=, ProtectKernelModules=,
+# ProtectKernelLogs=, RestrictRealtime=, RestrictAddressFamilies=, or PrivateDevices=)
+# blocks all SELinux transitions to non-bounded domains. Fedora's policy grants no
+# nnp_transition permission for this path, so those directives cannot be used here.
+# The directives below use CAP_SYS_ADMIN (held by the root systemd instance) to
+# install seccomp filters and namespaces without setting NNP, so SELinux transitions
+# are unaffected. See wg-nas.service for the same pattern.
+PrivateTmp=yes
+PrivateNetwork=yes
+
+ProtectSystem=strict
+ProtectHome=yes
+ProtectControlGroups=yes
+ProtectHostname=yes
+ProtectClock=yes
+ProtectProc=noaccess
+ProcSubset=pid
+# /var/lib/git-ssh doesn't exist at first boot (this service creates it), so we
+# can't use the specific subpath — bind-mount setup would fail at namespace setup.
+ReadWritePaths=/var/lib
+
+# ssh-keygen, install, chmod, chcon as root need no capabilities — file ops
+# succeed via UID 0 ownership bypass, not via capability checks.
+CapabilityBoundingSet=
+IPAddressDeny=any
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RestrictNamespaces=yes
+RestrictSUIDSGID=yes
+SystemCallArchitectures=native
+UMask=0077
 
 [Install]
 WantedBy=multi-user.target

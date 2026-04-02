@@ -2,11 +2,35 @@
 Description=Initialize Sonarr config.xml with API key
 ConditionUser=sonarr
 ConditionPathExists=!/var/local/lib/sonarr/config/config.xml
-Before=sonarr.service
 PartOf=sonarr.service
+Before=sonarr.service
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-LoadCredential=sonarr-api-key:/run/systemd-age-creds.sock
+
 ExecStart=/usr/local/bin/sonarr-init-config
+
+LoadCredential=sonarr-api-key:/run/systemd-age-creds.sock
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateUsers=yes
+PrivateNetwork=yes
+
+ProtectSystem=strict
+ProtectHome=tmpfs
+ProtectControlGroups=yes
+ProtectHostname=yes
+ProtectKernelLogs=yes
+ProtectKernelModules=yes
+ProtectClock=yes
+ProtectProc=invisible
+ReadWritePaths=/var/local/lib/sonarr/config
+
+LockPersonality=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+RestrictAddressFamilies=none
+SystemCallArchitectures=native

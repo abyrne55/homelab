@@ -49,6 +49,7 @@ _run-verify:
 	@podman run --rm \
 		-v $(CURDIR)/usr/lib/systemd/system:/tmp/homelab-system:ro \
 		-v $(CURDIR)/usr/lib/systemd/user:/tmp/homelab-user:ro \
+		-v $(CURDIR)/etc/systemd/user:/tmp/homelab-etc-user:ro \
 		$(_ANALYZE_IMAGE) /bin/bash -c ' \
 		EXIT_CODE=0; \
 		verify_dir() { \
@@ -62,8 +63,9 @@ _run-verify:
 			done; \
 			echo ""; \
 		}; \
-		verify_dir "System units" /tmp/homelab-system -name "*.service" -o -name "*.socket" -o -name "*.timer" -o -name "*.mount" -o -name "*.path"; \
-		verify_dir "User units"   /tmp/homelab-user   -name "*.service" -o -name "*.socket" -o -name "*.timer"; \
+		verify_dir "System units"       /tmp/homelab-system    -name "*.service" -o -name "*.socket" -o -name "*.timer" -o -name "*.mount" -o -name "*.path"; \
+		verify_dir "User units (usr)"   /tmp/homelab-user      -name "*.service" -o -name "*.socket" -o -name "*.timer"; \
+		verify_dir "User units (etc)"   /tmp/homelab-etc-user  -name "*.service" -o -name "*.socket" -o -name "*.timer"; \
 		echo ""; \
 		echo "=== Drop-in configs ==="; \
 		for conf in $$(find /tmp/homelab-system -type f -name "*.conf" 2>/dev/null | sort); do \
@@ -80,31 +82,35 @@ _run-security:
 	@echo "Analyzing custom systemd service security..."
 	@podman run --rm \
 		-v $(CURDIR)/usr/lib/systemd/system:/tmp/homelab-system:ro \
+		-v $(CURDIR)/usr/lib/systemd/user:/tmp/homelab-user:ro \
+		-v $(CURDIR)/etc/systemd/user:/tmp/homelab-etc-user:ro \
 		$(_ANALYZE_IMAGE) /bin/bash -c ' \
 		EXIT_CODE=0; \
-		echo "=== System service security scores ==="; \
-		echo ""; \
-		for unit in $$(find /tmp/homelab-system -maxdepth 1 -name "*.service" 2>/dev/null | sort); do \
-			name=$$(basename "$$unit"); \
-			ANALYSIS=$$(systemd-analyze security --offline=true --no-pager "$$unit" 2>&1); \
-			SCORE=$$(echo "$$ANALYSIS" | grep -i "Overall exposure level" | sed "s/.*: //"); \
-			echo "  $$name: $$SCORE"; \
-			if echo "$$ANALYSIS" | grep -q "UNSAFE"; then \
-				echo "  FAIL: $$name scored UNSAFE. Full analysis:"; \
-				echo "$$ANALYSIS"; \
-				echo ""; \
-				EXIT_CODE=1; \
-			elif echo "$$ANALYSIS" | grep -q "EXPOSED"; then \
-				echo "  (EXPOSED - full analysis for visibility:)"; \
-				echo "$$ANALYSIS"; \
-				echo ""; \
-			fi; \
-		done; \
-		echo ""; \
+		scan_units() { \
+			local label=$$1; local dir=$$2; \
+			echo "=== $$label security scores ==="; \
+			echo ""; \
+			for unit in $$(find "$$dir" -maxdepth 1 -name "*.service" 2>/dev/null | sort); do \
+				name=$$(basename "$$unit"); \
+				ANALYSIS=$$(systemd-analyze security --offline=true --no-pager "$$unit" 2>&1); \
+				SCORE=$$(echo "$$ANALYSIS" | grep -i "Overall exposure level" | sed "s/.*: //"); \
+				echo "  $$name: $$SCORE"; \
+				if echo "$$ANALYSIS" | grep -qE "EXPOSED|UNSAFE|DANGEROUS"; then \
+					echo "  FAIL: $$name scored EXPOSED or worse. Full analysis:"; \
+					echo "$$ANALYSIS"; \
+					echo ""; \
+					EXIT_CODE=1; \
+				fi; \
+			done; \
+			echo ""; \
+		}; \
+		scan_units "System service"      /tmp/homelab-system; \
+		scan_units "User service (usr)"  /tmp/homelab-user; \
+		scan_units "User service (etc)"  /tmp/homelab-etc-user; \
 		if [ $$EXIT_CODE -eq 0 ]; then \
-			echo "All units passed security threshold (UNSAFE < 6.0)"; \
+			echo "All units passed (no EXPOSED units, i.e., no badness scores ≥ 7.5)"; \
 		else \
-			echo "One or more units scored UNSAFE. Review the analysis above."; \
+			echo "One or more units scored EXPOSED or worse. Review the analysis above."; \
 		fi; \
 		exit $$EXIT_CODE'
 	@echo ""
@@ -116,7 +122,7 @@ systemd-analyze-verify: _pull-remote-image
 
 
 # Run systemd-analyze security on all custom .service files inside the GHCR image.
-# Prints full analysis for EXPOSED units; fails if any unit is UNSAFE.
+# Fails if any unit scores EXPOSED or worse (badness ≥ 7.5).
 systemd-analyze-security: _pull-remote-image
 	@$(MAKE) --no-print-directory _run-security _ANALYZE_IMAGE=$(REMOTE_IMAGE)
 
