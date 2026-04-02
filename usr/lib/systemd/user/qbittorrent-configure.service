@@ -19,7 +19,7 @@ PrivateTmp=yes
 PrivateUsers=yes
 
 ProtectSystem=strict
-ProtectHome=readonly
+ProtectHome=read-only
 ProtectControlGroups=yes
 ProtectHostname=yes
 ProtectKernelLogs=yes
