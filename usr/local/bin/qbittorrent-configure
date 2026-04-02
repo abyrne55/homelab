@@ -2,9 +2,23 @@
 set -euo pipefail
 
 QBIT_URL="http://localhost:20530"
+NEW_PASS=$(cat "${CREDENTIALS_DIRECTORY}/qbittorrent-webui-password")
 COOKIE_JAR=$(mktemp)
 cleanup() { rm -f "$COOKIE_JAR"; }
 trap cleanup EXIT
+
+# ---- censor setup ----
+_censor() {
+    local sed_args=()
+    for _v in "$@"; do
+        [[ -z "$_v" ]] && continue
+        local _e; _e=$(printf '%s' "$_v" | sed 's/[\/&]/\\&/g')
+        sed_args+=(-e "s/${_e}/[REDACTED]/g")
+    done
+    sed "${sed_args[@]}"
+}
+exec > >(_censor "$NEW_PASS") 2>&1
+# ---- end censor setup ----
 
 # Scope journal lookup to the current qbittorrent.service invocation
 INVOCATION_ID=$(systemctl --user show -p InvocationID --value qbittorrent.service)
@@ -28,7 +42,6 @@ if [ "$RESPONSE" != "Ok." ]; then
 fi
 
 echo "Setting permanent WebUI password from credential..."
-NEW_PASS=$(cat "${CREDENTIALS_DIRECTORY}/qbittorrent-webui-password")
 curl -sf -b "$COOKIE_JAR" -X POST "$QBIT_URL/api/v2/app/setPreferences" \
   --data-urlencode "json={\"web_ui_password\":\"${NEW_PASS}\"}"
 

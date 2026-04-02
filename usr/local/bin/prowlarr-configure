@@ -3,6 +3,22 @@ set -euo pipefail
 
 PROWLARR_URL="http://localhost:20570"
 API_KEY=$(cat "${CREDENTIALS_DIRECTORY}/prowlarr-api-key")
+WEBUI_PASS=$(cat "${CREDENTIALS_DIRECTORY}/prowlarr-webui-password")
+SONARR_KEY=$(cat "${CREDENTIALS_DIRECTORY}/sonarr-api-key")
+RADARR_KEY=$(cat "${CREDENTIALS_DIRECTORY}/radarr-api-key")
+
+# ---- censor setup ----
+_censor() {
+    local sed_args=()
+    for _v in "$@"; do
+        [[ -z "$_v" ]] && continue
+        local _e; _e=$(printf '%s' "$_v" | sed 's/[\/&]/\\&/g')
+        sed_args+=(-e "s/${_e}/[REDACTED]/g")
+    done
+    sed "${sed_args[@]}"
+}
+exec > >(_censor "$API_KEY" "$WEBUI_PASS" "$SONARR_KEY" "$RADARR_KEY") 2>&1
+# ---- end censor setup ----
 
 echo "Checking Prowlarr authentication configuration..."
 CURRENT=$(curl -sf "$PROWLARR_URL/api/v1/config/host" -H "X-Api-Key: $API_KEY")
@@ -13,7 +29,6 @@ if [ "$CURRENT_AUTH" = "forms" ] && [ "$CURRENT_USER" = "abyrne55" ]; then
   echo "Prowlarr Forms authentication already configured; skipping"
 else
   echo "Enabling Forms authentication on Prowlarr..."
-  WEBUI_PASS=$(cat "${CREDENTIALS_DIRECTORY}/prowlarr-webui-password")
   UPDATED=$(echo "$CURRENT" | jq \
     --arg pass "$WEBUI_PASS" \
     '.authenticationMethod = "forms" | .authenticationRequired = "enabled" | .username = "abyrne55" | .password = $pass | .passwordConfirmation = $pass')
@@ -27,7 +42,6 @@ fi
 echo "Checking Prowlarr app connections..."
 APPS=$(curl -sf "$PROWLARR_URL/api/v1/applications" -H "X-Api-Key: $API_KEY")
 
-SONARR_KEY=$(cat "${CREDENTIALS_DIRECTORY}/sonarr-api-key")
 if echo "$APPS" | jq -e '.[] | select(.implementation == "Sonarr")' > /dev/null 2>&1; then
   echo "Sonarr already registered in Prowlarr; skipping"
 else
@@ -52,7 +66,6 @@ else
   echo "Sonarr registered successfully"
 fi
 
-RADARR_KEY=$(cat "${CREDENTIALS_DIRECTORY}/radarr-api-key")
 if echo "$APPS" | jq -e '.[] | select(.implementation == "Radarr")' > /dev/null 2>&1; then
   echo "Radarr already registered in Prowlarr; skipping"
 else

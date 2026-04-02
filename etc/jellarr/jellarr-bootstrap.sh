@@ -5,6 +5,19 @@ DB="/var/local/lib/jellyfin/config/data/jellyfin.db"
 API_KEY=$(tr -d '[:space:]' < "${CREDENTIALS_DIRECTORY}/jellarr-api-key")
 API_KEY_NAME="jellarr"
 
+# ---- censor setup ----
+_censor() {
+    local sed_args=()
+    for _v in "$@"; do
+        [[ -z "$_v" ]] && continue
+        local _e; _e=$(printf '%s' "$_v" | sed 's/[\/&]/\\&/g')
+        sed_args+=(-e "s/${_e}/[REDACTED]/g")
+    done
+    sed "${sed_args[@]}"
+}
+exec > >(_censor "$API_KEY") 2>&1
+# ---- end censor setup ----
+
 echo "Waiting for Jellyfin database at ${DB}..."
 until [ -e "$DB" ]; do
     sleep 2
