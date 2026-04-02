@@ -131,6 +131,8 @@ PrivateNetwork=yes        # fully isolated network namespace (only for no-networ
 
 - `PrivateDevices=yes` must not be set on `secrets-inject.service` — it mounts `/dev/disk/by-label/SECRETS`.
 
+- `UMask=0077` must not be set on services that write files other users need to read. `homelab-config-sync` clones a git repo to `/var/lib/homelab-config/` that container users (e.g. caddy UID 1051) must be able to read — `UMask=0077` makes git create dirs/files as `700/600` (owner root only), causing `ConditionPathExists` guards to silently fail and services to never start on a clean boot. Services writing public-readable files should use the default root umask (0022). Services writing private data only (`homelab-secrets-sync`, `age-generate-identity`) are fine with `UMask=0077`.
+
 - `ReadWritePaths=` under `ProtectSystem=strict` requires the target path to **already exist** when the service starts — systemd sets up the bind mount during namespace initialization, before `ExecStart=` runs. If the service's purpose is to *create* that path, use the nearest existing parent instead. See `init-content-dirs.service` (`ReadWritePaths=/var/mnt/data`, not `/var/mnt/data/content`).
 
 ## Validating hardening with systemd-analyze security
