@@ -9,7 +9,7 @@ OnSuccess=jellarr.service
 [Service]
 Type=oneshot
 
-ExecStart=/bin/bash -o pipefail -c '/bin/bash /etc/jellarr/jellarr-bootstrap.sh 2>&1 | /usr/local/bin/redact-secrets'
+ExecStart=/bin/bash -o pipefail -c '/usr/local/bin/jellarr-bootstrap 2>&1 | /usr/local/bin/redact-secrets'
 
 Restart=on-failure
 RestartSec=30
