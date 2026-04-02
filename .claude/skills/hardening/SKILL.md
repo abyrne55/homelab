@@ -142,7 +142,7 @@ CapabilityBoundingSet=<caps>  # strip capabilities the service doesn't need; see
 
 ## User-level service units (non-quadlet)
 
-These are `*.service` files in `usr/lib/systemd/user/` or `etc/systemd/user/` that run scripts/tools (init-config, configure, bootstrap) rather than containers. They run under a service user's systemd instance.
+These are `*.service` files in `usr/lib/systemd/user/` that run scripts/tools (init-config, configure, bootstrap) rather than containers. They run under a service user's systemd instance.
 
 **Baseline — apply to every user-level service unit:**
 

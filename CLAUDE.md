@@ -34,6 +34,7 @@ Quick file-level index — consult this before exploring the repo.
 | `etc/containers/systemd/users/<uid>/` | Rootless quadlet definitions, one directory per service user |
 | `etc/firewalld/zones/public.xml` | Firewall rules — only Caddy's ports (20510, 20511) should be open |
 | `usr/lib/systemd/system/` | System-level units (boot orchestration, secrets, git sync, NFS mount, WireGuard) |
+| `usr/lib/systemd/user/` | User-level non-quadlet units (init-config, configure, bootstrap scripts) and `.target.wants/` enable symlinks |
 | `usr/lib/sysusers.d/` | User/group definitions — one file per user, named `NN-username-user.conf` |
 | `usr/lib/tmpfiles.d/quadlet-users-homedirs.conf` | Home + Podman directory trees for all quadlet users |
 | `usr/lib/tmpfiles.d/quadlet-users-linger.conf` | Linger entries (one per quadlet user) |
@@ -57,7 +58,7 @@ Quick file-level index — consult this before exploring the repo.
 | home-assistant | 1058 | 20580 | 689824 | 20581 |
 | **next slot** | **1059** | **20590** | **755360** | — |
 
-**Containerfile `systemctl enable` line** — when adding a new *system* unit, append it here. Quadlets are auto-discovered by podman-quadlet and do not need to be listed.
+**Containerfile `systemctl enable` line** — when adding a new *system* unit, append it here. Quadlets are auto-discovered by podman-quadlet and do not need to be listed. User-level units that need to be enabled globally should ship `.target.wants/` symlinks under `usr/lib/systemd/user/` rather than using `systemctl --global enable` in the Containerfile.
 
 ## Key Directories
 
@@ -69,6 +70,7 @@ Two top-level directories mirror their target filesystem counterparts, with a de
   - `etc/jellarr/` - Jellarr bootstrap script (OS plumbing, not config — stays in image)
 - **`usr/`** — OS-image-owned infrastructure (mirrors target `/usr/`). Use this for systemd units, sysusers, tmpfiles, and other OS-level plumbing that belongs to the system rather than any one application.
   - `usr/lib/systemd/system/` - Service units for boot orchestration and secrets management
+  - `usr/lib/systemd/user/` - User-level non-quadlet units (init-config, configure, bootstrap) and `.target.wants/` enable symlinks
   - `usr/lib/sysusers.d/` - User/group definitions created at boot
   - `usr/lib/tmpfiles.d/` - Temporary file/directory creation rules
   - `usr/local/bin/` - OS-level CLI tools baked into the image (e.g., `hl`, `qbittorrent-configure`)
