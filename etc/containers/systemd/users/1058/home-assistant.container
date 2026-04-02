@@ -23,7 +23,6 @@ Environment=TZ=UTC
 Restart=on-failure
 RestartSec=5
 TimeoutStartSec=infinity
-ProtectHostname=yes
 
 [Install]
 WantedBy=default.target

@@ -29,7 +29,6 @@ NoNewPrivileges=true
 [Service]
 Restart=on-failure
 RestartSec=5
-ProtectHostname=yes
 
 [Install]
 WantedBy=default.target

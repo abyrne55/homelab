@@ -31,7 +31,6 @@ Restart=on-failure
 RestartSec=10
 LoadCredential=mullvad-wireguard-private-key:/run/systemd-age-creds.sock
 LoadCredential=mullvad-wireguard-address:/run/systemd-age-creds.sock
-ProtectHostname=yes
 
 [Install]
 WantedBy=default.target
