@@ -95,15 +95,11 @@ _run-security:
 				ANALYSIS=$$(systemd-analyze security --offline=true --no-pager "$$unit" 2>&1); \
 				SCORE=$$(echo "$$ANALYSIS" | grep -i "Overall exposure level" | sed "s/.*: //"); \
 				echo "  $$name: $$SCORE"; \
-				if echo "$$ANALYSIS" | grep -qE "UNSAFE|DANGEROUS"; then \
-					echo "  FAIL: $$name scored UNSAFE or DANGEROUS. Full analysis:"; \
+				if echo "$$ANALYSIS" | grep -qE "EXPOSED|UNSAFE|DANGEROUS"; then \
+					echo "  FAIL: $$name scored EXPOSED or worse. Full analysis:"; \
 					echo "$$ANALYSIS"; \
 					echo ""; \
 					EXIT_CODE=1; \
-				elif echo "$$ANALYSIS" | grep -q "EXPOSED"; then \
-					echo "  (EXPOSED - full analysis for visibility:)"; \
-					echo "$$ANALYSIS"; \
-					echo ""; \
 				fi; \
 			done; \
 			echo ""; \
@@ -112,9 +108,9 @@ _run-security:
 		scan_units "User service (usr)"  /tmp/homelab-user; \
 		scan_units "User service (etc)"  /tmp/homelab-etc-user; \
 		if [ $$EXIT_CODE -eq 0 ]; then \
-			echo "All units passed (no UNSAFE units, i.e., no badness scores ≥ 9.0)"; \
+			echo "All units passed (no EXPOSED units, i.e., no badness scores ≥ 7.5)"; \
 		else \
-			echo "One or more units scored UNSAFE or DANGEROUS. Review the analysis above."; \
+			echo "One or more units scored EXPOSED or worse. Review the analysis above."; \
 		fi; \
 		exit $$EXIT_CODE'
 	@echo ""
@@ -126,7 +122,7 @@ systemd-analyze-verify: _pull-remote-image
 
 
 # Run systemd-analyze security on all custom .service files inside the GHCR image.
-# Prints full analysis for EXPOSED units; fails if any unit is UNSAFE.
+# Fails if any unit scores EXPOSED or worse (badness ≥ 7.5).
 systemd-analyze-security: _pull-remote-image
 	@$(MAKE) --no-print-directory _run-security _ANALYZE_IMAGE=$(REMOTE_IMAGE)
 

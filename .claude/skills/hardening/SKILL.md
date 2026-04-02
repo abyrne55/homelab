@@ -205,13 +205,13 @@ Run `make systemd-analyze-local` to build the image locally and run both verify 
 | 0.1–0.9 | SAFE | pass |
 | 1.0–4.9 | OK | pass |
 | 5.0–7.4 | MEDIUM | pass |
-| 7.5–8.9 | EXPOSED | pass (prints full analysis for visibility) |
+| 7.5–8.9 | EXPOSED | **fail** |
 | 9.0–9.9 | UNSAFE | **fail** |
 | 10.0 | DANGEROUS | **fail** |
 
-**CI enforcement:** The `systemd-analyze / correctness-and-security` check (`.github/workflows/systemd-analyze.yml`) runs on PRs, builds the image locally via `make systemd-analyze-local`, and fails if the output contains `"UNSAFE"` or `"DANGEROUS"` (it greps the label, not a numeric threshold).
+**CI enforcement:** The `systemd-analyze / correctness-and-security` check (`.github/workflows/systemd-analyze.yml`) runs on PRs, builds the image locally via `make systemd-analyze-local`, and fails if any unit scores EXPOSED or worse (badness ≥ 7.5).
 
-**Expected scores for baseline-hardened services:** OK–MEDIUM (< 7.5). Services with intentional exceptions (e.g., SELinux transitions requiring omission of `NoNewPrivileges`) may score MEDIUM or EXPOSED — document the exception in a comment in the unit file.
+**Expected scores for baseline-hardened services:** OK–MEDIUM (< 7.5). Services with intentional exceptions (e.g., SELinux transitions requiring omission of `NoNewPrivileges`) must still score below EXPOSED.
 
 **Note on `ProtectProc=` for root services:** `systemd-analyze security` marks `ProtectProc=` as ✗ for services running as root without an active user namespace (i.e., without `PrivateUsers=yes` or `DynamicUser=yes`). The directive is still set and enforced by the kernel, but systemd-analyze doesn't credit it because the protection is reduced without namespace isolation. This is expected for root services like `wg-nas.service` that can't use `PrivateUsers` due to SELinux domain transitions.
 
