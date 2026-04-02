@@ -1,5 +1,6 @@
 [Unit]
 Description=Set qBittorrent permanent WebUI password on first start
+ConditionUser=qbittorrent
 PartOf=qbittorrent.service
 After=qbittorrent.service
 
@@ -18,7 +19,7 @@ PrivateTmp=yes
 PrivateUsers=yes
 
 ProtectSystem=strict
-ProtectHome=readonly
+ProtectHome=read-only
 ProtectControlGroups=yes
 ProtectHostname=yes
 ProtectKernelLogs=yes

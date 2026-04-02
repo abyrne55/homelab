@@ -1,5 +1,6 @@
 [Unit]
 Description=Configure Prowlarr Forms authentication and app connections
+ConditionUser=prowlarr
 PartOf=prowlarr.service
 After=prowlarr.service
 

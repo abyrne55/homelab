@@ -1,5 +1,6 @@
 [Unit]
 Description=Add demo media torrent to qBittorrent
+ConditionUser=qbittorrent
 PartOf=qbittorrent.service
 After=qbittorrent-configure.service
 

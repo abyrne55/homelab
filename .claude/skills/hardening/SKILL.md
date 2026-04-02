@@ -142,7 +142,7 @@ CapabilityBoundingSet=<caps>  # strip capabilities the service doesn't need; see
 
 ## User-level service units (non-quadlet)
 
-These are `*.service` files in `usr/lib/systemd/user/` or `etc/systemd/user/` that run scripts/tools (init-config, configure, bootstrap) rather than containers. They run under a service user's systemd instance.
+These are `*.service` files in `usr/lib/systemd/user/` that run scripts/tools (init-config, configure, bootstrap) rather than containers. They run under a service user's systemd instance.
 
 **Baseline — apply to every user-level service unit:**
 
@@ -217,6 +217,7 @@ Run `make systemd-analyze-local` to build the image locally and run both verify 
 
 ## Additional References
 
-If in doubt about a quadlet option, these docs may help:
+If in doubt about a quadlet option or systemd-analyze behavior, these docs may help:
 
 - `.claude/references/podman/podman-systemd.unit.5.md` (lines 443–840) — detailed descriptions of the security-relevant container options used above: `AutoUpdate`, `DropCapability`, `HealthCmd`, `NoNewPrivileges`, `Notify`, `ReadOnly`, `ReadOnlyTmpfs`
+- `.claude/references/systemd/systemd-analyze.1.txt` — full reference for `systemd-analyze verify` (unit validation, line 481), `systemd-analyze security` (hardening scoring and per-directive breakdown, line 561), and other subcommands (`blame`, `critical-chain`, `condition`, `capability`, `syscall-filter`)
