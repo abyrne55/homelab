@@ -67,7 +67,6 @@ Two top-level directories mirror their target filesystem counterparts, with a de
 - **`etc/`** — OS-image-owned configuration (mirrors target `/etc/`). Both `etc/` and `usr/` are image-owned and reset on every boot (transient `/etc`). Application config files (Caddyfile, tinyproxy.conf, jellarr config) live in the private `homelab-config` repo, not here — they are synced at runtime to `/var/lib/homelab-config/`.
   - `etc/containers/systemd/users/<uid>/` - Rootless Podman quadlet definitions, organized by user UID
   - `etc/firewalld/` - Firewall configuration
-  - `etc/jellarr/` - Jellarr bootstrap script (OS plumbing, not config — stays in image)
 - **`usr/`** — OS-image-owned infrastructure (mirrors target `/usr/`). Use this for systemd units, sysusers, tmpfiles, and other OS-level plumbing that belongs to the system rather than any one application.
   - `usr/lib/systemd/system/` - Service units for boot orchestration and secrets management
   - `usr/lib/systemd/user/` - User-level non-quadlet units (init-config, configure, bootstrap) and `.target.wants/` enable symlinks

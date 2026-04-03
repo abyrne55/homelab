@@ -10,6 +10,7 @@ jobs:
           github_token: ${{ secrets.github_token }}
           reporter: github-pr-check
           locale: "US"
+          fail_level: warning
   actionlint:
     runs-on: ubuntu-24.04-arm
     steps:
@@ -18,3 +19,4 @@ jobs:
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-pr-check
+          fail_level: warning
