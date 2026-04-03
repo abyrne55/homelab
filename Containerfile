@@ -25,7 +25,7 @@ RUN semodule -i /tmp/systemd_age_creds.cil /tmp/container_tun.cil && rm /tmp/sys
 # - rpm-ostree-fix-shadow-mode.service: pre-create its stamp file so it knows the fix is
 #   already applied; with transient /etc the stamp would otherwise be reset every boot
 RUN systemctl enable firewalld podman-auto-update.timer secrets-inject.service ssh-generate-identity.service age-generate-identity.service init-content-dirs.service boot.mount boot-efi.mount var-mnt-data.automount homelab-secrets-sync.service homelab-secrets-sync.timer homelab-config-sync.service homelab-config-sync.timer systemd-age-creds.socket systemd-networkd.service && \
-    systemctl mask bootloader-update.service && \
+    systemctl mask bootloader-update.service systemd-networkd-wait-online.service && \
     touch /etc/.rpm-ostree-shadow-mode-fixed2.stamp
 
 # Lint (TODO: reenable --fatal-warnings)
