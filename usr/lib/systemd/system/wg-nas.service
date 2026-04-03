@@ -36,12 +36,12 @@ ExecStart=wg set wg-nas \
     private-key /run/credentials/wg-nas.service/wg-nas-private-key \
     peer FyNIe8zCEFrkvDgW7VFI1kDVHMnnqwIr2rTrbRvb3Dw= \
         preshared-key /run/credentials/wg-nas.service/wg-nas-preshared-key \
-        allowed-ips 10.8.0.1/32 \
+        allowed-ips 100.100.100.1/32 \
         endpoint 192.168.0.167:51820 \
         persistent-keepalive 25
-ExecStart=ip address add 10.8.0.3/32 dev wg-nas
+ExecStart=ip address add 100.100.100.2/32 dev wg-nas
 ExecStart=ip link set wg-nas up mtu 1420
-ExecStart=ip route add 10.8.0.1/32 dev wg-nas
+ExecStart=ip route add 100.100.100.1/32 dev wg-nas
 ExecStop=ip link delete wg-nas
 
 [Install]
