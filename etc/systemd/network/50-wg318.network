@@ -1,0 +1,13 @@
+[Match]
+Name=wg318
+
+[Network]
+Address=100.100.100.2/32
+LinkLocalAddressing=no
+
+[Link]
+RequiredForOnline=no
+
+[Route]
+Destination=100.100.100.1/32
+Scope=link

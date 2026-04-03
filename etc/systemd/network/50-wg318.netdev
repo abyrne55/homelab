@@ -1,0 +1,14 @@
+[NetDev]
+Name=wg318
+Kind=wireguard
+MTUBytes=1420
+
+[WireGuard]
+PrivateKeyFile=/run/credentials/systemd-networkd.service/wg-nas-private-key
+
+[WireGuardPeer]
+PublicKey=FyNIe8zCEFrkvDgW7VFI1kDVHMnnqwIr2rTrbRvb3Dw=
+PresharedKeyFile=/run/credentials/systemd-networkd.service/wg-nas-preshared-key
+AllowedIPs=100.100.100.1/32
+Endpoint=192.168.0.167:51820
+PersistentKeepalive=0

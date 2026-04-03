@@ -1,0 +1,9 @@
+[Unit]
+Description=Automount NFS media share from NAS
+
+[Automount]
+Where=/var/mnt/data
+TimeoutIdleSec=600
+
+[Install]
+WantedBy=multi-user.target
