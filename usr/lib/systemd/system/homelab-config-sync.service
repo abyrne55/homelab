@@ -5,6 +5,8 @@ After=network-online.target ssh-generate-identity.service
 
 [Service]
 Type=oneshot
+Restart=on-failure
+RestartSec=30
 User=root
 NoNewPrivileges=yes
 PrivateTmp=yes

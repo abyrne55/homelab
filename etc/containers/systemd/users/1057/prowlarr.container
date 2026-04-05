@@ -12,8 +12,10 @@ NoNewPrivileges=true
 # DropCapability=all intentionally omitted: linuxserver s6 init calls setgroups()
 # to switch from root to PUID/PGID, which requires CAP_SETGID inside the container
 HealthCmd=curl -f http://localhost:9696/
-HealthStartPeriod=60s
+HealthStartPeriod=120s
 HealthInterval=30s
+HealthRetries=5
+HealthOnFailure=kill
 Notify=healthy
 Environment=PUID=1057
 Environment=PGID=1057
@@ -22,6 +24,7 @@ Environment=TZ=UTC
 [Service]
 Restart=on-failure
 RestartSec=5
+TimeoutStartSec=20min
 
 [Install]
 WantedBy=default.target

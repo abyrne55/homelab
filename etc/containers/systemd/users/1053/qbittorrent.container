@@ -1,7 +1,7 @@
 [Unit]
 Description=qBittorrent torrent client
 After=gluetun.service
-Requires=gluetun.service
+BindsTo=gluetun.service
 Wants=qbittorrent-configure.service
 Wants=demo-media.service
 
@@ -19,8 +19,10 @@ Environment=WEBUI_PORT=20530
 Volume=/var/local/lib/qbittorrent/config:/config:Z
 Volume=/var/mnt/data/content/torrents:/downloads:z
 HealthCmd=curl -f http://localhost:20530/
-HealthStartPeriod=60s
+HealthStartPeriod=120s
 HealthInterval=30s
+HealthRetries=5
+HealthOnFailure=kill
 Notify=healthy
 NoNewPrivileges=true
 # DropCapability=all intentionally omitted: linuxserver s6 init calls setgroups()
@@ -29,6 +31,7 @@ NoNewPrivileges=true
 [Service]
 Restart=on-failure
 RestartSec=5
+TimeoutStartSec=20min
 
 [Install]
 WantedBy=default.target
