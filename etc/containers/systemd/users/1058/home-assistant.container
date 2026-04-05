@@ -14,8 +14,10 @@ NoNewPrivileges=true
 # DropCapability=all intentionally omitted: HA runs as root internally and
 # needs capabilities for hardware/network integration features
 HealthCmd=curl -f http://localhost:8123/
-HealthStartPeriod=60s
+HealthStartPeriod=300s
 HealthInterval=30s
+HealthRetries=5
+HealthOnFailure=kill
 Notify=healthy
 Environment=TZ=UTC
 

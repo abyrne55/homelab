@@ -24,11 +24,14 @@ Volume=%d:/run/credentials:ro,z
 HealthCmd=/gluetun-entrypoint healthcheck
 HealthStartPeriod=120s
 HealthInterval=30s
+HealthRetries=5
+HealthOnFailure=kill
 Notify=healthy
 
 [Service]
 Restart=on-failure
 RestartSec=10
+TimeoutStartSec=20min
 LoadCredential=mullvad-wireguard-private-key:/run/systemd-age-creds.sock
 LoadCredential=mullvad-wireguard-address:/run/systemd-age-creds.sock
 

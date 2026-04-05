@@ -15,6 +15,8 @@ DropCapability=all
 HealthCmd=curl -sf http://127.0.0.1:8096/health
 HealthStartPeriod=120s
 HealthInterval=30s
+HealthRetries=5
+HealthOnFailure=kill
 Notify=healthy
 Environment=HTTP_PROXY=http://systemd-tinyproxy:8888
 Environment=HTTPS_PROXY=http://systemd-tinyproxy:8888
@@ -22,6 +24,7 @@ Environment=HTTPS_PROXY=http://systemd-tinyproxy:8888
 [Service]
 Restart=on-failure
 RestartSec=5
+TimeoutStartSec=20min
 
 [Install]
 WantedBy=default.target

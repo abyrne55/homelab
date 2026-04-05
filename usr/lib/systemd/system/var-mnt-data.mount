@@ -9,7 +9,7 @@ What=100.100.100.1:/volume1/media-stg
 Where=/var/mnt/data
 Type=nfs
 Options=defaults,_netdev,nfsvers=4.1,nconnect=4,noatime,rsize=131072,wsize=131072,context=system_u:object_r:container_file_t:s0
-TimeoutSec=30
+TimeoutSec=120
 
 [Install]
 WantedBy=multi-user.target

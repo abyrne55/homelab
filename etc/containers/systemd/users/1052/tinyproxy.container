@@ -14,9 +14,10 @@ Network=proxynet.network
 Volume=/var/lib/homelab-config/tinyproxy:/etc/tinyproxy:ro,z
 ReloadSignal=SIGUSR1
 HealthCmd=CMD /bin/curl -sf -x http://127.0.0.1:8888 http://tinyproxy.stats/
-HealthStartPeriod=5s
+HealthStartPeriod=20s
 HealthInterval=30s
-HealthRetries=3
+HealthRetries=5
+HealthOnFailure=kill
 Notify=healthy
 
 [Service]

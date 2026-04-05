@@ -11,8 +11,10 @@ AutoUpdate=registry
 NoNewPrivileges=true
 DropCapability=all
 HealthCmd=curl -f http://localhost:5580/info
-HealthStartPeriod=60s
+HealthStartPeriod=120s
 HealthInterval=30s
+HealthRetries=5
+HealthOnFailure=kill
 Notify=healthy
 
 [Service]
