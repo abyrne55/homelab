@@ -8,7 +8,7 @@ Image=docker.io/prom/node-exporter:v1.11.0-distroless
 PublishPort=20592:9100
 Volume=/proc:/host/proc:ro
 Volume=/sys:/host/sys:ro
-Volume=/:/host/root:ro,rslave,z
+Volume=/:/host/root:ro,rslave
 # --pid=host shares the host PID namespace so node_exporter can see all processes
 PodmanArgs=--pid=host
 Exec=--path.procfs=/host/proc --path.sysfs=/host/sys --path.rootfs=/host/root --collector.disable-defaults --collector.cpu --collector.meminfo --collector.diskstats --collector.filesystem --collector.netdev --collector.loadavg --collector.uname --collector.time

@@ -7,7 +7,7 @@ ConditionPathIsDirectory=/var/lib/homelab-config/grafana/provisioning
 [Container]
 Image=docker.io/grafana/grafana:12.4
 PublishPort=20591:3000
-Volume=/var/local/lib/grafana:/var/lib/grafana:Z
+Volume=/var/local/lib/grafana:/var/lib/grafana:Z,U
 Volume=/var/lib/homelab-config/grafana/provisioning:/etc/grafana/provisioning:ro,z
 # Credentials dir mounted so GF_SECURITY_ADMIN_PASSWORD__FILE resolves
 Volume=%d:/run/credentials:ro,z
