@@ -1,0 +1,23 @@
+[Unit]
+Description=Prometheus systemd exporter (system unit metrics)
+After=network-online.target dbus.service
+Wants=network-online.target
+
+[Container]
+Image=quay.io/prometheus-community/systemd-exporter:v0.7.0
+PublishPort=9558:9558
+# D-Bus socket required to query systemd unit state
+Volume=/run/dbus/system_bus_socket:/run/dbus/system_bus_socket:ro
+AutoUpdate=registry
+NoNewPrivileges=true
+DropCapability=all
+ReadOnly=true
+ReadOnlyTmpfs=true
+# HealthCmd intentionally omitted: prometheus-community/systemd-exporter is distroless
+
+[Service]
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

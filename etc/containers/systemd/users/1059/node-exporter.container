@@ -1,0 +1,27 @@
+[Unit]
+Description=Prometheus node exporter (host metrics)
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=docker.io/prom/node-exporter:v1.11.0-distroless
+PublishPort=20592:9100
+Volume=/proc:/host/proc:ro
+Volume=/sys:/host/sys:ro
+Volume=/:/host/root:ro,rslave,z
+# --pid=host shares the host PID namespace so node_exporter can see all processes
+PodmanArgs=--pid=host
+Exec=--path.procfs=/host/proc --path.sysfs=/host/sys --path.rootfs=/host/root --collector.disable-defaults --collector.cpu --collector.meminfo --collector.diskstats --collector.filesystem --collector.netdev --collector.loadavg --collector.uname --collector.time
+AutoUpdate=registry
+NoNewPrivileges=true
+DropCapability=all
+ReadOnly=true
+ReadOnlyTmpfs=true
+# HealthCmd intentionally omitted: distroless image has no shell or curl/wget
+
+[Service]
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -60,7 +60,8 @@ Quick file-level index — consult this before exploring the repo.
 | configarr | 1056 | none (no UI) | 558752 | — |
 | prowlarr | 1057 | 20570 | 624288 | 20571 |
 | home-assistant | 1058 | 20580 | 689824 | 20581 |
-| **next slot** | **1059** | **20590** | **755360** | — |
+| monitoring | 1059 | 20590–20593 | 755360 | 20594 |
+| **next slot** | **1060** | **20600** | **820896** | — |
 
 **Containerfile `systemctl enable` line** — when adding a new *system* unit, append it here. Quadlets are auto-discovered by podman-quadlet and do not need to be listed. User-level units that need to be enabled globally should ship `.target.wants/` symlinks under `usr/lib/systemd/user/` rather than using `systemctl --global enable` in the Containerfile.
 
@@ -187,6 +188,11 @@ Use `/add-quadlet [service-name]` for the full step-by-step checklist. The short
 | configarr | 1056 | none (no UI) | — | No |
 | prowlarr | 1057 | 20570 | 9696 | No — via Caddy only |
 | home-assistant | 1058 | 20580 | 8123 | No — via Caddy only |
+| monitoring (VictoriaMetrics) | 1059 | 20590 | 8428 | No — via Caddy only |
+| monitoring (Grafana) | 1059 | 20591 | 3000 | No — via Caddy only |
+| monitoring (node_exporter) | 1059 | 20592 | 9100 | No — localhost scrape only |
+| monitoring (blackbox_exporter) | 1059 | 20593 | 9115 | No — localhost scrape only |
+| prometheus-systemd-exporter | rootful | 9558 | 9558 | No — localhost scrape only |
 
 New system units (not quadlets) must also be appended to the `RUN systemctl enable` line in `Containerfile`.
 

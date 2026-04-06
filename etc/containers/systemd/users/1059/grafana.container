@@ -1,0 +1,31 @@
+[Unit]
+Description=Grafana dashboards and alerting
+After=network-online.target
+Wants=network-online.target
+ConditionPathIsDirectory=/var/lib/homelab-config/grafana/provisioning
+
+[Container]
+Image=docker.io/grafana/grafana:12.4
+PublishPort=20591:3000
+Volume=/var/local/lib/grafana:/var/lib/grafana:Z
+Volume=/var/lib/homelab-config/grafana/provisioning:/etc/grafana/provisioning:ro,z
+# Credentials dir mounted so GF_SECURITY_ADMIN_PASSWORD__FILE resolves
+Volume=%d:/run/credentials:ro,z
+Environment=GF_SECURITY_ADMIN_PASSWORD__FILE=/run/credentials/grafana-admin-password
+AutoUpdate=registry
+NoNewPrivileges=true
+DropCapability=all
+Notify=healthy
+HealthCmd=curl -sf http://127.0.0.1:3000/api/health
+HealthStartPeriod=60s
+HealthInterval=30s
+HealthRetries=5
+HealthOnFailure=kill
+
+[Service]
+Restart=on-failure
+RestartSec=5
+LoadCredential=grafana-admin-password:/run/systemd-age-creds.sock
+
+[Install]
+WantedBy=default.target

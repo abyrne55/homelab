@@ -1,0 +1,30 @@
+[Unit]
+Description=VictoriaMetrics time-series database
+After=network-online.target
+Wants=network-online.target
+ConditionPathIsDirectory=/var/lib/homelab-config/victoria-metrics
+
+[Container]
+Image=docker.io/victoriametrics/victoria-metrics:v1.139.0
+PublishPort=20590:8428
+Volume=/var/local/lib/victoria-metrics/data:/victoria-metrics-data:Z
+Volume=/var/lib/homelab-config/victoria-metrics:/etc/victoria-metrics:ro,z
+Exec=-storageDataPath=/victoria-metrics-data -promscrape.config=/etc/victoria-metrics/scrape_config.yaml -retentionPeriod=6
+AutoUpdate=registry
+NoNewPrivileges=true
+DropCapability=all
+ReadOnly=true
+ReadOnlyTmpfs=true
+Notify=healthy
+HealthCmd=curl -sf http://127.0.0.1:8428/-/healthy
+HealthStartPeriod=30s
+HealthInterval=30s
+HealthRetries=5
+HealthOnFailure=kill
+
+[Service]
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

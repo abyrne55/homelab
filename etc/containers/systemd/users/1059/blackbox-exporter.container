@@ -1,0 +1,24 @@
+[Unit]
+Description=Prometheus blackbox exporter (HTTP probing)
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/var/lib/homelab-config/blackbox/blackbox.yml
+
+[Container]
+Image=docker.io/prom/blackbox-exporter:v0.28.0
+PublishPort=20593:9115
+Volume=/var/lib/homelab-config/blackbox:/config:ro,z
+Exec=--config.file=/config/blackbox.yml
+AutoUpdate=registry
+NoNewPrivileges=true
+DropCapability=all
+ReadOnly=true
+ReadOnlyTmpfs=true
+# HealthCmd intentionally omitted: blackbox-exporter distroless image has no curl/wget
+
+[Service]
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
