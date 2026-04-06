@@ -9,9 +9,10 @@ Image=docker.io/grafana/grafana:12.4
 PublishPort=20591:3000
 Volume=/var/local/lib/grafana:/var/lib/grafana:Z,U
 Volume=/var/lib/homelab-config/grafana/provisioning:/etc/grafana/provisioning:ro,z
-# Credentials dir mounted so GF_SECURITY_ADMIN_PASSWORD__FILE resolves
-Volume=%d:/run/credentials:ro,z
-Environment=GF_SECURITY_ADMIN_PASSWORD__FILE=/run/credentials/grafana-admin-password
+# Password injected via env file written by ExecStartPre (see [Service] below).
+# Cannot mount %d directly: credentials dir is root-owned (mode 0700) inside the
+# container, so Grafana's internal UID 472 cannot read it.
+EnvironmentFile=%t/grafana-admin.env
 AutoUpdate=registry
 NoNewPrivileges=true
 DropCapability=all
@@ -26,6 +27,8 @@ HealthOnFailure=kill
 Restart=on-failure
 RestartSec=5
 LoadCredential=grafana-admin-password:/run/systemd-age-creds.sock
+ExecStartPre=/bin/sh -c 'printf "GF_SECURITY_ADMIN_PASSWORD=%s" "$(cat ${CREDENTIALS_DIRECTORY}/grafana-admin-password)" > %t/grafana-admin.env'
+ExecStopPost=/bin/rm -f %t/grafana-admin.env
 
 [Install]
 WantedBy=default.target
