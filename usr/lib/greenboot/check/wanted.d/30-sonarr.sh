@@ -1,7 +1,10 @@
 #!/usr/bin/bash
 set -euo pipefail
-if ! systemctl --user -M sonarr@.host is-active --quiet sonarr.service; then
-    echo "FAIL: sonarr.service (sonarr) is not active"
+status=$(podman --root /var/home/sonarr/.local/share/containers/storage \
+               --runroot /run/user/1055/containers \
+               ps --filter name=sonarr --format '{{.Status}}' 2>/dev/null)
+if [[ "$status" != *"(healthy)"* ]]; then
+    echo "FAIL: sonarr container is not healthy (status: '${status}')"
     exit 1
 fi
-echo "OK: sonarr.service (sonarr) is active"
+echo "OK: sonarr container is healthy"

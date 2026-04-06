@@ -1,7 +1,10 @@
 #!/usr/bin/bash
 set -euo pipefail
-if ! systemctl --user -M radarr@.host is-active --quiet radarr.service; then
-    echo "FAIL: radarr.service (radarr) is not active"
+status=$(podman --root /var/home/radarr/.local/share/containers/storage \
+               --runroot /run/user/1054/containers \
+               ps --filter name=radarr --format '{{.Status}}' 2>/dev/null)
+if [[ "$status" != *"(healthy)"* ]]; then
+    echo "FAIL: radarr container is not healthy (status: '${status}')"
     exit 1
 fi
-echo "OK: radarr.service (radarr) is active"
+echo "OK: radarr container is healthy"

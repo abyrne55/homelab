@@ -1,7 +1,10 @@
 #!/usr/bin/bash
 set -euo pipefail
-if ! systemctl --user -M jellyfin@.host is-active --quiet jellyfin.service; then
-    echo "FAIL: jellyfin.service (jellyfin) is not active"
+status=$(podman --root /var/home/jellyfin/.local/share/containers/storage \
+               --runroot /run/user/1052/containers \
+               ps --filter name=jellyfin --format '{{.Status}}' 2>/dev/null)
+if [[ "$status" != *"(healthy)"* ]]; then
+    echo "FAIL: jellyfin container is not healthy (status: '${status}')"
     exit 1
 fi
-echo "OK: jellyfin.service (jellyfin) is active"
+echo "OK: jellyfin container is healthy"
