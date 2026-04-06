@@ -105,6 +105,26 @@ The `systemd-age-creds` log shows each credential request (service name, UID, cr
 
 If `vsh` is unavailable, use the `/fallback-cmd` skill to access raw SSH and systemctl/journalctl/podman commands.
 
+## Greenboot reboot loops
+
+If the VM reboots repeatedly after an upgrade, greenboot is likely failing a `required.d` check. The journal doesn't persist across reboots by default, so use the serial log and GRUB env:
+
+```bash
+# Check GRUB state (boot_counter counts down; rollback fires when it reaches 0)
+vsh 'sudo grub2-editenv list'
+
+# Check serial log for greenboot outcomes across all recent boots
+strings build/serial.log | grep -E "(greenboot-healthcheck|Rebooting|boot_success)"
+
+# Run the healthcheck binary directly (RefuseManualStart=yes blocks `systemctl start`)
+vsh 'sudo /usr/libexec/greenboot/greenboot health-check 2>&1'
+
+# Test individual check scripts
+vsh 'sudo /usr/lib/greenboot/check/required.d/20-caddy.sh'
+```
+
+Greenboot spawns each check script as a transient systemd unit internally. "Connection reset by peer" / "Transport endpoint is not connected" in greenboot's output means the user session D-Bus socket was transiently unavailable — not necessarily that the service is broken. Run the script directly to confirm actual state.
+
 ## Common patterns
 
 - **`statfs /var/mnt/data/.<service>/config: no such file or directory`** → data disk config dir not created; `init-data-disk.service` only runs on fresh disk init. Fix: `sudo mkdir -p /var/mnt/data/.<service>/config && sudo chown -R <uid>:<uid> /var/mnt/data/.<service>`, then `hl restart <service>`

@@ -19,7 +19,8 @@ Add Quadlet: $ARGUMENTS
 - [ ] 5. .container quadlet file
 - [ ] 6. service-state-dirs.conf entry (for /var/local/lib/<service>/ state dir)
 - [ ] 7. Caddy route in homelab-config
-- [ ] 8. Allocations table updated in CLAUDE.md
+- [ ] 8. Greenboot wanted.d check script
+- [ ] 9. Allocations table updated in CLAUDE.md
 ```
 
 ## 1. `usr/lib/sysusers.d/<N>-<name>-user.conf`
@@ -115,7 +116,32 @@ If in doubt about a directive or behavior, these docs may help:
 - `.claude/references/bootc/users-and-groups.md` — sysusers.d patterns, subid allocation, user/group management in a bootc image
 - `.claude/references/bootc/filesystem.md` (lines 114–154) — `/var/` layout and persistent state patterns (home directories, data mounts)
 
-## 8. Update the allocations table in CLAUDE.md
+## 8. Add a greenboot health check (`usr/lib/greenboot/check/wanted.d/30-<name>.sh`)
+
+All quadlet services get a `wanted.d` check (non-fatal — failure warns but won't trigger rollback). Use `systemctl --user -M` with a retry loop to handle transient D-Bus errors at boot:
+
+```bash
+#!/usr/bin/bash
+set -euo pipefail
+for _ in 1 2 3; do
+    state=$(systemctl --user -M $ARGUMENTS@.host show $ARGUMENTS.service \
+            -p ActiveState --value 2>/dev/null) && break || state=""
+    sleep 5
+done
+if [ "$state" != "active" ]; then
+    echo "FAIL: $ARGUMENTS.service is not active (state='${state}')"
+    exit 1
+fi
+echo "OK: $ARGUMENTS.service is active"
+```
+
+Mark it executable (`chmod +x`) — git preserves the bit, no Containerfile step needed.
+
+**Do NOT use `podman --root/--runroot` as root** to check container health — it conflicts with the user session's libpod runtime dir and will restart running containers.
+
+**Do NOT add to `required.d`** unless the service is as critical as secrets-sync, config-sync, or caddy. Required checks trigger rollback on failure.
+
+## 9. Update the allocations table in CLAUDE.md
 
 Update the service user allocations table to reflect the new user and advance the "next slot" row (UID, port, subUID range start).
 
