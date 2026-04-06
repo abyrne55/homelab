@@ -1,0 +1,55 @@
+#!/usr/bin/bash
+# Pre-flight for greenboot: polls until required services are healthy or timeout.
+# Always exits 0 — pass/fail decisions belong to the greenboot check scripts.
+set -uo pipefail
+
+TIMEOUT=400
+INTERVAL=10
+ELAPSED=0
+
+log() { echo "wait-for-quadlets: $*"; }
+
+# Check that a oneshot service completed with Result=success
+is_sync_done() {
+    local svc=$1 result
+    result=$(systemctl show "$svc" -p Result --value 2>/dev/null) || return 1
+    [ "$result" = "success" ]
+}
+
+# Check that a user service is active via systemctl --user -M.
+# Returns 1 on both "not active" and transient D-Bus errors.
+is_user_active() {
+    local user=$1 svc=$2 state
+    state=$(systemctl --user -M "${user}@.host" show "$svc" \
+            -p ActiveState --value 2>/dev/null) || return 1
+    [ "$state" = "active" ]
+}
+
+while true; do
+    all_ready=true
+
+    for svc in homelab-secrets-sync.service homelab-config-sync.service; do
+        if ! is_sync_done "$svc"; then
+            all_ready=false
+            log "waiting for $svc (${ELAPSED}s)"
+        fi
+    done
+
+    if ! is_user_active caddy caddy.service; then
+        all_ready=false
+        log "waiting for caddy.service (${ELAPSED}s)"
+    fi
+
+    if [ "$all_ready" = true ]; then
+        log "all required services ready after ${ELAPSED}s"
+        exit 0
+    fi
+
+    if (( ELAPSED >= TIMEOUT )); then
+        log "timeout after ${TIMEOUT}s, proceeding to greenboot checks"
+        exit 0
+    fi
+
+    sleep "$INTERVAL"
+    ELAPSED=$(( ELAPSED + INTERVAL ))
+done

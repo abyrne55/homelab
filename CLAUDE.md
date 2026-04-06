@@ -41,7 +41,11 @@ Quick file-level index — consult this before exploring the repo.
 | `usr/lib/tmpfiles.d/quadlet-users-subids.conf` | subUID/subGID ranges for rootless Podman |
 | `usr/lib/tmpfiles.d/service-state-dirs.conf` | `/var/local/lib/<service>/` dirs for per-service state (config/cache) |
 | `usr/lib/tmpfiles.d/` (other files) | NFS mount point, git known-hosts, homelab-config dir |
-| `usr/local/bin/` | Scripts baked into the image (`hl`, `secrets-inject`, `qbittorrent-configure`, …) |
+| `usr/local/bin/` | Scripts baked into the image (`hl`, `secrets-inject`, `wait-for-quadlets`, …) |
+| `usr/lib/greenboot/check/required.d/` | Greenboot health checks that must pass or rollback is triggered (secrets-sync, config-sync, caddy) |
+| `usr/lib/greenboot/check/wanted.d/` | Greenboot health checks that may fail without triggering rollback (other quadlets, wg-nas) |
+| `usr/lib/systemd/system/greenboot-healthcheck.service.d/` | Drop-in: extends timeout, adds `After=` user sessions, runs `wait-for-quadlets` pre-flight |
+| `etc/greenboot/greenboot.conf` | Greenboot config (`GREENBOOT_MAX_BOOT_ATTEMPTS=3`) |
 | `selinux/` | Custom SELinux policy modules (`.cil` files) |
 
 **Current service user allocations** (update this table when adding a new user):
