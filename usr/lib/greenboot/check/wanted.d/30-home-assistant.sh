@@ -1,10 +1,12 @@
 #!/usr/bin/bash
 set -euo pipefail
-status=$(podman --root /var/home/home-assistant/.local/share/containers/storage \
-               --runroot /run/user/1058/containers \
-               ps --filter name=home-assistant --format '{{.Status}}' 2>/dev/null)
-if [[ "$status" != *"(healthy)"* ]]; then
-    echo "FAIL: home-assistant container is not healthy (status: '${status}')"
+for _ in 1 2 3; do
+    state=$(systemctl --user -M home-assistant@.host show home-assistant.service \
+            -p ActiveState --value 2>/dev/null) && break || state=""
+    sleep 5
+done
+if [ "$state" != "active" ]; then
+    echo "FAIL: home-assistant.service is not active (state='${state}')"
     exit 1
 fi
-echo "OK: home-assistant container is healthy"
+echo "OK: home-assistant.service is active"

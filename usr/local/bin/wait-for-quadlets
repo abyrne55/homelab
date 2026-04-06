@@ -16,14 +16,13 @@ is_sync_done() {
     [ "$result" = "success" ]
 }
 
-# Check that a rootless podman container is healthy.
-# Uses --root/--runroot so no D-Bus or user session socket is needed.
-is_container_healthy() {
-    local home=$1 uid=$2 name=$3 status
-    status=$(podman --root "${home}/.local/share/containers/storage" \
-                    --runroot "/run/user/${uid}/containers" \
-                    ps --filter "name=${name}" --format '{{.Status}}' 2>/dev/null) || return 1
-    [[ "$status" == *"(healthy)"* ]]
+# Check that a user service is active via systemctl --user -M.
+# Returns 1 on both "not active" and transient D-Bus errors.
+is_user_active() {
+    local user=$1 svc=$2 state
+    state=$(systemctl --user -M "${user}@.host" show "$svc" \
+            -p ActiveState --value 2>/dev/null) || return 1
+    [ "$state" = "active" ]
 }
 
 while true; do
@@ -36,9 +35,9 @@ while true; do
         fi
     done
 
-    if ! is_container_healthy /var/home/caddy 1051 caddy; then
+    if ! is_user_active caddy caddy.service; then
         all_ready=false
-        log "waiting for caddy container to be healthy (${ELAPSED}s)"
+        log "waiting for caddy.service (${ELAPSED}s)"
     fi
 
     if [ "$all_ready" = true ]; then

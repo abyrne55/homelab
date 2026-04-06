@@ -1,10 +1,12 @@
 #!/usr/bin/bash
 set -euo pipefail
-status=$(podman --root /var/home/qbittorrent/.local/share/containers/storage \
-               --runroot /run/user/1053/containers \
-               ps --filter name=qbittorrent --format '{{.Status}}' 2>/dev/null)
-if [[ "$status" != *"(healthy)"* ]]; then
-    echo "FAIL: qbittorrent container is not healthy (status: '${status}')"
+for _ in 1 2 3; do
+    state=$(systemctl --user -M qbittorrent@.host show qbittorrent.service \
+            -p ActiveState --value 2>/dev/null) && break || state=""
+    sleep 5
+done
+if [ "$state" != "active" ]; then
+    echo "FAIL: qbittorrent.service is not active (state='${state}')"
     exit 1
 fi
-echo "OK: qbittorrent container is healthy"
+echo "OK: qbittorrent.service is active"

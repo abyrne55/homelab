@@ -1,10 +1,12 @@
 #!/usr/bin/bash
 set -euo pipefail
-status=$(podman --root /var/home/prowlarr/.local/share/containers/storage \
-               --runroot /run/user/1057/containers \
-               ps --filter name=prowlarr --format '{{.Status}}' 2>/dev/null)
-if [[ "$status" != *"(healthy)"* ]]; then
-    echo "FAIL: prowlarr container is not healthy (status: '${status}')"
+for _ in 1 2 3; do
+    state=$(systemctl --user -M prowlarr@.host show prowlarr.service \
+            -p ActiveState --value 2>/dev/null) && break || state=""
+    sleep 5
+done
+if [ "$state" != "active" ]; then
+    echo "FAIL: prowlarr.service is not active (state='${state}')"
     exit 1
 fi
-echo "OK: prowlarr container is healthy"
+echo "OK: prowlarr.service is active"

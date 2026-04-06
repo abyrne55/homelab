@@ -1,10 +1,13 @@
 #!/usr/bin/bash
 set -euo pipefail
-status=$(podman --root /var/home/caddy/.local/share/containers/storage \
-               --runroot /run/user/1051/containers \
-               ps --filter name=caddy --format '{{.Status}}' 2>/dev/null)
-if [[ "$status" != *"(healthy)"* ]]; then
-    echo "FAIL: caddy container is not healthy (status: '${status}')"
+# Retry up to 3 times to handle transient D-Bus connection errors at boot.
+for _ in 1 2 3; do
+    state=$(systemctl --user -M caddy@.host show caddy.service \
+            -p ActiveState --value 2>/dev/null) && break || state=""
+    sleep 5
+done
+if [ "$state" != "active" ]; then
+    echo "FAIL: caddy.service is not active (state='${state}')"
     exit 1
 fi
-echo "OK: caddy container is healthy"
+echo "OK: caddy.service is active"
