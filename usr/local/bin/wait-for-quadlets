@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-# Pre-flight for greenboot: polls until required services are active or timeout.
+# Pre-flight for greenboot: polls until required services are healthy or timeout.
 # Always exits 0 — pass/fail decisions belong to the greenboot check scripts.
 set -uo pipefail
 
@@ -7,48 +7,47 @@ TIMEOUT=400
 INTERVAL=10
 ELAPSED=0
 
-REQUIRED_SYSTEM=(homelab-secrets-sync.service homelab-config-sync.service)
-# "username service" pairs (username, not UID — consistent with hl's ctl())
-REQUIRED_USER=("caddy caddy.service")
+log() { echo "wait-for-quadlets: $*"; }
 
+# Check that a oneshot service completed with Result=success
 is_sync_done() {
-    local svc=$1
-    local result
-    result=$(systemctl show "$svc" -p Result --value 2>/dev/null)
+    local svc=$1 result
+    result=$(systemctl show "$svc" -p Result --value 2>/dev/null) || return 1
     [ "$result" = "success" ]
 }
 
+# Check that a user service is in ActiveState=active (not just activating)
 is_user_active() {
-    local user=$1 svc=$2
-    systemctl --user -M "${user}@.host" is-active --quiet "$svc" 2>/dev/null
+    local user=$1 svc=$2 state
+    state=$(systemctl --user -M "${user}@.host" show "$svc" -p ActiveState --value 2>/dev/null) || return 1
+    [ "$state" = "active" ]
 }
 
 while true; do
-    ALL_READY=true
+    all_ready=true
 
-    for svc in "${REQUIRED_SYSTEM[@]}"; do
+    for svc in homelab-secrets-sync.service homelab-config-sync.service; do
         if ! is_sync_done "$svc"; then
-            ALL_READY=false
-            echo "wait-for-quadlets: waiting for $svc (${ELAPSED}s elapsed)"
+            all_ready=false
+            log "waiting for $svc (${ELAPSED}s)"
         fi
     done
 
-    for entry in "${REQUIRED_USER[@]}"; do
-        user="${entry%% *}"
-        svc="${entry#* }"
-        if ! is_user_active "$user" "$svc"; then
-            ALL_READY=false
-            echo "wait-for-quadlets: waiting for $svc user=$user (${ELAPSED}s elapsed)"
-        fi
-    done
+    if ! is_user_active caddy caddy.service; then
+        all_ready=false
+        log "waiting for caddy.service (${ELAPSED}s)"
+    fi
 
-    $ALL_READY && { echo "wait-for-quadlets: all required services ready after ${ELAPSED}s"; exit 0; }
+    if [ "$all_ready" = true ]; then
+        log "all required services ready after ${ELAPSED}s"
+        exit 0
+    fi
 
     if (( ELAPSED >= TIMEOUT )); then
-        echo "wait-for-quadlets: timeout after ${TIMEOUT}s, proceeding to greenboot checks"
+        log "timeout after ${TIMEOUT}s, proceeding to greenboot checks"
         exit 0
     fi
 
     sleep "$INTERVAL"
-    (( ELAPSED += INTERVAL )) || true
+    ELAPSED=$(( ELAPSED + INTERVAL ))
 done
