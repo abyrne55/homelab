@@ -295,8 +295,13 @@ cmd_failed() {
   local any=0
 
   echo "=== system ==="
+  # Filter out transient Podman health check units (<container-id>-<random>.service)
+  # which often appear as transiently failed in the first minutes after boot.
+  filter_health_checks() { grep -Ev '^[0-9a-f]{64}-[0-9a-f]+\.service' || true; }
+
   local sys_failed
-  sys_failed=$(systemctl list-units --state=failed --no-pager --plain --no-legend 2>/dev/null || true)
+  sys_failed=$(systemctl list-units --state=failed --no-pager --plain --no-legend 2>/dev/null \
+    | filter_health_checks || true)
   if [[ -n "$sys_failed" ]]; then
     echo "$sys_failed"
     any=1
@@ -310,7 +315,8 @@ cmd_failed() {
   for user in "${users[@]}"; do
     echo "=== $user ==="
     local user_failed
-    user_failed=$(ctl "$user" list-units --state=failed --no-pager --plain --no-legend 2>/dev/null || true)
+    user_failed=$(ctl "$user" list-units --state=failed --no-pager --plain --no-legend 2>/dev/null \
+      | filter_health_checks || true)
     if [[ -n "$user_failed" ]]; then
       echo "$user_failed"
       any=1
