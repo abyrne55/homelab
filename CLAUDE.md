@@ -62,6 +62,8 @@ Quick file-level index — consult this before exploring the repo.
 | home-assistant | 1058 | 20580 | 689824 | 20581 |
 | **next slot** | **1059** | **20590** | **755360** | — |
 
+> **Note:** Netdata is deployed as a privileged **system-level** Podman quadlet (`etc/containers/systemd/netdata.container`) and does not have a dedicated Linux user. It requires `--network=host`, `SYS_PTRACE`, `SYS_ADMIN`, and broad read access to host paths, making rootless operation impractical. No UID, sysusers.d, homedirs, linger, or subids entries are needed. State dirs live under `/var/local/lib/netdata/` (owned root:root).
+
 **Containerfile `systemctl enable` line** — when adding a new *system* unit, append it here. Quadlets are auto-discovered by podman-quadlet and do not need to be listed. User-level units that need to be enabled globally should ship `.target.wants/` symlinks under `usr/lib/systemd/user/` rather than using `systemctl --global enable` in the Containerfile.
 
 ## Key Directories
