@@ -21,7 +21,6 @@ Volume=/sys:/host/sys:ro
 Volume=/:/host/root:ro,rslave
 Volume=/etc/passwd:/host/etc/passwd:ro
 Volume=/etc/group:/host/etc/group:ro
-Volume=/etc/localtime:/etc/localtime:ro
 Volume=/etc/os-release:/host/etc/os-release:ro
 Volume=/var/log:/host/var/log:ro
 Volume=/run/dbus:/run/dbus:ro
