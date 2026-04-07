@@ -102,6 +102,20 @@ Secrets are encrypted with `age` and decrypted on-demand by `systemd` and `syste
 - System units: `LoadCredential=name:%t/systemd-age-creds.sock` (`%t` = `/run` in system context)
 - User units (quadlets): use hardcoded `/run/systemd-age-creds.sock` — `%t` expands to `/run/user/<uid>` in user context, not `/run`
 
+**Non-root container processes cannot read `$CREDENTIALS_DIRECTORY` directly** — the credentials directory is 0700 and root-owned, so any container UID other than 0 gets EACCES. The workaround is to write an env file in `ExecStartPre` and clean it up in `ExecStopPost`:
+
+```ini
+[Container]
+EnvironmentFile=%t/<service>-secret.env
+
+[Service]
+LoadCredential=my-secret:/run/systemd-age-creds.sock
+ExecStartPre=/bin/sh -c 'echo "MY_VAR=$(cat ${CREDENTIALS_DIRECTORY}/my-secret)" > %t/<service>-secret.env'
+ExecStopPost=/bin/rm -f %t/<service>-secret.env
+```
+
+Avoid `printf` with `%s` in `Exec*=` values — `%s` is a systemd specifier (expands to the user's shell path in user units) and will be substituted before the shell sees the string. Use `echo "KEY=$(cat ...)"` instead.
+
 ## Important Commands
 
 All operations go through the Makefile:

@@ -61,11 +61,26 @@ Append the new user's subUID/subGID range to **both** the `subuid` and `subgid` 
 
 Podman quadlet format. Apply the baseline hardening directives from the `/hardening` skill.
 
-For credential access, use the hardcoded `/run/` path — **not** `%t/`. In user units, `%t` expands to `/run/user/<uid>`, not `/run`, so the credentials socket path would be wrong:
+**Credentials:** Use the hardcoded `/run/` path — **not** `%t/`. In user units, `%t` expands to `/run/user/<uid>`, not `/run`, so the credentials socket path would be wrong:
 
 ```ini
 [Service]
 LoadCredential=credential-name:/run/systemd-age-creds.sock
+```
+
+If the container process runs as a **non-root UID**, it cannot read `$CREDENTIALS_DIRECTORY` directly. See the "Non-root container processes" note in CLAUDE.md § Secrets Management for the env file pattern.
+
+**Volume SELinux labels and UID remapping:**
+
+- `:Z` (exclusive) — private writable state the container owns (e.g., `/var/local/lib/<service>`)
+- `:z` (shared) — read-only config mounted by multiple containers
+- `:U` — add this when the container process runs as a non-root UID and writes to the volume; Podman remaps volume ownership into the container's user namespace
+- Host filesystem bind mounts (e.g., `/proc`, `/sys`, `/`) for exporters: use `:ro` only — do not apply `:z`/`:Z` (relabeling the entire host tree breaks the system)
+
+**HealthCmd for distroless images:** Distroless images (`prom/node-exporter:*-distroless`, `prometheuscommunity/systemd-exporter`, etc.) have no shell, curl, or wget. Omit `HealthCmd` with a comment:
+
+```ini
+# HealthCmd intentionally omitted: distroless image has no shell or curl/wget
 ```
 
 ## 6. Add service state directory to `service-state-dirs.conf`
