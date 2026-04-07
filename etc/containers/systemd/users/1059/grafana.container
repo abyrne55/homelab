@@ -27,7 +27,7 @@ HealthOnFailure=kill
 Restart=on-failure
 RestartSec=5
 LoadCredential=grafana-admin-password:/run/systemd-age-creds.sock
-ExecStartPre=/bin/sh -c 'printf "GF_SECURITY_ADMIN_PASSWORD=%s" "$(cat ${CREDENTIALS_DIRECTORY}/grafana-admin-password)" > %t/grafana-admin.env'
+ExecStartPre=/bin/sh -c 'echo "GF_SECURITY_ADMIN_PASSWORD=$(cat ${CREDENTIALS_DIRECTORY}/grafana-admin-password)" > %t/grafana-admin.env'
 ExecStopPost=/bin/rm -f %t/grafana-admin.env
 
 [Install]
