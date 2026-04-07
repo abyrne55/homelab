@@ -52,16 +52,18 @@ Quick file-level index — consult this before exploring the repo.
 
 | User | UID | Host port(s) | subUID range start | Next port index |
 |---|---|---|---|---|
-| caddy | 1051 | 20510, 20511 | 231072 | 20512 |
-| jellyfin | 1052 | 20520 | 296608 | 20521 |
-| qbittorrent | 1053 | 20530 | 362144 | 20531 |
-| radarr | 1054 | 20540 | 427680 | 20541 |
-| sonarr | 1055 | 20550 | 493216 | 20551 |
-| configarr | 1056 | none (no UI) | 558752 | — |
-| prowlarr | 1057 | 20570 | 624288 | 20571 |
-| home-assistant | 1058 | 20580 | 689824 | 20581 |
+| caddy | 1051 | 20510, 20511, 20519 | 231072 | 20512 |
+| jellyfin | 1052 | 20520, 20529 | 296608 | 20521 |
+| qbittorrent | 1053 | 20530, 20539 | 362144 | 20531 |
+| radarr | 1054 | 20540, 20549 | 427680 | 20541 |
+| sonarr | 1055 | 20550, 20559 | 493216 | 20551 |
+| configarr | 1056 | 20569 (exporter only) | 558752 | 20560 |
+| prowlarr | 1057 | 20570, 20579 | 624288 | 20571 |
+| home-assistant | 1058 | 20580, 20589 | 689824 | 20581 |
 | **next slot** | **1059** | **20590** | **755360** | — |
 
+> **Note:** Port X9 (last in each user's 10-port block) is reserved for `prometheus-podman-exporter` — a localhost-only metrics endpoint scraped by Netdata. No firewalld changes needed for these ports.
+>
 > **Note:** Netdata is deployed as a privileged **system-level** Podman quadlet (`etc/containers/systemd/netdata.container`) and does not have a dedicated Linux user. It requires `--network=host`, `SYS_PTRACE`, `SYS_ADMIN`, and broad read access to host paths, making rootless operation impractical. No UID, sysusers.d, homedirs, linger, or subids entries are needed. State dirs live under `/var/local/lib/netdata/` (owned root:root).
 
 **Containerfile `systemctl enable` line** — when adding a new *system* unit, append it here. Quadlets are auto-discovered by podman-quadlet and do not need to be listed. User-level units that need to be enabled globally should ship `.target.wants/` symlinks under `usr/lib/systemd/user/` rather than using `systemctl --global enable` in the Containerfile.
@@ -182,13 +184,21 @@ Use `/add-quadlet [service-name]` for the full step-by-step checklist. The short
 | Service | UID | Host port(s) | Container port(s) | Externally accessible |
 |---|---|---|---|---|
 | caddy | 1051 | 20510, 20511 | 8080 (HTTP), 8443 (HTTPS) | Yes — firewalld forwards 80→20510, 443→20511 |
+| caddy (exporter) | 1051 | 20519 (localhost only) | — | No — Netdata scrape only |
 | jellyfin | 1052 | 20520 | 8096 | No — via Caddy only |
+| jellyfin (exporter) | 1052 | 20529 (localhost only) | — | No — Netdata scrape only |
 | qbittorrent | 1053 | 20530 | 20530 | No — via Caddy only |
+| qbittorrent (exporter) | 1053 | 20539 (localhost only) | — | No — Netdata scrape only |
 | radarr | 1054 | 20540 | 7878 | No — via Caddy only |
+| radarr (exporter) | 1054 | 20549 (localhost only) | — | No — Netdata scrape only |
 | sonarr | 1055 | 20550 | 8989 | No — via Caddy only |
+| sonarr (exporter) | 1055 | 20559 (localhost only) | — | No — Netdata scrape only |
 | configarr | 1056 | none (no UI) | — | No |
+| configarr (exporter) | 1056 | 20569 (localhost only) | — | No — Netdata scrape only |
 | prowlarr | 1057 | 20570 | 9696 | No — via Caddy only |
+| prowlarr (exporter) | 1057 | 20579 (localhost only) | — | No — Netdata scrape only |
 | home-assistant | 1058 | 20580 | 8123 | No — via Caddy only |
+| home-assistant (exporter) | 1058 | 20589 (localhost only) | — | No — Netdata scrape only |
 
 New system units (not quadlets) must also be appended to the `RUN systemctl enable` line in `Containerfile`.
 
