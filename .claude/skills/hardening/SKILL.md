@@ -193,6 +193,26 @@ SystemCallArchitectures=native
 
 - `PrivateUsers=yes` is safe in standalone user service units. It is **not** the same as the `[Service]` section of rootless quadlet files — these units don't invoke `newuidmap` and don't set up container user namespaces, so NNP is not an issue here.
 
+- Services that **embed libpod directly** (e.g. `prometheus-podman-exporter`, which uses the Podman Go library rather than the socket API) can only use purely seccomp/prctl directives. At init, libpod calls `setns()` to join the rootless pause process's user and mount namespaces (by opening `/proc/<pause_pid>/ns/user`). Two classes of directives break this, confirmed via strace:
+
+  1. **Any directive that causes systemd to create a user namespace**, even as a failed side effect of attempting mount namespace setup: `PrivateTmp`, `PrivateUsers`, `ProtectClock`, `ProtectKernelLogs`, `ProtectKernelModules`, `ProtectSystem`, `ProtectHome`, `ProtectHostname`, `ProtectControlGroups`, `ProtectProc`. Systemd calls `unshare(CLONE_NEWUSER|CLONE_NEWNS)` for these; even when the mount half fails with EPERM (expected for an unprivileged user service), the user namespace is already live. From inside it, the pause process's namespace file returns EACCES, and libpod crashes with a nil pointer panic.
+
+  2. **`RestrictNamespaces=yes`** — blocks `setns()` directly via seccomp, preventing libpod from joining the pause process's namespaces at all.
+
+  Safe hardening for libpod-embedding services is limited to directives with no mount or namespace component:
+
+  ```ini
+  NoNewPrivileges=yes
+  LockPersonality=yes
+  RestrictRealtime=yes
+  RestrictSUIDSGID=yes
+  SystemCallArchitectures=native
+  RestrictAddressFamilies=AF_INET AF_UNIX
+  UMask=0077
+  ```
+
+  Always document the omissions with a comment explaining the libpod constraint so future readers know it is intentional. See `usr/lib/systemd/user/prometheus-podman-exporter.service.d/10-homelab.conf` for the canonical example.
+
 ## Validating hardening with systemd-analyze security
 
 Run `make systemd-analyze-local` to build the image locally and run both verify and security (used in CI). To score against a pushed branch image instead (e.g. on a branch without a PR), use `make systemd-analyze-security` — it pulls from GHCR so the branch must have been pushed and built first.
