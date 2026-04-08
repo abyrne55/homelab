@@ -1,0 +1,52 @@
+[Unit]
+Description=Netdata monitoring agent
+After=network-online.target systemd-age-creds.service
+Wants=network-online.target
+
+[Container]
+Image=docker.io/netdata/netdata:stable
+Network=host
+PodmanArgs=--pid host
+AddCapability=SYS_PTRACE SYS_ADMIN
+SecurityLabelType=spc_t
+
+# Persistent state volumes
+Volume=/var/local/lib/netdata/config:/etc/netdata:Z
+Volume=/var/local/lib/netdata/lib:/var/lib/netdata:Z
+Volume=/var/local/lib/netdata/cache:/var/cache/netdata:Z
+
+# Host read-only mounts for monitoring
+Volume=/proc:/host/proc:ro
+Volume=/sys:/host/sys:ro
+Volume=/:/host/root:ro,rslave
+Volume=/etc/passwd:/host/etc/passwd:ro
+Volume=/etc/group:/host/etc/group:ro
+Volume=/etc/os-release:/host/etc/os-release:ro
+Volume=/var/log:/host/var/log:ro
+Volume=/run/dbus:/run/dbus:ro
+
+EnvironmentFile=/run/netdata/env
+Environment=DISABLE_TELEMETRY=1
+Environment=NETDATA_CLAIM_URL=https://app.netdata.cloud
+Environment=NETDATA_CLAIM_ROOMS=7cf9f9b0-6785-4c75-96c8-206556933fbe
+
+AutoUpdate=registry
+HealthCmd=curl -sf http://localhost:19999/api/v1/info
+HealthInterval=60s
+HealthTimeout=10s
+HealthRetries=3
+HealthStartPeriod=120s
+Notify=healthy
+HealthOnFailure=kill
+
+[Service]
+RuntimeDirectory=netdata
+LoadCredential=netdata-claim-token:%t/systemd-age-creds.sock
+ExecStartPre=bash -c 'echo "NETDATA_CLAIM_TOKEN=$(cat $CREDENTIALS_DIRECTORY/netdata-claim-token)" > $RUNTIME_DIRECTORY/env'
+ExecStartPre=bash -c 'mkdir -p /var/local/lib/netdata/config/go.d && cp -r /var/lib/homelab-config/netdata/go.d/. /var/local/lib/netdata/config/go.d/'
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=infinity
+
+[Install]
+WantedBy=multi-user.target
