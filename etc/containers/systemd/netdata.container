@@ -14,8 +14,6 @@ SecurityLabelType=spc_t
 Volume=/var/local/lib/netdata/config:/etc/netdata:Z
 Volume=/var/local/lib/netdata/lib:/var/lib/netdata:Z
 Volume=/var/local/lib/netdata/cache:/var/cache/netdata:Z
-# go.d collector config from homelab-config (overlays /etc/netdata/go.d inside the container)
-Volume=/var/lib/homelab-config/netdata/go.d:/etc/netdata/go.d:ro,z
 
 # Host read-only mounts for monitoring
 Volume=/proc:/host/proc:ro
@@ -45,6 +43,7 @@ HealthOnFailure=kill
 RuntimeDirectory=netdata
 LoadCredential=netdata-claim-token:%t/systemd-age-creds.sock
 ExecStartPre=bash -c 'echo "NETDATA_CLAIM_TOKEN=$(cat $CREDENTIALS_DIRECTORY/netdata-claim-token)" > $RUNTIME_DIRECTORY/env'
+ExecStartPre=bash -c 'mkdir -p /var/local/lib/netdata/config/go.d && cp -r /var/lib/homelab-config/netdata/go.d/. /var/local/lib/netdata/config/go.d/'
 Restart=on-failure
 RestartSec=5
 TimeoutStartSec=infinity
