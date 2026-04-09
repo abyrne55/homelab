@@ -4,10 +4,9 @@ After=network-online.target
 Wants=network-online.target
 
 [Container]
-Image=ghcr.io/matter-js/python-matter-server:8.1
+Image=ghcr.io/matter-js/python-matter-server:8.1.2
 Pod=home-assistant.pod
 Volume=/var/local/lib/home-assistant/matter-server:/data:Z
-AutoUpdate=registry
 NoNewPrivileges=true
 DropCapability=all
 HealthCmd=curl -f http://localhost:5580/info

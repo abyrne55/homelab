@@ -4,10 +4,9 @@ After=network-online.target prowlarr-init-config.service
 Wants=network-online.target prowlarr-init-config.service prowlarr-configure.service
 
 [Container]
-Image=lscr.io/linuxserver/prowlarr:2.3.0
+Image=lscr.io/linuxserver/prowlarr:2.3.5
 PublishPort=20570:9696
 Volume=/var/local/lib/prowlarr/config:/config:Z
-AutoUpdate=registry
 NoNewPrivileges=true
 # DropCapability=all intentionally omitted: linuxserver s6 init calls setgroups()
 # to switch from root to PUID/PGID, which requires CAP_SETGID inside the container

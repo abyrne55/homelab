@@ -5,7 +5,6 @@ ConditionPathIsDirectory=/var/lib/homelab-config/jellarr
 
 [Container]
 Image=ghcr.io/venkyr77/jellarr:v0.1.0
-AutoUpdate=registry
 NoNewPrivileges=true
 ReadOnly=true
 ReadOnlyTmpfs=true

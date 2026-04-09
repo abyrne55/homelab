@@ -1,0 +1,72 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+
+  // Repo rules require hyphens, not slashes, in branch names
+  "branchPrefix": "renovate-",
+
+  // Only run custom regex managers — no built-in dockerfile/docker-compose scanning
+  // GitHub Actions updates stay with Dependabot
+  "enabledManagers": ["custom.regex"],
+
+  // Add sha256 digests to all container image references
+  "pinDigests": true,
+
+  // Let Renovate use GitHub's native auto-merge
+  "platformAutomerge": true,
+
+  "customManagers": [
+    {
+      // Quadlet .container files: Image=<registry>/<name>:<tag>[@sha256:<digest>]
+      "customType": "regex",
+      "fileMatch": ["etc/containers/systemd/.*\\.container$"],
+      "matchStrings": [
+        "Image=(?<depName>[a-zA-Z0-9][a-zA-Z0-9./_-]*):(?<currentValue>[a-zA-Z0-9._-]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?"
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
+      // Containerfile: RPM downloads from GitHub releases
+      "customType": "regex",
+      "fileMatch": ["^Containerfile$"],
+      "matchStrings": [
+        "https://github\\.com/(?<depName>[^/]+/[^/]+)/releases/download/v(?<currentValue>[^/]+)/"
+      ],
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.*)$"
+    }
+  ],
+
+  "packageRules": [
+    // Personal GHCR images: excluded (stay on :main with AutoUpdate)
+    {
+      "matchDatasources": ["docker"],
+      "matchPackagePatterns": ["^ghcr\\.io/abyrne55/"],
+      "enabled": false
+    },
+    // Personal GitHub releases: excluded
+    {
+      "matchDatasources": ["github-releases"],
+      "matchPackageNames": ["abyrne55/systemd-age-creds"],
+      "enabled": false
+    },
+    // Home Assistant uses calendar versioning (YYYY.M.P)
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/home-assistant/home-assistant"],
+      "versioning": "regex:^(?<major>\\d{4})\\.(?<minor>\\d+)(?:\\.(?<patch>\\d+))?$"
+    },
+    // Containerfile RPMs: never auto-merge (SHA256 needs manual update)
+    {
+      "matchDatasources": ["github-releases"],
+      "automerge": false
+    },
+    // Auto-merge non-major container image updates
+    {
+      "matchDatasources": ["docker"],
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "automerge": true,
+      "automergeType": "pr"
+    }
+  ]
+}
