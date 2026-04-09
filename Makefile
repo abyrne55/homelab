@@ -174,85 +174,71 @@ $(BUILD_DIR)/.image-built: Containerfile $(wildcard quadlets/*) $(wildcard syste
 	podman build -t $(IMAGE_NAME):$(TAG) -f Containerfile .
 	@touch $@
 
-# Build qcow2 image using bootc-image-builder
+# Build qcow2 image using bootc install to-disk
 $(BUILD_DIR)/qcow2/disk.qcow2: $(BUILD_DIR)/.image-built
+	mkdir -p $(BUILD_DIR)/qcow2
+	truncate -s $(ROOT_DISK_SIZE) $(BUILD_DIR)/disk.raw
 ifdef DEBUG
 	podman run \
 		--rm \
 		-it \
 		--privileged \
-		--pull=newer \
+		--pid=host \
 		--security-opt label=type:unconfined_t \
 		-v $(BUILD_DIR):/output \
-		-v /var/lib/containers/storage:/var/lib/containers/storage \
-		quay.io/centos-bootc/bootc-image-builder:latest \
-		--type qcow2 \
-		--use-librepo=True \
+		-v /dev:/dev \
 		localhost/$(IMAGE_NAME):$(TAG) \
-		--rootfs btrfs
+		bootc install to-disk --generic-image --filesystem btrfs --via-loopback /output/disk.raw
 else
 	@echo "Building qcow2 image from localhost/$(IMAGE_NAME):$(TAG)..."
 	@podman run \
 		--rm \
 		-i \
 		--privileged \
-		--pull=newer \
+		--pid=host \
 		--security-opt label=type:unconfined_t \
 		-v $(BUILD_DIR):/output \
-		-v /var/lib/containers/storage:/var/lib/containers/storage \
-		quay.io/centos-bootc/bootc-image-builder:latest \
-		--type qcow2 \
-		--use-librepo=True \
+		-v /dev:/dev \
 		localhost/$(IMAGE_NAME):$(TAG) \
-		--rootfs btrfs 2>&1 \
-	| awk '{ gsub(/\033\[[0-9;?]*[A-Za-z]/,"") } /Message:|[Ee]rror|[Ff]ail/ { gsub(/^[[:space:]]+|[[:space:]]+$$/,""); if (!length || $$0 in seen) next; seen[$$0]=1; print }'
+		bootc install to-disk --generic-image --filesystem btrfs --via-loopback /output/disk.raw
 endif
-	@echo "Resizing root disk to $(ROOT_DISK_SIZE)..."
-	@qemu-img resize $(BUILD_DIR)/qcow2/disk.qcow2 $(ROOT_DISK_SIZE)
+	qemu-img convert -f raw -O qcow2 $(BUILD_DIR)/disk.raw $@
+	rm $(BUILD_DIR)/disk.raw
 
 # Build qcow2 image from GHCR (skips local container build)
 $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2:
-	mkdir -p $(BUILD_DIR)
+	mkdir -p $(BUILD_DIR)/qcow2
+	@echo "Pulling $(REMOTE_IMAGE)..."
+	@podman pull $(REMOTE_IMAGE) 2>&1 | grep -Ev 'Copying (blob|config) sha256'
+	truncate -s $(ROOT_DISK_SIZE) $(BUILD_DIR)/disk.raw
 ifdef DEBUG
-	podman pull $(REMOTE_IMAGE)
 	podman run \
 		--rm \
 		-it \
 		--privileged \
-		--pull=newer \
+		--pid=host \
 		--security-opt label=type:unconfined_t \
 		-v $(BUILD_DIR):/output \
-		-v /var/lib/containers/storage:/var/lib/containers/storage \
-		quay.io/centos-bootc/bootc-image-builder:latest \
-		--type qcow2 \
-		--use-librepo=True \
+		-v /dev:/dev \
 		$(REMOTE_IMAGE) \
-		--rootfs btrfs
+		bootc install to-disk --generic-image --filesystem btrfs --via-loopback /output/disk.raw
 else
-	@echo "Pulling $(REMOTE_IMAGE)..."
-	@podman pull $(REMOTE_IMAGE) 2>&1 | grep -Ev 'Copying (blob|config) sha256'
 	@echo "Building qcow2 disk image..."
 	@podman run \
 		--rm \
 		-i \
 		--privileged \
-		--pull=newer \
+		--pid=host \
 		--security-opt label=type:unconfined_t \
 		-v $(BUILD_DIR):/output \
-		-v /var/lib/containers/storage:/var/lib/containers/storage \
-		quay.io/centos-bootc/bootc-image-builder:latest \
-		--type qcow2 \
-		--use-librepo=True \
+		-v /dev:/dev \
 		$(REMOTE_IMAGE) \
-		--rootfs btrfs 2>&1 \
-	| awk '{ gsub(/\033\[[0-9;?]*[A-Za-z]/,"") } /Message:|[Ee]rror|[Ff]ail/ { gsub(/^[[:space:]]+|[[:space:]]+$$/,""); if (!length || $$0 in seen) next; seen[$$0]=1; print }'
+		bootc install to-disk --generic-image --filesystem btrfs --via-loopback /output/disk.raw
 endif
-	@# Rename the created disk to disk-from-ghcr.qcow2
-	@mv $(BUILD_DIR)/qcow2/disk.qcow2 $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2
+	qemu-img convert -f raw -O qcow2 $(BUILD_DIR)/disk.raw $@
+	rm $(BUILD_DIR)/disk.raw
 	@# Create a symlink so run-vm can use the same disk path
 	@ln -sf disk-from-ghcr.qcow2 $(BUILD_DIR)/qcow2/disk.qcow2
-	@echo "Resizing root disk to $(ROOT_DISK_SIZE)..."
-	@qemu-img resize $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2 $(ROOT_DISK_SIZE)
 
 # Create data disk for media storage (formatted on first boot)
 $(BUILD_DIR)/data.qcow2:
