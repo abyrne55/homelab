@@ -50,13 +50,12 @@
       "matchPackageNames": ["abyrne55/systemd-age-creds"],
       "enabled": false
     },
-    // LinuxServer images have old date-based tags (e.g. 20.04.1) that
-    // Renovate misinterprets as major updates. Force strict semver to
-    // only follow real app-version tags (e.g. 5.1.4, 6.1.1).
+    // qbittorrent has rogue tags (14.3.9, 20.04.1) from 2020 that aren't
+    // real app versions. Real qBittorrent versions are 4.x/5.x.
     {
       "matchDatasources": ["docker"],
-      "matchPackagePatterns": ["^lscr\\.io/linuxserver/"],
-      "versioning": "semver"
+      "matchPackageNames": ["lscr.io/linuxserver/qbittorrent"],
+      "allowedVersions": "<10.0.0"
     },
     // Home Assistant uses calendar versioning (YYYY.M.P)
     {
