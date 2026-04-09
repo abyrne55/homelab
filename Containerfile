@@ -5,7 +5,7 @@
 FROM quay.io/fedora/fedora-bootc:43
 
 # renovate: datasource=github-releases depName=sigstore/cosign extractVersion=^v(?<version>.*)$
-ARG COSIGN_VERSION=3.0.4
+ARG COSIGN_VERSION=3.0.6
 
 # Install dependencies
 RUN curl -LO https://github.com/abyrne55/systemd-age-creds/releases/download/v1.4.4/systemd-age-creds-1.4.4-1.aarch64.rpm && \
