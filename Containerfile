@@ -14,7 +14,7 @@ RUN curl -LO https://github.com/abyrne55/systemd-age-creds/releases/download/v1.
     curl -sfL --proto =https https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign_checksums.txt | grep "cosign-${COSIGN_VERSION}-1.aarch64.rpm" | sha256sum -c && \
     dnf -y --setopt=install_weak_deps=False install jq age git firewalld sqlite nfs-utils wireguard-tools greenboot prometheus-podman-exporter ./systemd-age-creds-*.rpm ./cosign-*.rpm && \
     dnf clean all && \
-    rm -rf /var/cache/*dnf* /var/cache/ldconfig/* /var/lib/dnf /var/log/dnf*.log systemd-age-creds-*.rpm cosign-*.rpm
+    rm -rf /run/dnf /var/cache/*dnf* /var/cache/ldconfig/* /var/lib/dnf /var/log/dnf*.log systemd-age-creds-*.rpm cosign-*.rpm
 
 COPY etc/ /etc/
 COPY usr/ /usr/
@@ -31,8 +31,8 @@ RUN systemctl enable firewalld podman-auto-update.timer secrets-inject.service s
     systemctl mask bootloader-update.service && \
     touch /etc/.rpm-ostree-shadow-mode-fixed2.stamp
 
-# Lint (TODO: reenable --fatal-warnings)
-RUN bootc container lint --no-truncate
+# Lint
+RUN bootc container lint --fatal-warnings --no-truncate
 
 # Enable transient /etc (reset on every boot, config comes from image)
 RUN mkdir -p /usr/lib/ostree && \
