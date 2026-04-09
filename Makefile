@@ -200,7 +200,8 @@ else
 		-v $(BUILD_DIR):/output \
 		-v /dev:/dev \
 		localhost/$(IMAGE_NAME):$(TAG) \
-		bootc install to-disk --generic-image --filesystem btrfs --via-loopback /output/disk.raw
+		bootc install to-disk --generic-image --filesystem btrfs --via-loopback /output/disk.raw 2>&1 \
+	| grep -E 'Installing image:|Deploying|Bootloader:|Installation complete!|[Ee]rror|[Ff]ail'
 endif
 	qemu-img convert -f raw -O qcow2 $(BUILD_DIR)/disk.raw $@
 	rm $(BUILD_DIR)/disk.raw
@@ -233,7 +234,8 @@ else
 		-v $(BUILD_DIR):/output \
 		-v /dev:/dev \
 		$(REMOTE_IMAGE) \
-		bootc install to-disk --generic-image --filesystem btrfs --via-loopback /output/disk.raw
+		bootc install to-disk --generic-image --filesystem btrfs --via-loopback /output/disk.raw 2>&1 \
+	| grep -E 'Installing image:|Deploying|Bootloader:|Installation complete!|[Ee]rror|[Ff]ail'
 endif
 	qemu-img convert -f raw -O qcow2 $(BUILD_DIR)/disk.raw $@
 	rm $(BUILD_DIR)/disk.raw
