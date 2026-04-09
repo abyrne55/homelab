@@ -21,6 +21,7 @@ Add Quadlet: $ARGUMENTS
 - [ ] 7. Caddy route in homelab-config
 - [ ] 8. Greenboot wanted.d check script
 - [ ] 9. Allocations table updated in CLAUDE.md
+- [ ] 10. prometheus-podman-exporter wired up
 ```
 
 ## 1. `usr/lib/sysusers.d/<N>-<name>-user.conf`
@@ -148,3 +149,29 @@ Update the service user allocations table to reflect the new user and advance th
 **Port assignment formula:** `2<last 3 digits of UID><index>` — e.g. UID 1054 → host ports 20540, 20541, … All ports stay in 20000–29999 (below the Linux ephemeral port floor of 32768).
 
 **New system unit only:** If adding a system-level unit (not a quadlet), also append it to the `RUN systemctl enable` line in `Containerfile`. Quadlets are auto-discovered and do not need to be listed there.
+
+## 10. Wire up prometheus-podman-exporter
+
+Each service user gets a `prometheus-podman-exporter` sidecar that exposes Podman metrics on a localhost-only port. Three files need updating:
+
+### `usr/lib/tmpfiles.d/prometheus-podman-exporter-configs.conf`
+
+Append one line for the new user. The port is the X9 port (last in the user's 10-port block — see allocations table):
+
+```text
+f /var/home/$ARGUMENTS/.config/prometheus-podman-exporter  0600 $ARGUMENTS  $ARGUMENTS  - PODMAN_EXPORTER_OPTS=--collector.enable-all --web.listen-address=127.0.0.1:<UID_X9_PORT>
+```
+
+The `f` type creates the file only if it doesn't already exist, so it won't overwrite any manually edited config on a live system.
+
+### `usr/lib/systemd/user/prometheus-podman-exporter.service.d/10-homelab.conf`
+
+Add the new container service name(s) to the `After=` line so the exporter starts after the user's containers have initialized libpod's rootless pause process:
+
+```ini
+After=... $ARGUMENTS.service
+```
+
+### Netdata scrape config (in homelab-config)
+
+Add the new exporter endpoint to the Netdata Prometheus scrape config in the private `homelab-config` repo so metrics are actually collected.

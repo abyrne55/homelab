@@ -43,7 +43,7 @@ HealthOnFailure=kill
 RuntimeDirectory=netdata
 LoadCredential=netdata-claim-token:%t/systemd-age-creds.sock
 ExecStartPre=bash -c 'echo "NETDATA_CLAIM_TOKEN=$(cat $CREDENTIALS_DIRECTORY/netdata-claim-token)" > $RUNTIME_DIRECTORY/env'
-ExecStartPre=bash -c 'mkdir -p /var/local/lib/netdata/config/go.d && cp -r /var/lib/homelab-config/netdata/go.d/. /var/local/lib/netdata/config/go.d/'
+ExecStartPre=bash -c 'cp -r /var/lib/homelab-config/netdata/. /var/local/lib/netdata/config/'
 Restart=on-failure
 RestartSec=5
 TimeoutStartSec=infinity
