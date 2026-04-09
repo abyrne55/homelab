@@ -10,7 +10,7 @@ This repo builds a [bootc](https://containers.github.io/bootc/)-based system ima
 
 1. `Containerfile` defines the OS (based on Fedora bootc), including systemd units and quadlets
 2. `podman build` creates a container image
-3. `bootc-image-builder` converts the container image to a qcow2 VM disk
+3. `bootc install to-disk` converts the container image to a qcow2 VM disk
 4. QEMU boots the resulting VM locally for testing
 
 ## Included Services
