@@ -50,6 +50,14 @@
       "matchPackageNames": ["abyrne55/systemd-age-creds"],
       "enabled": false
     },
+    // LinuxServer images have old date-based tags (e.g. 20.04.1) that
+    // Renovate misinterprets as major updates. Force strict semver to
+    // only follow real app-version tags (e.g. 5.1.4, 6.1.1).
+    {
+      "matchDatasources": ["docker"],
+      "matchPackagePatterns": ["^lscr\\.io/linuxserver/"],
+      "versioning": "semver"
+    },
     // Home Assistant uses calendar versioning (YYYY.M.P)
     {
       "matchDatasources": ["docker"],
