@@ -7,14 +7,29 @@ on:
 
 jobs:
   quadlets:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
 
     steps:
+      - name: Check for quadlet changes
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+        id: changes
+        with:
+          filters: |
+            quadlets:
+              - 'etc/containers/systemd/**'
+
+      - name: Skip — no quadlet changes
+        if: steps.changes.outputs.quadlets != 'true'
+        run: echo "No quadlet changes detected, skipping validation"
+
       - name: Checkout repository
+        if: steps.changes.outputs.quadlets == 'true'
         uses: actions/checkout@v6
 
       - name: Install podman
+        if: steps.changes.outputs.quadlets == 'true'
         run: sudo apt-get install -y podman
 
       - name: Validate quadlet files
+        if: steps.changes.outputs.quadlets == 'true'
         run: make verify-quadlets
