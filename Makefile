@@ -36,7 +36,6 @@ build-vm-from-ghcr: $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2 $(BUILD_DIR)/data.qc
 #
 
 _pull-remote-image:
-	@echo "Pulling $(REMOTE_IMAGE)..."
 	@podman pull $(REMOTE_IMAGE) 2>&1 | grep -Ev 'Copying (blob|config) sha256'
 
 _build-local-image:
@@ -209,7 +208,6 @@ endif
 # Build qcow2 image from GHCR (skips local container build)
 $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2:
 	mkdir -p $(BUILD_DIR)/qcow2
-	@echo "Pulling $(REMOTE_IMAGE)..."
 	@podman pull $(REMOTE_IMAGE) 2>&1 | grep -Ev 'Copying (blob|config) sha256'
 	truncate -s $(ROOT_DISK_SIZE) $(BUILD_DIR)/disk.raw
 ifdef DEBUG
