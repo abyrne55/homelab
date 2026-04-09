@@ -4,11 +4,14 @@
 
 FROM quay.io/fedora/fedora-bootc:43
 
+# renovate: datasource=github-releases depName=sigstore/cosign extractVersion=^v(?<version>.*)$
+ARG COSIGN_VERSION=3.0.4
+
 # Install dependencies
 RUN curl -LO https://github.com/abyrne55/systemd-age-creds/releases/download/v1.4.4/systemd-age-creds-1.4.4-1.aarch64.rpm && \
     echo "55e1c7a8f2655ee489ac012c3c2b00ed3269910e5a0669417a0606e1658d5586  systemd-age-creds-1.4.4-1.aarch64.rpm" | sha256sum -c && \
-    curl -LO https://github.com/sigstore/cosign/releases/download/v3.0.4/cosign-3.0.4-1.aarch64.rpm && \
-    echo "96aacfb0ba8f31de6253e69909d98f3bd76ba50f225d77e6248fda16f0119b95  cosign-3.0.4-1.aarch64.rpm" | sha256sum -c && \
+    curl -fLO --proto =https https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign-${COSIGN_VERSION}-1.aarch64.rpm && \
+    curl -sfL --proto =https https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign_checksums.txt | grep "cosign-${COSIGN_VERSION}-1.aarch64.rpm" | sha256sum -c && \
     dnf -y --setopt=install_weak_deps=False install jq age git firewalld sqlite nfs-utils wireguard-tools greenboot prometheus-podman-exporter ./systemd-age-creds-*.rpm ./cosign-*.rpm && \
     dnf clean all && \
     rm -rf /var/cache/*dnf* /var/cache/ldconfig/* /var/lib/dnf /var/log/dnf*.log systemd-age-creds-*.rpm cosign-*.rpm
