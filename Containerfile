@@ -37,6 +37,7 @@ RUN bootc container lint --fatal-warnings --no-truncate
 # Enable transient /etc (reset on every boot, config comes from image)
 RUN mkdir -p /usr/lib/ostree && \
     echo -e '[etc]\ntransient = true' >> /usr/lib/ostree/prepare-root.conf && \
+    mkdir -p /var/roothome && \
     kver=$(cd /usr/lib/modules && echo *) && \
     dracut -f /usr/lib/modules/$kver/initramfs.img $kver
 
