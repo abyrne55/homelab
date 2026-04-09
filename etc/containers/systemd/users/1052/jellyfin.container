@@ -3,13 +3,12 @@ Description=Jellyfin Media Server
 After=tinyproxy.service
 
 [Container]
-Image=docker.io/jellyfin/jellyfin:latest
+Image=docker.io/jellyfin/jellyfin:10.11.8
 PublishPort=20520:8096
 Network=jellynet.network
 Volume=/var/mnt/data/content/media:/media:ro,z
 Volume=/var/local/lib/jellyfin/config:/config:Z
 Volume=/var/local/lib/jellyfin/cache:/cache:Z
-AutoUpdate=registry
 NoNewPrivileges=true
 DropCapability=all
 HealthCmd=curl -sf http://127.0.0.1:8096/health

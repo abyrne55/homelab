@@ -5,11 +5,10 @@ Wants=network-online.target
 ConditionPathExists=/var/lib/homelab-config/home-assistant/configuration.yaml
 
 [Container]
-Image=ghcr.io/home-assistant/home-assistant:2026.3
+Image=ghcr.io/home-assistant/home-assistant:2026.4.1
 Pod=home-assistant.pod
 Volume=/var/local/lib/home-assistant/config:/config:Z
 Volume=/var/lib/homelab-config/home-assistant/configuration.yaml:/config/configuration.yaml:ro
-AutoUpdate=registry
 NoNewPrivileges=true
 # DropCapability=all intentionally omitted: HA runs as root internally and
 # needs capabilities for hardware/network integration features

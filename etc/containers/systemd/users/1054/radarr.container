@@ -4,11 +4,10 @@ After=network-online.target radarr-init-config.service
 Wants=network-online.target radarr-init-config.service radarr-configure.service radarr-demo-media.service
 
 [Container]
-Image=lscr.io/linuxserver/radarr:6.0.4
+Image=lscr.io/linuxserver/radarr:6.1.1
 PublishPort=20540:7878
 Volume=/var/mnt/data/content:/content:rw,z
 Volume=/var/local/lib/radarr/config:/config:Z
-AutoUpdate=registry
 NoNewPrivileges=true
 # DropCapability=all intentionally omitted: linuxserver s6 init calls setgroups()
 # to switch from root to PUID/PGID, which requires CAP_SETGID inside the container
