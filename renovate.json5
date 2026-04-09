@@ -26,13 +26,14 @@
       "datasourceTemplate": "docker"
     },
     {
-      // Containerfile: RPM downloads from GitHub releases
+      // Containerfile: cosign version from ARG
       "customType": "regex",
       "fileMatch": ["^Containerfile$"],
       "matchStrings": [
-        "https://github\\.com/(?<depName>[^/]+/[^/]+)/releases/download/v(?<currentValue>[^/]+)/"
+        "ARG COSIGN_VERSION=(?<currentValue>\\S+)"
       ],
       "datasourceTemplate": "github-releases",
+      "depNameTemplate": "sigstore/cosign",
       "extractVersionTemplate": "^v(?<version>.*)$"
     }
   ],
@@ -63,7 +64,7 @@
       "matchPackageNames": ["ghcr.io/home-assistant/home-assistant"],
       "versioning": "regex:^(?<major>\\d{4})\\.(?<minor>\\d+)(?:\\.(?<patch>\\d+))?$"
     },
-    // Containerfile RPMs: never auto-merge (SHA256 needs manual update)
+    // Containerfile RPMs: don't auto-merge (prefer manual review for security tooling)
     {
       "matchDatasources": ["github-releases"],
       "automerge": false
