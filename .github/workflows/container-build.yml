@@ -25,6 +25,11 @@ jobs:
       id-token: write
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
       - name: Check for image-related changes
         if: github.event_name != 'schedule'
         uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
@@ -40,12 +45,6 @@ jobs:
       - name: Skip — no image changes
         if: github.event_name != 'schedule' && steps.changes.outputs.image != 'true'
         run: echo "No image-related changes detected, skipping build"
-
-      - name: Checkout repository
-        if: github.event_name == 'schedule' || steps.changes.outputs.image == 'true'
-        uses: actions/checkout@v6
-        with:
-          submodules: recursive
 
       # Install the cosign tool for main branch and tags only (not PRs or feature branches)
       # https://github.com/sigstore/cosign-installer

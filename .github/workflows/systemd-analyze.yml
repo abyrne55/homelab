@@ -9,6 +9,9 @@ jobs:
     runs-on: ubuntu-24.04-arm
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
       - name: Check for unit changes
         uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
         id: changes
@@ -21,10 +24,6 @@ jobs:
       - name: Skip — no unit changes
         if: steps.changes.outputs.units != 'true'
         run: echo "No systemd/quadlet changes detected, skipping analysis"
-
-      - name: Checkout repository
-        if: steps.changes.outputs.units == 'true'
-        uses: actions/checkout@v6
 
       - name: Install podman
         if: steps.changes.outputs.units == 'true'
