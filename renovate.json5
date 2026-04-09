@@ -64,7 +64,7 @@
     // Auto-merge non-major container image updates
     {
       "matchDatasources": ["docker"],
-      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "matchUpdateTypes": ["patch", "digest"],
       "automerge": true,
       "automergeType": "pr"
     }
