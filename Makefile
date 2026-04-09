@@ -256,7 +256,7 @@ $(BUILD_DIR)/secrets.iso:
 		cp secrets/age.key.pub $(BUILD_DIR)/secrets-temp/; \
 		cp secrets/ssh.key $(BUILD_DIR)/secrets-temp/; \
 		cp secrets/ssh.key.pub $(BUILD_DIR)/secrets-temp/; \
-		xorrisofs -V SECRETS -J -R -o $@ $(BUILD_DIR)/secrets-temp; \
+		xorrisofs -V SECRETS -J -R -o $@ $(BUILD_DIR)/secrets-temp 2>/dev/null; \
 		rm -rf $(BUILD_DIR)/secrets-temp; \
 		echo "Secrets ISO created successfully."; \
 	else \
