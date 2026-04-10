@@ -6,7 +6,7 @@ Wants=qbittorrent-configure.service
 Wants=demo-media.service
 
 [Container]
-Image=lscr.io/linuxserver/qbittorrent:5.1.4@sha256:a89108b1bf43de072a35a59a3ee41b97b564538faae5cbb3f6c803aa7f5fd9f7
+Image=lscr.io/linuxserver/qbittorrent:5.1.4@sha256:ef0c57d5b7b8d90fa561419baa083cf599338f36ee6769cbbd21cb009cfc816c
 Pod=torrent.pod
 Environment=PUID=1053
 # PGID=1: in the rootless user namespace, container GID 1 maps to host GID 2000 (content-writers)
