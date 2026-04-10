@@ -4,7 +4,7 @@ After=network-online.target sonarr-init-config.service
 Wants=network-online.target sonarr-init-config.service sonarr-configure.service
 
 [Container]
-Image=lscr.io/linuxserver/sonarr:4.0.17
+Image=lscr.io/linuxserver/sonarr:4.0.17@sha256:b5670a3adb0f8a8b0f277feeaa69a5fbe3869ba4bb9fa7c0f0764c3b3f0e698f
 PublishPort=20550:8989
 Volume=/var/mnt/data/content:/content:rw,z
 Volume=/var/local/lib/sonarr/config:/config:Z
