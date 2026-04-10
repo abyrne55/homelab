@@ -19,6 +19,7 @@
         'Image=(?<depName>[a-zA-Z0-9][a-zA-Z0-9./_-]*):(?<currentValue>[a-zA-Z0-9._-]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?',
       ],
       datasourceTemplate: 'docker',
+      autoReplaceStringTemplate: 'Image={{depName}}:{{newValue}}{{#if newDigest}}@{{newDigest}}{{/if}}',
     },
     {
       customType: 'regex',

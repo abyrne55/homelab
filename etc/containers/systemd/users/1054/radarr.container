@@ -4,7 +4,7 @@ After=network-online.target radarr-init-config.service
 Wants=network-online.target radarr-init-config.service radarr-configure.service radarr-demo-media.service
 
 [Container]
-Image=lscr.io/linuxserver/radarr:6.1.1
+Image=lscr.io/linuxserver/radarr:6.1.1@sha256:cd70546fc97169788530386b42cf47ba1b16d091b4dc2264cd54099dd13c6f7f
 PublishPort=20540:7878
 Volume=/var/mnt/data/content:/content:rw,z
 Volume=/var/local/lib/radarr/config:/config:Z

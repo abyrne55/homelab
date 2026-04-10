@@ -4,7 +4,7 @@ After=jellarr-bootstrap.service jellyfin.service
 ConditionPathIsDirectory=/var/lib/homelab-config/jellarr
 
 [Container]
-Image=ghcr.io/venkyr77/jellarr:v0.1.0
+Image=ghcr.io/venkyr77/jellarr:v0.1.0@sha256:b16c867f06b53556fdc31f1514d5e955414f3132724ecafe41e796d781214f79
 NoNewPrivileges=true
 ReadOnly=true
 ReadOnlyTmpfs=true

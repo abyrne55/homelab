@@ -2,7 +2,7 @@
 Description=Gluetun VPN client (Mullvad WireGuard)
 
 [Container]
-Image=docker.io/qmcgaw/gluetun:v3.41.1
+Image=docker.io/qmcgaw/gluetun:v3.41.1@sha256:1a5bf4b4820a879cdf8d93d7ef0d2d963af56670c9ebff8981860b6804ebc8ab
 Pod=torrent.pod
 # WireGuard requires NET_ADMIN to create tunnel interface in user namespace
 # NET_RAW required for ICMP-based healthchecks
