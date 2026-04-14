@@ -39,6 +39,8 @@ ExecStart=/usr/bin/mkdir -p \
   /var/mnt/data/content/usenet/complete/books \
   /var/mnt/data/content/usenet/complete/other
 ExecStart=/usr/bin/chmod -R 0777 /var/mnt/data/content
+ExecStart=/usr/bin/chown -R :content-writers /var/mnt/data/content
+ExecStart=/usr/bin/find /var/mnt/data/content -type d -exec /usr/bin/chmod g+s {} +
 
 [Install]
 WantedBy=var-mnt-data.mount
