@@ -10,7 +10,8 @@ Image=lscr.io/linuxserver/qbittorrent:5.1.4@sha256:1fc78c81850d658f17701bfa9d8de
 Pod=torrent.pod
 Environment=PUID=1053
 # PGID=1: in the rootless user namespace, container GID 1 maps to host GID 2000 (content-writers)
-# via the qbittorrent:2000:1 subgid entry. Files created under setgid content/ dirs get GID 2000.
+# via the qbittorrent:2000:1 subgid entry. Combined with the setgid bit on /var/mnt/data/content,
+# downloaded files get GID 2000, allowing radarr/sonarr to read and hardlink them.
 Environment=PGID=1
 Environment=UMASK=002
 Environment=TZ=UTC
