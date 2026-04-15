@@ -1,0 +1,7 @@
+[Unit]
+Description=Prune unused Podman images (system)
+Documentation=man:podman-image-prune(1)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/podman image prune -af

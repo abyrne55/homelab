@@ -27,7 +27,7 @@ RUN semodule -i /tmp/systemd_age_creds.cil /tmp/container_tun.cil && rm /tmp/sys
 # - bootloader-update.service: bootupd is not installed in our image so this always fails
 # - rpm-ostree-fix-shadow-mode.service: pre-create its stamp file so it knows the fix is
 #   already applied; with transient /etc the stamp would otherwise be reset every boot
-RUN systemctl enable firewalld bootc-fetch-apply-updates.timer secrets-inject.service ssh-generate-identity.service age-generate-identity.service init-content-dirs.service boot.mount boot-efi.mount var-mnt-data.mount homelab-secrets-sync.service homelab-secrets-sync.timer homelab-config-sync.service homelab-config-sync.timer systemd-age-creds.socket wg-nas.service greenboot-healthcheck.service greenboot-set-rollback-trigger.service && \
+RUN systemctl enable firewalld podman-image-prune.timer bootc-fetch-apply-updates.timer secrets-inject.service ssh-generate-identity.service age-generate-identity.service init-content-dirs.service boot.mount boot-efi.mount var-mnt-data.mount homelab-secrets-sync.service homelab-secrets-sync.timer homelab-config-sync.service homelab-config-sync.timer systemd-age-creds.socket wg-nas.service greenboot-healthcheck.service greenboot-set-rollback-trigger.service && \
     systemctl mask bootloader-update.service && \
     touch /etc/.rpm-ostree-shadow-mode-fixed2.stamp && \
     ln -sf /usr/share/zoneinfo/America/New_York /etc/localtime
