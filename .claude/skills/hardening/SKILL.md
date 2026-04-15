@@ -176,6 +176,7 @@ SystemCallArchitectures=native
 | Loopback only (calls localhost API) | omit | `AF_UNIX AF_INET` |
 | Internet HTTP calls (configure scripts) | omit | `AF_INET` |
 | Calls `systemctl --user` via D-Bus | omit | `AF_UNIX` |
+| **libpod-embedding (Podman CLI/library)** | **omit** — breaks libpod | `none` or tightest needed |
 
 **Tailor `ProtectHome=` per service:**
 
@@ -195,11 +196,13 @@ SystemCallArchitectures=native
 
 - Services that **embed libpod directly** (e.g. `prometheus-podman-exporter`, which uses the Podman Go library rather than the socket API) can only use purely seccomp/prctl directives. At init, libpod calls `setns()` to join the rootless pause process's user and mount namespaces (by opening `/proc/<pause_pid>/ns/user`). Two classes of directives break this, confirmed via strace:
 
-  1. **Any directive that causes systemd to create a user namespace**, even as a failed side effect of attempting mount namespace setup: `PrivateTmp`, `PrivateUsers`, `ProtectClock`, `ProtectKernelLogs`, `ProtectKernelModules`, `ProtectSystem`, `ProtectHome`, `ProtectHostname`, `ProtectControlGroups`, `ProtectProc`. Systemd calls `unshare(CLONE_NEWUSER|CLONE_NEWNS)` for these; even when the mount half fails with EPERM (expected for an unprivileged user service), the user namespace is already live. From inside it, the pause process's namespace file returns EACCES, and libpod crashes with a nil pointer panic.
+  1. **Any directive that causes systemd to create a user or network namespace**, even as a failed side effect of attempting mount namespace setup: `PrivateTmp`, `PrivateNetwork`, `PrivateUsers`, `ProtectClock`, `ProtectKernelLogs`, `ProtectKernelModules`, `ProtectSystem`, `ProtectHome`, `ProtectHostname`, `ProtectControlGroups`, `ProtectProc`. Systemd calls `unshare(CLONE_NEWUSER|CLONE_NEWNS)` for mount-namespace directives; even when the mount half fails with EPERM (expected for an unprivileged user service), the user namespace is already live. From inside it, the pause process's namespace file returns EACCES, and libpod crashes with a nil pointer panic. `PrivateNetwork=yes` triggers the same failure via network namespace setup. Symptom in all cases: `Error: fatal error, invalid internal status, unable to create a new pause process: cannot re-exec process to join the existing user namespace`, exit code 125.
 
-  2. **`RestrictNamespaces=yes`** — blocks `setns()` directly via seccomp, preventing libpod from joining the pause process's namespaces at all.
+  2. **`RestrictNamespaces=yes`** — blocks `setns()` directly via seccomp, preventing libpod from joining the pause process's namespaces at all. Same exit-code-125 symptom.
 
-  Safe hardening for libpod-embedding services is limited to directives with no mount or namespace component:
+  3. **`CapabilityBoundingSet=`** — fails in user service context with exit code 218/CAPABILITIES (`Failed to drop capabilities: Operation not permitted`). Reducing the bounding set requires `CAP_SETPCAP`, which unprivileged user services don't have.
+
+  Safe hardening for libpod-embedding services is limited to directives with no mount/namespace component and no capability manipulation:
 
   ```ini
   NoNewPrivileges=yes
@@ -207,11 +210,15 @@ SystemCallArchitectures=native
   RestrictRealtime=yes
   RestrictSUIDSGID=yes
   SystemCallArchitectures=native
-  RestrictAddressFamilies=AF_INET AF_UNIX
+  RestrictAddressFamilies=AF_INET AF_UNIX   # or =none if no network needed
+  IPAddressDeny=any                          # safe to add when RestrictAddressFamilies=none
   UMask=0077
+  # Syscall blocklists for groups Podman/Go never use — safe to add, each worth ~0.2 pts:
+  SystemCallFilter=~@clock @cpu-emulation @debug @module @obsolete @raw-io @reboot @swap
+  # Avoid @mount, @privileged, @resources — libpod or the Go runtime may use these
   ```
 
-  Always document the omissions with a comment explaining the libpod constraint so future readers know it is intentional. See `usr/lib/systemd/user/prometheus-podman-exporter.service.d/10-homelab.conf` for the canonical example.
+  Always document the omissions with a comment explaining the libpod constraint so future readers know it is intentional. See `usr/lib/systemd/user/prometheus-podman-exporter.service.d/10-homelab.conf` and `usr/lib/systemd/user/podman-image-prune.service` for examples.
 
 ## Validating hardening with systemd-analyze security
 
