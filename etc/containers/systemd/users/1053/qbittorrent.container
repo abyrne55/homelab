@@ -14,7 +14,6 @@ Environment=PUID=1053
 # downloaded files get GID 2000, allowing radarr/sonarr to read and hardlink them.
 Environment=PGID=1
 Environment=UMASK=002
-Environment=TZ=UTC
 Environment=WEBUI_PORT=20530
 Volume=/var/local/lib/qbittorrent/config:/config:Z
 Volume=/var/mnt/data/content/torrents:/downloads:z

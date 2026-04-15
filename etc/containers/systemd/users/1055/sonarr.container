@@ -23,7 +23,6 @@ Environment=PUID=1055
 # satisfying fs.protected_hardlinks for files owned by qbittorrent with group content-writers.
 Environment=PGID=1
 Environment=UMASK=002
-Environment=TZ=UTC
 
 [Service]
 Restart=on-failure
