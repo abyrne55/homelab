@@ -1,0 +1,29 @@
+[Unit]
+Description=Mealie recipe manager
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=ghcr.io/mealie-recipes/mealie:v3.15.0
+PublishPort=20590:9000
+Volume=/var/local/lib/mealie/data:/app/data:Z
+NoNewPrivileges=true
+DropCapability=all
+HealthCmd=curl -sf http://localhost:9000/api/app/about
+HealthStartPeriod=120s
+HealthInterval=30s
+HealthRetries=5
+HealthOnFailure=kill
+Notify=healthy
+Environment=TZ=UTC
+Environment=ALLOW_SIGNUP=false
+Environment=MAX_WORKERS=1
+Environment=WEB_CONCURRENCY=1
+
+[Service]
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=10min
+
+[Install]
+WantedBy=default.target
