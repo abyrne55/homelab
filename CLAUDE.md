@@ -40,6 +40,8 @@ Quick file-level index — consult this before exploring the repo.
 | `usr/lib/tmpfiles.d/quadlet-users-linger.conf` | Linger entries (one per quadlet user) |
 | `usr/lib/tmpfiles.d/quadlet-users-subids.conf` | subUID/subGID ranges for rootless Podman |
 | `usr/lib/tmpfiles.d/service-state-dirs.conf` | `/var/local/lib/<service>/` dirs for per-service state (config/cache) |
+| `usr/lib/tmpfiles.d/core-homedir.conf` | Login user (core) home directory and SSH authorized_keys |
+| `usr/lib/tmpfiles.d/prometheus-podman-exporter-configs.conf` | Per-user exporter environment configs (port assignments for X9 metrics endpoints) |
 | `usr/lib/tmpfiles.d/` (other files) | NFS mount point, git known-hosts, homelab-config dir |
 | `usr/local/bin/` | Scripts baked into the image (`hl`, `secrets-inject`, `wait-for-quadlets`, …) |
 | `usr/lib/greenboot/check/required.d/` | Greenboot health checks that must pass or rollback is triggered (secrets-sync, config-sync, caddy) |
@@ -198,6 +200,7 @@ Use `/add-quadlet [service-name]` for the full step-by-step checklist. The short
 | prowlarr | 1057 | 20570 | 9696 | No — via Caddy only |
 | prowlarr (exporter) | 1057 | 20579 (localhost only) | — | No — Netdata scrape only |
 | home-assistant | 1058 | 20580 | 8123 | No — via Caddy only |
+| matter-server | 1058 | none (pod-internal) | 5580 | No — sidecar in home-assistant pod |
 | home-assistant (exporter) | 1058 | 20589 (localhost only) | — | No — Netdata scrape only |
 
 New system units (not quadlets) must also be appended to the `RUN systemctl enable` line in `Containerfile`.
