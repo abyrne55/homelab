@@ -1,0 +1,26 @@
+[Unit]
+Description=Prune unused Podman images
+Documentation=man:podman-image-prune(1)
+
+[Service]
+Type=oneshot
+ExecStart=podman image prune -af
+
+# Hardening: purely seccomp/prctl directives only.
+# podman image prune uses libpod directly (embedded, not via socket). libpod joins
+# the rootless pause process's namespaces at init via setns(). Any directive that
+# creates a user or mount namespace as a side effect (PrivateTmp, PrivateNetwork,
+# PrivateUsers, ProtectClock, ProtectKernelLogs, ProtectKernelModules, ProtectSystem,
+# ProtectHome, ProtectHostname, ProtectControlGroups, ProtectProc) makes
+# /proc/<pause_pid>/ns/user inaccessible (EACCES). RestrictNamespaces=yes blocks
+# setns() directly. CapabilityBoundingSet= fails in user context (needs CAP_SETPCAP).
+# All such directives are intentionally omitted.
+NoNewPrivileges=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+SystemCallArchitectures=native
+RestrictAddressFamilies=none
+IPAddressDeny=any
+UMask=0077
+SystemCallFilter=~@clock @cpu-emulation @debug @module @obsolete @raw-io @reboot @swap
