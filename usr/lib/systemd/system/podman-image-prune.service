@@ -1,0 +1,32 @@
+[Unit]
+Description=Prune unused Podman images (system)
+Documentation=man:podman-image-prune(1)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/podman image prune -af
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+LockPersonality=yes
+RestrictRealtime=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/containers /run/containers
+ProtectClock=yes
+MemoryDenyWriteExecute=yes
+ProtectHostname=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+SystemCallArchitectures=native
+ProtectProc=noaccess
+ProcSubset=pid
+UMask=0077
+# Image prune is local storage only — no network needed; AF_UNIX for storage backend sockets
+RestrictAddressFamilies=AF_UNIX
+IPAddressDeny=any
+# PrivateDevices=yes omitted: overlay storage driver may need block device access
