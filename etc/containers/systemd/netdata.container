@@ -29,6 +29,7 @@ EnvironmentFile=/run/netdata/env
 Environment=DISABLE_TELEMETRY=1
 Environment=NETDATA_CLAIM_URL=https://app.netdata.cloud
 Environment=NETDATA_CLAIM_ROOMS=7cf9f9b0-6785-4c75-96c8-206556933fbe
+Timezone=local
 
 HealthCmd=curl -sf http://localhost:19999/api/v1/info
 HealthInterval=60s

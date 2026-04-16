@@ -18,7 +18,6 @@ HealthOnFailure=kill
 Notify=healthy
 Environment=PUID=1057
 Environment=PGID=1057
-Environment=TZ=UTC
 
 [Service]
 Restart=on-failure

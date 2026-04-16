@@ -18,7 +18,6 @@ HealthInterval=30s
 HealthRetries=5
 HealthOnFailure=kill
 Notify=healthy
-Environment=TZ=UTC
 
 [Service]
 Restart=on-failure

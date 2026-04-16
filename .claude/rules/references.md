@@ -22,6 +22,7 @@ If today's date is more than ~3 months past the date above, suggest that the use
 | File | When to consult |
 |---|---|
 | `filesystem.md` | Filesystem ownership, `/etc` vs `/usr` placement, persistent state in `/var/` |
+| `guidance.md` | General guidance for building bootc images: installing software, systemd units, configuration in `/usr` vs `/etc`, handling read-only vs writable locations |
 | `upgrades.md` | Upgrade behavior, staged deployments, rollback |
 | `users-and-groups.md` | Managing users/groups in a bootc image (sysusers, `/etc/passwd`, subids) |
 | `bootc-switch.8.md` | `bootc switch` command reference |
