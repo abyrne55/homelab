@@ -62,7 +62,8 @@ Quick file-level index — consult this before exploring the repo.
 | configarr | 1056 | 20569 (exporter only) | 558752 | 20560 |
 | prowlarr | 1057 | 20570, 20579 | 624288 | 20571 |
 | home-assistant | 1058 | 20580, 20589 | 689824 | 20581 |
-| **next slot** | **1059** | **20590** | **755360** | — |
+| mealie | 1059 | 20590, 20599 | 755360 | 20591 |
+| **next slot** | **1060** | **20600** | **820896** | — |
 
 > **Note:** Port X9 (last in each user's 10-port block) is reserved for `prometheus-podman-exporter` — a localhost-only metrics endpoint scraped by Netdata. No firewalld changes needed for these ports.
 >
@@ -202,6 +203,8 @@ Use `/add-quadlet [service-name]` for the full step-by-step checklist. The short
 | home-assistant | 1058 | 20580 | 8123 | No — via Caddy only |
 | matter-server | 1058 | none (pod-internal) | 5580 | No — sidecar in home-assistant pod |
 | home-assistant (exporter) | 1058 | 20589 (localhost only) | — | No — Netdata scrape only |
+| mealie | 1059 | 20590 | 9000 | No — via Caddy only |
+| mealie (exporter) | 1059 | 20599 (localhost only) | — | No — Netdata scrape only |
 
 New system units (not quadlets) must also be appended to the `RUN systemctl enable` line in `Containerfile`.
 
