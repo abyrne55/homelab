@@ -45,7 +45,7 @@ minutes. Both use the SSH keypair at `/var/lib/git-ssh/id_ed25519` as a read-onl
 
 The VM uses a single root disk; content is served from a remote NAS over NFS:
 
-- **Root disk** - Read-only system image (runs in snapshot mode, changes discarded on reboot). Default size is 15G to accommodate large container images (e.g., Home Assistant).
+- **Root disk** - Read-only system image (runs in snapshot mode, changes discarded on reboot). Default size is 25G to accommodate large container images (e.g., Home Assistant).
 - **Service state** - Each service stores its config and cache in `/var/local/lib/<service>/` on the root disk's persistent `/var/` partition. Always available, independent of network.
 - **Content share** - Media, downloads, and shared content live at `/var/mnt/data`, which is an NFSv4.1 share mounted over a WireGuard VPN tunnel to the NAS. `wg-nas.service` establishes the tunnel at boot; `var-mnt-data.mount` then mounts the NFS volume. Content directories are initialized on first mount by `init-content-dirs.service`.
 
@@ -111,7 +111,7 @@ hl help                              # full usage
 | `IMAGE_NAME` | `homelab` | Container image name |
 | `TAG` | `latest` | Container image tag |
 | `SSH_PORT` | `2222` | Host port forwarded to VM SSH |
-| `ROOT_DISK_SIZE` | `15G` | Size of the root disk image |
+| `ROOT_DISK_SIZE` | `25G` | Size of the root disk image |
 | `DATA_DISK_SIZE` | `3G` | Size of the local data disk attached in QEMU (dev/test only) |
 | `MONITOR_PORT` | `4444` | localhost TCP port for the QEMU monitor |
 
