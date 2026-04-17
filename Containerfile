@@ -4,17 +4,31 @@
 
 FROM quay.io/fedora/fedora-bootc:43
 
+ARG TARGETARCH
+
 # renovate: datasource=github-releases depName=sigstore/cosign extractVersion=^v(?<version>.*)$
 ARG COSIGN_VERSION=3.0.6
 
 # Install dependencies
-RUN curl -LO https://github.com/abyrne55/systemd-age-creds/releases/download/v1.4.4/systemd-age-creds-1.4.4-1.aarch64.rpm && \
-    echo "55e1c7a8f2655ee489ac012c3c2b00ed3269910e5a0669417a0606e1658d5586  systemd-age-creds-1.4.4-1.aarch64.rpm" | sha256sum -c && \
-    curl -fLO --proto =https https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign-${COSIGN_VERSION}-1.aarch64.rpm && \
-    curl -sfL --proto =https https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign_checksums.txt | grep "cosign-${COSIGN_VERSION}-1.aarch64.rpm" | sha256sum -c && \
-    dnf -y --setopt=install_weak_deps=False install jq age git firewalld sqlite nfs-utils wireguard-tools greenboot prometheus-podman-exporter ./systemd-age-creds-*.rpm ./cosign-*.rpm && \
+RUN set -eu; \
+    case "${TARGETARCH}" in \
+        amd64) RPM_ARCH="x86_64" ;; \
+        arm64) RPM_ARCH="aarch64" ;; \
+        *)     echo "Unsupported architecture: ${TARGETARCH}" >&2; exit 1 ;; \
+    esac; \
+    SAC_VERSION="1.4.5"; \
+    curl -fLO "https://github.com/abyrne55/systemd-age-creds/releases/download/v${SAC_VERSION}/systemd-age-creds-${SAC_VERSION}-1.${RPM_ARCH}.rpm" && \
+    curl -fL "https://github.com/abyrne55/systemd-age-creds/releases/download/v${SAC_VERSION}/SHA256SUMS" | \
+        grep "systemd-age-creds-${SAC_VERSION}-1.${RPM_ARCH}.rpm" | sha256sum -c && \
+    curl -fLO --proto =https "https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign-${COSIGN_VERSION}-1.${RPM_ARCH}.rpm" && \
+    curl -sfL --proto =https "https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign_checksums.txt" | \
+        grep "cosign-${COSIGN_VERSION}-1.${RPM_ARCH}.rpm" | sha256sum -c && \
+    dnf -y --setopt=install_weak_deps=False install \
+        jq age git firewalld sqlite nfs-utils wireguard-tools greenboot prometheus-podman-exporter \
+        ./systemd-age-creds-*.rpm ./cosign-*.rpm && \
     dnf clean all && \
-    rm -rf /run/dnf /var/cache/*dnf* /var/cache/ldconfig/* /var/lib/dnf /var/log/dnf*.log systemd-age-creds-*.rpm cosign-*.rpm
+    rm -rf /run/dnf /var/cache/*dnf* /var/cache/ldconfig/* /var/lib/dnf /var/log/dnf*.log \
+        systemd-age-creds-*.rpm cosign-*.rpm
 
 COPY etc/ /etc/
 COPY usr/ /usr/

@@ -10,8 +10,35 @@ CORE_SSH_KEY ?= ./secrets/core/id_ed25519
 DATA_DISK_SIZE ?= 3G
 ROOT_DISK_SIZE ?= 25G
 
+# Platform detection
+HOST_ARCH := $(shell uname -m)
+HOST_OS   := $(shell uname -s)
+
+ifeq ($(HOST_OS),Darwin)
+  QEMU_ACCEL ?= hvf
+  ifeq ($(HOST_ARCH),arm64)
+    QEMU_BIN     ?= qemu-system-aarch64
+    QEMU_MACHINE ?= virt
+    QEMU_BIOS    ?= $(shell brew --prefix qemu)/share/qemu/edk2-aarch64-code.fd
+  else ifeq ($(HOST_ARCH),x86_64)
+    QEMU_BIN     ?= qemu-system-x86_64
+    QEMU_MACHINE ?= q35
+    QEMU_BIOS    ?= $(shell brew --prefix qemu)/share/qemu/edk2-x86_64-code.fd
+  endif
+else ifeq ($(HOST_OS),Linux)
+  QEMU_ACCEL ?= kvm
+  ifeq ($(HOST_ARCH),x86_64)
+    QEMU_BIN     ?= qemu-system-x86_64
+    QEMU_MACHINE ?= q35
+    QEMU_BIOS    ?= /usr/share/edk2/ovmf/OVMF_CODE.fd
+  else ifeq ($(HOST_ARCH),aarch64)
+    QEMU_BIN     ?= qemu-system-aarch64
+    QEMU_MACHINE ?= virt
+    QEMU_BIOS    ?= /usr/share/edk2/aarch64/QEMU_EFI-pflash.raw
+  endif
+endif
+
 # QEMU configuration
-QEMU_BIOS ?= $(shell brew --prefix qemu)/share/qemu/edk2-aarch64-code.fd
 SSH_PORT ?= 2222
 MONITOR_PORT ?= 4444
 
@@ -286,15 +313,15 @@ run-vm-from-ghcr: $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2 $(BUILD_DIR)/data.qcow
 # Internal target to actually start QEMU
 .PHONY: _start-qemu
 _start-qemu:
-	qemu-system-aarch64 \
-		-M accel=hvf \
+	$(QEMU_BIN) \
+		-M accel=$(QEMU_ACCEL) \
 		-cpu host \
 		-smp 2 \
 		-m 4096 \
 		-bios $(QEMU_BIOS) \
 		-serial file:$(BUILD_DIR)/serial.log \
 		-display none \
-		-machine virt \
+		-machine $(QEMU_MACHINE) \
 		-monitor tcp:127.0.0.1:$(MONITOR_PORT),server,nowait \
 		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::80-:80,hostfwd=tcp::443-:443 \
 		-drive if=virtio,file=$(BUILD_DIR)/qcow2/disk.qcow2,snapshot=on \

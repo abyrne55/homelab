@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This repo contains GitOps-style homelab infrastructure-as-code based around a bootable container (bootc). The system is built as a fedora-bootc container image and either converted to a VM disk for dev-testing via QEMU or pushed to a container registry for deployment on a Raspberry Pi using `bootc switch`.
+This repo contains GitOps-style homelab infrastructure-as-code based around a bootable container (bootc). The system is built as a multi-arch (arm64 + amd64) fedora-bootc container image and either converted to a VM disk for dev-testing via QEMU or pushed to a container registry for deployment on a Raspberry Pi (arm64) or x86_64 hardware using `bootc switch`.
 
-Note that none of the software referenced/defined in this repo is meant to be run directly on the local machine; it is meant to run on a Raspberry Pi or within an arm64 QEMU emulator. Do not assume that the local machine is even running Linux.
+Note that none of the software referenced/defined in this repo is meant to be run directly on the local machine; it is meant to run on the deployment target or within a QEMU VM. The local machine may be macOS (arm64 or x86_64) or Linux (x86_64 or aarch64) — the Makefile auto-detects the platform and selects the correct QEMU binary, accelerator, and firmware.
 
 ## Architecture
 
