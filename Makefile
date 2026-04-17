@@ -40,6 +40,8 @@ endif
 
 # QEMU configuration
 SSH_PORT ?= 2222
+HTTP_PORT ?= 8080
+HTTPS_PORT ?= 8443
 MONITOR_PORT ?= 4444
 
 # Set DEBUG=1 for unfiltered output from build commands
@@ -323,7 +325,7 @@ _start-qemu:
 		-display none \
 		-machine $(QEMU_MACHINE) \
 		-monitor tcp:127.0.0.1:$(MONITOR_PORT),server,nowait \
-		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::80-:80,hostfwd=tcp::443-:443 \
+		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::$(HTTP_PORT)-:80,hostfwd=tcp::$(HTTPS_PORT)-:443 \
 		-drive if=virtio,file=$(BUILD_DIR)/qcow2/disk.qcow2,snapshot=on \
 		-drive if=virtio,file=$(BUILD_DIR)/data.qcow2 \
 		$(shell [ -s $(BUILD_DIR)/secrets.iso ] && echo "-drive file=$(BUILD_DIR)/secrets.iso,format=raw,if=virtio,readonly=on,media=cdrom,id=secrets") & disown
