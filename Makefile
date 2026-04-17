@@ -8,7 +8,7 @@ LOCAL_IMAGE ?= homelab:ci
 BUILD_DIR ?= ./build
 CORE_SSH_KEY ?= ./secrets/core/id_ed25519
 DATA_DISK_SIZE ?= 3G
-ROOT_DISK_SIZE ?= 15G
+ROOT_DISK_SIZE ?= 25G
 
 # QEMU configuration
 QEMU_BIOS ?= $(shell brew --prefix qemu)/share/qemu/edk2-aarch64-code.fd
