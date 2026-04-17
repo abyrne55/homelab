@@ -24,6 +24,7 @@ ifeq ($(HOST_OS),Darwin)
     QEMU_BIN     ?= qemu-system-x86_64
     QEMU_MACHINE ?= q35
     QEMU_BIOS    ?= $(shell brew --prefix qemu)/share/qemu/edk2-x86_64-code.fd
+    QEMU_VARS    ?= $(shell brew --prefix qemu)/share/qemu/edk2-i386-vars.fd
   endif
 else ifeq ($(HOST_OS),Linux)
   QEMU_ACCEL ?= kvm
@@ -31,6 +32,7 @@ else ifeq ($(HOST_OS),Linux)
     QEMU_BIN     ?= qemu-system-x86_64
     QEMU_MACHINE ?= q35
     QEMU_BIOS    ?= /usr/share/edk2/ovmf/OVMF_CODE.fd
+    QEMU_VARS    ?= /usr/share/edk2/ovmf/OVMF_VARS.fd
   else ifeq ($(HOST_ARCH),aarch64)
     QEMU_BIN     ?= qemu-system-aarch64
     QEMU_MACHINE ?= virt
@@ -314,6 +316,26 @@ run-vm-from-ghcr: $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2 $(BUILD_DIR)/data.qcow
 
 # Internal target to actually start QEMU
 .PHONY: _start-qemu
+ifdef QEMU_VARS
+_start-qemu:
+	cp $(QEMU_VARS) $(BUILD_DIR)/ovmf-vars.fd
+	$(QEMU_BIN) \
+		-M accel=$(QEMU_ACCEL) \
+		-cpu host \
+		-smp 2 \
+		-m 4096 \
+		-drive if=pflash,format=raw,readonly=on,file=$(QEMU_BIOS) \
+		-drive if=pflash,format=raw,file=$(BUILD_DIR)/ovmf-vars.fd \
+		-serial file:$(BUILD_DIR)/serial.log \
+		-display none \
+		-machine $(QEMU_MACHINE) \
+		-monitor tcp:127.0.0.1:$(MONITOR_PORT),server,nowait \
+		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::$(HTTP_PORT)-:80,hostfwd=tcp::$(HTTPS_PORT)-:443 \
+		-drive if=virtio,file=$(BUILD_DIR)/qcow2/disk.qcow2,snapshot=on \
+		-drive if=virtio,file=$(BUILD_DIR)/data.qcow2 \
+		$(shell [ -s $(BUILD_DIR)/secrets.iso ] && echo "-drive file=$(BUILD_DIR)/secrets.iso,format=raw,if=virtio,readonly=on,media=cdrom,id=secrets") & disown
+	@echo "QEMU running in background. Serial output: $(BUILD_DIR)/serial.log"
+else
 _start-qemu:
 	$(QEMU_BIN) \
 		-M accel=$(QEMU_ACCEL) \
@@ -330,6 +352,7 @@ _start-qemu:
 		-drive if=virtio,file=$(BUILD_DIR)/data.qcow2 \
 		$(shell [ -s $(BUILD_DIR)/secrets.iso ] && echo "-drive file=$(BUILD_DIR)/secrets.iso,format=raw,if=virtio,readonly=on,media=cdrom,id=secrets") & disown
 	@echo "QEMU running in background. Serial output: $(BUILD_DIR)/serial.log"
+endif
 
 # SSH options
 SSH_HOST := 127.0.0.1
