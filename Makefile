@@ -15,6 +15,7 @@ HOST_ARCH := $(shell uname -m)
 HOST_OS   := $(shell uname -s)
 
 ifeq ($(HOST_OS),Darwin)
+  PODMAN_PRIVILEGED ?= podman
   QEMU_ACCEL ?= hvf
   ifeq ($(HOST_ARCH),arm64)
     QEMU_BIN     ?= qemu-system-aarch64
@@ -27,6 +28,7 @@ ifeq ($(HOST_OS),Darwin)
     QEMU_VARS    ?= $(shell brew --prefix qemu)/share/qemu/edk2-i386-vars.fd
   endif
 else ifeq ($(HOST_OS),Linux)
+  PODMAN_PRIVILEGED ?= pkexec podman
   QEMU_ACCEL ?= kvm
   ifeq ($(HOST_ARCH),x86_64)
     QEMU_BIN     ?= qemu-system-x86_64
@@ -209,25 +211,25 @@ $(BUILD_DIR)/qcow2/disk.qcow2: $(BUILD_DIR)/.image-built
 	mkdir -p $(BUILD_DIR)/qcow2
 	truncate -s $(ROOT_DISK_SIZE) $(BUILD_DIR)/disk.raw
 ifdef DEBUG
-	podman run \
+	$(PODMAN_PRIVILEGED) run \
 		--rm \
 		-it \
 		--privileged \
 		--pid=host \
 		--security-opt label=type:unconfined_t \
-		-v $(BUILD_DIR):/output \
+		-v $(abspath $(BUILD_DIR)):/output \
 		-v /dev:/dev \
 		localhost/$(IMAGE_NAME):$(TAG) \
 		bootc install to-disk --generic-image --filesystem btrfs --via-loopback /output/disk.raw
 else
 	@echo "Building qcow2 image from localhost/$(IMAGE_NAME):$(TAG)..."
-	@podman run \
+	@$(PODMAN_PRIVILEGED) run \
 		--rm \
 		-i \
 		--privileged \
 		--pid=host \
 		--security-opt label=type:unconfined_t \
-		-v $(BUILD_DIR):/output \
+		-v $(abspath $(BUILD_DIR)):/output \
 		-v /dev:/dev \
 		localhost/$(IMAGE_NAME):$(TAG) \
 		bootc install to-disk --generic-image --filesystem btrfs --via-loopback /output/disk.raw 2>&1 \
@@ -242,25 +244,25 @@ $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2:
 	@podman pull $(REMOTE_IMAGE) 2>&1 | grep -Ev 'Copying (blob|config) sha256'
 	truncate -s $(ROOT_DISK_SIZE) $(BUILD_DIR)/disk.raw
 ifdef DEBUG
-	podman run \
+	$(PODMAN_PRIVILEGED) run \
 		--rm \
 		-it \
 		--privileged \
 		--pid=host \
 		--security-opt label=type:unconfined_t \
-		-v $(BUILD_DIR):/output \
+		-v $(abspath $(BUILD_DIR)):/output \
 		-v /dev:/dev \
 		$(REMOTE_IMAGE) \
 		bootc install to-disk --generic-image --filesystem btrfs --via-loopback /output/disk.raw
 else
 	@echo "Building qcow2 disk image..."
-	@podman run \
+	@$(PODMAN_PRIVILEGED) run \
 		--rm \
 		-i \
 		--privileged \
 		--pid=host \
 		--security-opt label=type:unconfined_t \
-		-v $(BUILD_DIR):/output \
+		-v $(abspath $(BUILD_DIR)):/output \
 		-v /dev:/dev \
 		$(REMOTE_IMAGE) \
 		bootc install to-disk --generic-image --filesystem btrfs --via-loopback /output/disk.raw 2>&1 \
