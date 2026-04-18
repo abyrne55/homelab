@@ -203,7 +203,7 @@ verify-quadlets:
 # Build the container image (sentinel file tracks build state)
 $(BUILD_DIR)/.image-built: Containerfile $(wildcard quadlets/*) $(wildcard systemd/*) $(wildcard caddy/*)
 	mkdir -p $(BUILD_DIR)
-	podman build -t $(IMAGE_NAME):$(TAG) -f Containerfile .
+	$(PODMAN_PRIVILEGED) build -t $(IMAGE_NAME):$(TAG) -f Containerfile .
 	@touch $@
 
 # Build qcow2 image using bootc install to-disk
@@ -241,7 +241,7 @@ endif
 # Build qcow2 image from GHCR (skips local container build)
 $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2:
 	mkdir -p $(BUILD_DIR)/qcow2
-	@podman pull $(REMOTE_IMAGE) 2>&1 | grep -Ev 'Copying (blob|config) sha256'
+	@$(PODMAN_PRIVILEGED) pull $(REMOTE_IMAGE) 2>&1 | grep -Ev 'Copying (blob|config) sha256'
 	truncate -s $(ROOT_DISK_SIZE) $(BUILD_DIR)/disk.raw
 ifdef DEBUG
 	$(PODMAN_PRIVILEGED) run \
