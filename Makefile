@@ -10,9 +10,42 @@ CORE_SSH_KEY ?= ./secrets/core/id_ed25519
 DATA_DISK_SIZE ?= 3G
 ROOT_DISK_SIZE ?= 25G
 
+# Platform detection
+HOST_ARCH := $(shell uname -m)
+HOST_OS   := $(shell uname -s)
+
+ifeq ($(HOST_OS),Darwin)
+  PODMAN_PRIVILEGED ?= podman
+  QEMU_ACCEL ?= hvf
+  ifeq ($(HOST_ARCH),arm64)
+    QEMU_BIN     ?= qemu-system-aarch64
+    QEMU_MACHINE ?= virt
+    QEMU_BIOS    ?= $(shell brew --prefix qemu)/share/qemu/edk2-aarch64-code.fd
+  else ifeq ($(HOST_ARCH),x86_64)
+    QEMU_BIN     ?= qemu-system-x86_64
+    QEMU_MACHINE ?= q35
+    QEMU_BIOS    ?= $(shell brew --prefix qemu)/share/qemu/edk2-x86_64-code.fd
+    QEMU_VARS    ?= $(shell brew --prefix qemu)/share/qemu/edk2-i386-vars.fd
+  endif
+else ifeq ($(HOST_OS),Linux)
+  PODMAN_PRIVILEGED ?= pkexec podman
+  QEMU_ACCEL ?= kvm
+  ifeq ($(HOST_ARCH),x86_64)
+    QEMU_BIN     ?= qemu-system-x86_64
+    QEMU_MACHINE ?= q35
+    QEMU_BIOS    ?= /usr/share/edk2/ovmf/OVMF_CODE.fd
+    QEMU_VARS    ?= /usr/share/edk2/ovmf/OVMF_VARS.fd
+  else ifeq ($(HOST_ARCH),aarch64)
+    QEMU_BIN     ?= qemu-system-aarch64
+    QEMU_MACHINE ?= virt
+    QEMU_BIOS    ?= /usr/share/edk2/aarch64/QEMU_EFI-pflash.raw
+  endif
+endif
+
 # QEMU configuration
-QEMU_BIOS ?= $(shell brew --prefix qemu)/share/qemu/edk2-aarch64-code.fd
 SSH_PORT ?= 2222
+HTTP_PORT ?= 8080
+HTTPS_PORT ?= 8443
 MONITOR_PORT ?= 4444
 
 # Set DEBUG=1 for unfiltered output from build commands
@@ -170,7 +203,7 @@ verify-quadlets:
 # Build the container image (sentinel file tracks build state)
 $(BUILD_DIR)/.image-built: Containerfile $(wildcard quadlets/*) $(wildcard systemd/*) $(wildcard caddy/*)
 	mkdir -p $(BUILD_DIR)
-	podman build -t $(IMAGE_NAME):$(TAG) -f Containerfile .
+	$(PODMAN_PRIVILEGED) build -t $(IMAGE_NAME):$(TAG) -f Containerfile .
 	@touch $@
 
 # Build qcow2 image using bootc install to-disk
@@ -178,25 +211,25 @@ $(BUILD_DIR)/qcow2/disk.qcow2: $(BUILD_DIR)/.image-built
 	mkdir -p $(BUILD_DIR)/qcow2
 	truncate -s $(ROOT_DISK_SIZE) $(BUILD_DIR)/disk.raw
 ifdef DEBUG
-	podman run \
+	$(PODMAN_PRIVILEGED) run \
 		--rm \
 		-it \
 		--privileged \
 		--pid=host \
 		--security-opt label=type:unconfined_t \
-		-v $(BUILD_DIR):/output \
+		-v $(abspath $(BUILD_DIR)):/output \
 		-v /dev:/dev \
 		localhost/$(IMAGE_NAME):$(TAG) \
 		bootc install to-disk --generic-image --filesystem btrfs --via-loopback /output/disk.raw
 else
 	@echo "Building qcow2 image from localhost/$(IMAGE_NAME):$(TAG)..."
-	@podman run \
+	@$(PODMAN_PRIVILEGED) run \
 		--rm \
 		-i \
 		--privileged \
 		--pid=host \
 		--security-opt label=type:unconfined_t \
-		-v $(BUILD_DIR):/output \
+		-v $(abspath $(BUILD_DIR)):/output \
 		-v /dev:/dev \
 		localhost/$(IMAGE_NAME):$(TAG) \
 		bootc install to-disk --generic-image --filesystem btrfs --via-loopback /output/disk.raw 2>&1 \
@@ -208,28 +241,28 @@ endif
 # Build qcow2 image from GHCR (skips local container build)
 $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2:
 	mkdir -p $(BUILD_DIR)/qcow2
-	@podman pull $(REMOTE_IMAGE) 2>&1 | grep -Ev 'Copying (blob|config) sha256'
+	@$(PODMAN_PRIVILEGED) pull $(REMOTE_IMAGE) 2>&1 | grep -Ev 'Copying (blob|config) sha256'
 	truncate -s $(ROOT_DISK_SIZE) $(BUILD_DIR)/disk.raw
 ifdef DEBUG
-	podman run \
+	$(PODMAN_PRIVILEGED) run \
 		--rm \
 		-it \
 		--privileged \
 		--pid=host \
 		--security-opt label=type:unconfined_t \
-		-v $(BUILD_DIR):/output \
+		-v $(abspath $(BUILD_DIR)):/output \
 		-v /dev:/dev \
 		$(REMOTE_IMAGE) \
 		bootc install to-disk --generic-image --filesystem btrfs --via-loopback /output/disk.raw
 else
 	@echo "Building qcow2 disk image..."
-	@podman run \
+	@$(PODMAN_PRIVILEGED) run \
 		--rm \
 		-i \
 		--privileged \
 		--pid=host \
 		--security-opt label=type:unconfined_t \
-		-v $(BUILD_DIR):/output \
+		-v $(abspath $(BUILD_DIR)):/output \
 		-v /dev:/dev \
 		$(REMOTE_IMAGE) \
 		bootc install to-disk --generic-image --filesystem btrfs --via-loopback /output/disk.raw 2>&1 \
@@ -285,22 +318,43 @@ run-vm-from-ghcr: $(BUILD_DIR)/qcow2/disk-from-ghcr.qcow2 $(BUILD_DIR)/data.qcow
 
 # Internal target to actually start QEMU
 .PHONY: _start-qemu
+ifdef QEMU_VARS
 _start-qemu:
-	qemu-system-aarch64 \
-		-M accel=hvf \
+	cp $(QEMU_VARS) $(BUILD_DIR)/ovmf-vars.fd
+	$(QEMU_BIN) \
+		-M accel=$(QEMU_ACCEL) \
+		-cpu host \
+		-smp 2 \
+		-m 4096 \
+		-drive if=pflash,format=raw,readonly=on,file=$(QEMU_BIOS) \
+		-drive if=pflash,format=raw,file=$(BUILD_DIR)/ovmf-vars.fd \
+		-serial file:$(BUILD_DIR)/serial.log \
+		-display none \
+		-machine $(QEMU_MACHINE) \
+		-monitor tcp:127.0.0.1:$(MONITOR_PORT),server,nowait \
+		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::$(HTTP_PORT)-:80,hostfwd=tcp::$(HTTPS_PORT)-:443 \
+		-drive if=virtio,file=$(BUILD_DIR)/qcow2/disk.qcow2,snapshot=on \
+		-drive if=virtio,file=$(BUILD_DIR)/data.qcow2 \
+		$(shell [ -s $(BUILD_DIR)/secrets.iso ] && echo "-drive file=$(BUILD_DIR)/secrets.iso,format=raw,if=virtio,readonly=on,media=cdrom,id=secrets") & disown
+	@echo "QEMU running in background. Serial output: $(BUILD_DIR)/serial.log"
+else
+_start-qemu:
+	$(QEMU_BIN) \
+		-M accel=$(QEMU_ACCEL) \
 		-cpu host \
 		-smp 2 \
 		-m 4096 \
 		-bios $(QEMU_BIOS) \
 		-serial file:$(BUILD_DIR)/serial.log \
 		-display none \
-		-machine virt \
+		-machine $(QEMU_MACHINE) \
 		-monitor tcp:127.0.0.1:$(MONITOR_PORT),server,nowait \
-		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::80-:80,hostfwd=tcp::443-:443 \
+		-nic user,hostfwd=tcp::$(SSH_PORT)-:22,hostfwd=tcp::$(HTTP_PORT)-:80,hostfwd=tcp::$(HTTPS_PORT)-:443 \
 		-drive if=virtio,file=$(BUILD_DIR)/qcow2/disk.qcow2,snapshot=on \
 		-drive if=virtio,file=$(BUILD_DIR)/data.qcow2 \
 		$(shell [ -s $(BUILD_DIR)/secrets.iso ] && echo "-drive file=$(BUILD_DIR)/secrets.iso,format=raw,if=virtio,readonly=on,media=cdrom,id=secrets") & disown
 	@echo "QEMU running in background. Serial output: $(BUILD_DIR)/serial.log"
+endif
 
 # SSH options
 SSH_HOST := 127.0.0.1
