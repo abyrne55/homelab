@@ -4,7 +4,7 @@ After=network-online.target prowlarr-init-config.service
 Wants=network-online.target prowlarr-init-config.service prowlarr-configure.service
 
 [Container]
-Image=lscr.io/linuxserver/prowlarr:2.3.5@sha256:6df73ab9e99d0dbaad27c39d8a47c600333eebea80fcb56253a0bb8b630c8115
+Image=lscr.io/linuxserver/prowlarr:2.3.5@sha256:c5de2a8758a05594319263e7691c1dce56899442ed1720d6eca216c0958f4caf
 PublishPort=20570:9696
 Volume=/var/local/lib/prowlarr/config:/config:Z
 NoNewPrivileges=true
