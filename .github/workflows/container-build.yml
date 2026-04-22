@@ -176,3 +176,15 @@ jobs:
           done
           # shellcheck disable=SC2086
           cosign sign --yes ${images}
+
+  result:
+    if: always()
+    runs-on: ubuntu-24.04-arm
+    needs: [changes, build, merge]
+    steps:
+      - name: Verify build result
+        run: |
+          if [[ "${{ needs.build.result }}" == "failure" || "${{ needs.merge.result }}" == "failure" ]]; then
+            echo "Build or merge failed"
+            exit 1
+          fi
