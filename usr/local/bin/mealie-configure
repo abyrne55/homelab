@@ -27,13 +27,13 @@ if [ -n "$TOKEN" ]; then
 
   echo "Updating admin email..."
   UPDATED=$(echo "$USER" | jq --arg email "$TARGET_EMAIL" '.email = $email')
-  curl -sf -X PUT "$MEALIE_URL/api/users/$USER_ID" \
+  curl -sf -o /dev/null -X PUT "$MEALIE_URL/api/users/$USER_ID" \
     -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
     -d "$UPDATED"
 
   echo "Changing admin password..."
-  curl -sf -X PUT "$MEALIE_URL/api/users/password" \
+  curl -sf -o /dev/null -X PUT "$MEALIE_URL/api/users/password" \
     -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
     -d "$(jq -n \
