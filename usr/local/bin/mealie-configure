@@ -1,0 +1,56 @@
+#!/bin/bash
+set -euo pipefail
+
+MEALIE_URL="http://localhost:20590"
+TARGET_EMAIL="abyrne55"
+TARGET_PASS=$(cat "${CREDENTIALS_DIRECTORY}/mealie-webui-password")
+
+DEFAULT_EMAIL="changeme@example.com"
+DEFAULT_PASS="MyPassword"
+
+login() {
+  curl -sf -X POST "$MEALIE_URL/api/auth/token" \
+    --data-urlencode "username=$1" \
+    --data-urlencode "password=$2" \
+    | jq -r '.access_token'
+}
+
+echo "Checking Mealie admin credentials..."
+
+TOKEN=$(login "$DEFAULT_EMAIL" "$DEFAULT_PASS" 2>/dev/null || true)
+
+if [ -n "$TOKEN" ]; then
+  echo "Default credentials still active; updating..."
+
+  USER=$(curl -sf "$MEALIE_URL/api/users/self" -H "Authorization: Bearer $TOKEN")
+  USER_ID=$(echo "$USER" | jq -r '.id')
+
+  echo "Updating admin email..."
+  curl -sf -X PUT "$MEALIE_URL/api/users/$USER_ID" \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "$(jq -n --arg email "$TARGET_EMAIL" '{email: $email}')"
+
+  echo "Changing admin password..."
+  curl -sf -X PUT "$MEALIE_URL/api/users/password" \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "$(jq -n \
+      --arg cur "$DEFAULT_PASS" \
+      --arg new "$TARGET_PASS" \
+      '{current_password: $cur, new_password: $new}')"
+
+  echo "Mealie admin credentials configured successfully"
+  exit 0
+fi
+
+echo "Default login failed; checking target credentials..."
+TOKEN=$(login "$TARGET_EMAIL" "$TARGET_PASS" 2>/dev/null || true)
+
+if [ -n "$TOKEN" ]; then
+  echo "Mealie admin credentials already configured; skipping"
+  exit 0
+fi
+
+echo "Both default and target credentials failed — manual intervention required" >&2
+exit 1

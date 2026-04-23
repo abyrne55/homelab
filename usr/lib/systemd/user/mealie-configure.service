@@ -1,0 +1,35 @@
+[Unit]
+Description=Configure Mealie admin credentials
+ConditionUser=mealie
+PartOf=mealie.service
+After=mealie.service
+
+[Service]
+Type=oneshot
+
+ExecStart=/bin/bash -o pipefail -c '/usr/local/bin/mealie-configure 2>&1 | /usr/local/bin/redact-secrets'
+
+Restart=on-failure
+RestartSec=10
+
+LoadCredential=mealie-webui-password:/run/systemd-age-creds.sock
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateUsers=yes
+
+ProtectSystem=strict
+ProtectHome=tmpfs
+ProtectControlGroups=yes
+ProtectHostname=yes
+ProtectKernelLogs=yes
+ProtectKernelModules=yes
+ProtectClock=yes
+ProtectProc=invisible
+
+LockPersonality=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+RestrictAddressFamilies=AF_INET
+SystemCallArchitectures=native
