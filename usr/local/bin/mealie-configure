@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-MEALIE_URL="http://localhost:20590"
+MEALIE_URL="http://127.0.0.1:20590"
 TARGET_EMAIL="abyrne55"
 TARGET_PASS=$(cat "${CREDENTIALS_DIRECTORY}/mealie-webui-password")
 
@@ -26,10 +26,11 @@ if [ -n "$TOKEN" ]; then
   USER_ID=$(echo "$USER" | jq -r '.id')
 
   echo "Updating admin email..."
+  UPDATED=$(echo "$USER" | jq --arg email "$TARGET_EMAIL" '.email = $email')
   curl -sf -X PUT "$MEALIE_URL/api/users/$USER_ID" \
     -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
-    -d "$(jq -n --arg email "$TARGET_EMAIL" '{email: $email}')"
+    -d "$UPDATED"
 
   echo "Changing admin password..."
   curl -sf -X PUT "$MEALIE_URL/api/users/password" \
