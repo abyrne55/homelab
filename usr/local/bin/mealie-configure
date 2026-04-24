@@ -15,6 +15,10 @@ login() {
     | jq -r '.access_token'
 }
 
+api() {
+  curl -sf -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" "$@"
+}
+
 echo "Checking Mealie admin credentials..."
 
 TOKEN=$(login "$DEFAULT_EMAIL" "$DEFAULT_PASS" 2>/dev/null || true)
@@ -22,36 +26,109 @@ TOKEN=$(login "$DEFAULT_EMAIL" "$DEFAULT_PASS" 2>/dev/null || true)
 if [ -n "$TOKEN" ]; then
   echo "Default credentials still active; updating..."
 
-  USER=$(curl -sf "$MEALIE_URL/api/users/self" -H "Authorization: Bearer $TOKEN")
+  USER=$(api "$MEALIE_URL/api/users/self")
   USER_ID=$(echo "$USER" | jq -r '.id')
 
   echo "Updating admin email..."
   UPDATED=$(echo "$USER" | jq --arg email "$TARGET_EMAIL" '.email = $email')
-  curl -sf -o /dev/null -X PUT "$MEALIE_URL/api/users/$USER_ID" \
-    -H "Authorization: Bearer $TOKEN" \
-    -H "Content-Type: application/json" \
-    -d "$UPDATED"
+  api -o /dev/null -X PUT "$MEALIE_URL/api/users/$USER_ID" -d "$UPDATED"
 
   echo "Changing admin password..."
-  curl -sf -o /dev/null -X PUT "$MEALIE_URL/api/users/password" \
-    -H "Authorization: Bearer $TOKEN" \
-    -H "Content-Type: application/json" \
+  api -o /dev/null -X PUT "$MEALIE_URL/api/users/password" \
     -d "$(jq -n \
       --arg cur "$DEFAULT_PASS" \
       --arg new "$TARGET_PASS" \
       '{current_password: $cur, new_password: $new}')"
 
   echo "Mealie admin credentials configured successfully"
-  exit 0
-fi
 
-echo "Default login failed; checking target credentials..."
-TOKEN=$(login "$TARGET_EMAIL" "$TARGET_PASS" 2>/dev/null || true)
+  TOKEN=$(login "$TARGET_EMAIL" "$TARGET_PASS")
+else
+  echo "Default login failed; checking target credentials..."
+  TOKEN=$(login "$TARGET_EMAIL" "$TARGET_PASS" 2>/dev/null || true)
 
-if [ -n "$TOKEN" ]; then
+  if [ -z "$TOKEN" ]; then
+    echo "Both default and target credentials failed — manual intervention required" >&2
+    exit 1
+  fi
+
   echo "Mealie admin credentials already configured; skipping"
-  exit 0
 fi
 
-echo "Both default and target credentials failed — manual intervention required" >&2
-exit 1
+# Set user display name
+USER=$(api "$MEALIE_URL/api/users/self")
+USER_ID=$(echo "$USER" | jq -r '.id')
+FULL_NAME=$(echo "$USER" | jq -r '.fullName')
+
+if [ "$FULL_NAME" = "Change Me" ]; then
+  echo "Updating user display name..."
+  UPDATED=$(echo "$USER" | jq '.fullName = "Anthony"')
+  api -o /dev/null -X PUT "$MEALIE_URL/api/users/$USER_ID" -d "$UPDATED"
+  echo "Display name set to Anthony"
+else
+  echo "Display name already set to '$FULL_NAME'; skipping"
+fi
+
+# Set Family household to not-private
+HOUSEHOLDS=$(api "$MEALIE_URL/api/admin/households")
+FAMILY=$(echo "$HOUSEHOLDS" | jq '.items[] | select(.name == "Family")')
+FAMILY_ID=$(echo "$FAMILY" | jq -r '.id')
+FAMILY_GROUP_ID=$(echo "$FAMILY" | jq -r '.groupId')
+FAMILY_PRIVATE=$(echo "$FAMILY" | jq -r '.preferences.privateHousehold')
+
+if [ "$FAMILY_PRIVATE" = "true" ]; then
+  echo "Setting Family household to public..."
+  api -o /dev/null -X PUT "$MEALIE_URL/api/admin/households/$FAMILY_ID" \
+    -d "$(jq -n \
+      --arg id "$FAMILY_ID" \
+      --arg gid "$FAMILY_GROUP_ID" \
+      '{id: $id, groupId: $gid, name: "Family", preferences: {privateHousehold: false}}')"
+  echo "Family household set to public"
+else
+  echo "Family household already public; skipping"
+fi
+
+# Set Home group to not-private
+GROUPS=$(api "$MEALIE_URL/api/admin/groups")
+HOME_GROUP=$(echo "$GROUPS" | jq '.items[] | select(.name == "Home")')
+HOME_GROUP_ID=$(echo "$HOME_GROUP" | jq -r '.id')
+HOME_PRIVATE=$(echo "$HOME_GROUP" | jq -r '.preferences.privateGroup')
+
+if [ "$HOME_PRIVATE" = "true" ]; then
+  echo "Setting Home group to public..."
+  api -o /dev/null -X PUT "$MEALIE_URL/api/admin/groups/$HOME_GROUP_ID" \
+    -d "$(jq -n \
+      --arg id "$HOME_GROUP_ID" \
+      '{id: $id, name: "Home", preferences: {privateGroup: false}}')"
+  echo "Home group set to public"
+else
+  echo "Home group already public; skipping"
+fi
+
+# Seed foods, units, and labels
+FOOD_COUNT=$(api "$MEALIE_URL/api/foods?per_page=1" | jq '.total')
+if [ "$FOOD_COUNT" -eq 0 ]; then
+  echo "Seeding foods database..."
+  api -o /dev/null -X POST "$MEALIE_URL/api/groups/seeders/foods" -d '{"locale": "en-US"}'
+  echo "Foods seeded"
+else
+  echo "Foods already populated ($FOOD_COUNT items); skipping"
+fi
+
+UNIT_COUNT=$(api "$MEALIE_URL/api/units?per_page=1" | jq '.total')
+if [ "$UNIT_COUNT" -eq 0 ]; then
+  echo "Seeding units database..."
+  api -o /dev/null -X POST "$MEALIE_URL/api/groups/seeders/units" -d '{"locale": "en-US"}'
+  echo "Units seeded"
+else
+  echo "Units already populated ($UNIT_COUNT items); skipping"
+fi
+
+LABEL_COUNT=$(api "$MEALIE_URL/api/groups/labels?per_page=1" | jq '.total')
+if [ "$LABEL_COUNT" -eq 0 ]; then
+  echo "Seeding labels database..."
+  api -o /dev/null -X POST "$MEALIE_URL/api/groups/seeders/labels" -d '{"locale": "en-US"}'
+  echo "Labels seeded"
+else
+  echo "Labels already populated ($LABEL_COUNT items); skipping"
+fi

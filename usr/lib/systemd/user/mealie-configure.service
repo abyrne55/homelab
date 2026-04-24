@@ -1,5 +1,5 @@
 [Unit]
-Description=Configure Mealie admin credentials
+Description=Configure Mealie
 ConditionUser=mealie
 PartOf=mealie.service
 After=mealie.service
