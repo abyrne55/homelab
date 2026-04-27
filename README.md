@@ -26,6 +26,7 @@ This repo builds a [bootc](https://containers.github.io/bootc/)-based system ima
 - **Configarr** - TRaSH-Guides sync. Runs as a rootless Podman quadlet under a dedicated `configarr` user (UID 1056). No web UI — runs on a timer to push quality profiles and custom formats from TRaSH-Guides into Radarr and Sonarr. Config lives in the private `homelab-config` repo.
 - **Prowlarr** - Indexer manager. Runs as a rootless Podman quadlet under a dedicated `prowlarr` user (UID 1057). Not directly exposed externally — accessed via Caddy by hostname. Manages torrent indexers and syncs them to Radarr and Sonarr.
 - **Home Assistant** - Home automation platform. Runs as a rootless Podman pod under a dedicated `home-assistant` user (UID 1058), alongside a **python-matter-server** sidecar for Matter/Thread device support. Not directly exposed externally — accessed via Caddy by hostname. Config is mounted read-only from the private `homelab-config` repo.
+- **Mealie** - Recipe manager and meal planner. Runs as a rootless Podman quadlet under a dedicated `mealie` user (UID 1059). Not directly exposed externally — accessed via Caddy by hostname. Admin credentials are pre-configured on first boot via `mealie-configure` using age-encrypted secrets. Service state lives in `/var/local/lib/mealie/`.
 
 ## Three-Repository Pattern
 
