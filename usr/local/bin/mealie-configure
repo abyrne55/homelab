@@ -26,12 +26,12 @@ TOKEN=$(login "$DEFAULT_EMAIL" "$DEFAULT_PASS" 2>/dev/null || true)
 if [ -n "$TOKEN" ]; then
   echo "Default credentials still active; updating..."
 
-  USER=$(api "$MEALIE_URL/api/users/self")
-  USER_ID=$(echo "$USER" | jq -r '.id')
+  SELF=$(api "$MEALIE_URL/api/users/self")
+  SELF_ID=$(echo "$SELF" | jq -r '.id')
 
   echo "Updating admin email..."
-  UPDATED=$(echo "$USER" | jq --arg email "$TARGET_EMAIL" '.email = $email')
-  api -o /dev/null -X PUT "$MEALIE_URL/api/users/$USER_ID" -d "$UPDATED"
+  UPDATED=$(echo "$SELF" | jq --arg email "$TARGET_EMAIL" '.email = $email')
+  api -o /dev/null -X PUT "$MEALIE_URL/api/users/$SELF_ID" -d "$UPDATED"
 
   echo "Changing admin password..."
   api -o /dev/null -X PUT "$MEALIE_URL/api/users/password" \
@@ -56,14 +56,14 @@ else
 fi
 
 # Set user display name
-USER=$(api "$MEALIE_URL/api/users/self")
-USER_ID=$(echo "$USER" | jq -r '.id')
-FULL_NAME=$(echo "$USER" | jq -r '.fullName')
+SELF=$(api "$MEALIE_URL/api/users/self")
+SELF_ID=$(echo "$SELF" | jq -r '.id')
+FULL_NAME=$(echo "$SELF" | jq -r '.fullName')
 
 if [ "$FULL_NAME" = "Change Me" ]; then
   echo "Updating user display name..."
-  UPDATED=$(echo "$USER" | jq '.fullName = "Anthony"')
-  api -o /dev/null -X PUT "$MEALIE_URL/api/users/$USER_ID" -d "$UPDATED"
+  UPDATED=$(echo "$SELF" | jq '.fullName = "Anthony"')
+  api -o /dev/null -X PUT "$MEALIE_URL/api/users/$SELF_ID" -d "$UPDATED"
   echo "Display name set to Anthony"
 else
   echo "Display name already set to '$FULL_NAME'; skipping"
@@ -89,8 +89,8 @@ else
 fi
 
 # Set Home group to not-private
-GROUPS=$(api "$MEALIE_URL/api/admin/groups")
-HOME_GROUP=$(echo "$GROUPS" | jq '.items[] | select(.name == "Home")')
+GROUP_LIST=$(api "$MEALIE_URL/api/admin/groups")
+HOME_GROUP=$(echo "$GROUP_LIST" | jq '.items[] | select(.name == "Home")')
 HOME_GROUP_ID=$(echo "$HOME_GROUP" | jq -r '.id')
 HOME_PRIVATE=$(echo "$HOME_GROUP" | jq -r '.preferences.privateGroup')
 
