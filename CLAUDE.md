@@ -43,7 +43,7 @@ Quick file-level index — consult this before exploring the repo.
 | `usr/lib/tmpfiles.d/core-homedir.conf` | Login user (core) home directory and SSH authorized_keys |
 | `usr/lib/tmpfiles.d/prometheus-podman-exporter-configs.conf` | Per-user exporter environment configs (port assignments for X9 metrics endpoints) |
 | `usr/lib/tmpfiles.d/` (other files) | NFS mount point, git known-hosts, homelab-config dir |
-| `usr/local/bin/` | Scripts baked into the image (`hl`, `secrets-inject`, `wait-for-quadlets`, …) |
+| `usr/local/bin/` | Scripts baked into the image (`hl`, `secrets-inject`, `wait-for-quadlets`, `mealie-configure`, …) |
 | `usr/lib/greenboot/check/required.d/` | Greenboot health checks that must pass or rollback is triggered (secrets-sync, config-sync, caddy) |
 | `usr/lib/greenboot/check/wanted.d/` | Greenboot health checks that may fail without triggering rollback (other quadlets, wg-nas) |
 | `usr/lib/systemd/system/greenboot-healthcheck.service.d/` | Drop-in: extends timeout, adds `After=` user sessions, runs `wait-for-quadlets` pre-flight |

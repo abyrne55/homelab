@@ -41,7 +41,7 @@ vsh hl status -s $ARGUMENTS
 vsh hl logs -s $ARGUMENTS -n 50
 ```
 
-For user-level non-quadlet units (configure/bootstrap scripts like `radarr-configure`, `jellarr-bootstrap`):
+For user-level non-quadlet units (configure/bootstrap scripts like `radarr-configure`, `mealie-configure`, `jellarr-bootstrap`):
 
 ```bash
 vsh "hl logs -u radarr radarr-configure -n 50"   # -u <service-user> <unit-name>
