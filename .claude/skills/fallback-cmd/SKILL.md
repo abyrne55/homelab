@@ -8,6 +8,12 @@ argument-hint: [tool-name]
 
 Use these raw commands **only if** the preferred tool (`vsh`, `hl`) is unavailable or unable to complete a task.
 
+**Key gotchas for rootless Podman commands:**
+
+- Container names are `systemd-<service-name>` (e.g., `systemd-jellyfin`), not just the service name
+- Must run in the service user's context with `XDG_RUNTIME_DIR=/run/user/$(id -u)` set
+- List available containers first: `sudo su - <user> -s /bin/sh -c "XDG_RUNTIME_DIR=/run/user/$(id -u) podman ps"`
+
 ---
 
 ## vsh (VM SSH wrapper)
@@ -133,8 +139,6 @@ sudo su - jellyfin -s /bin/sh -c "XDG_RUNTIME_DIR=/run/user/\$(id -u) podman ps"
 sudo podman ps
 ```
 
-**Important:** User quadlet containers are only visible when running podman commands in the service user's context. Always include `XDG_RUNTIME_DIR=/run/user/$(id -u)` when running podman commands for a specific user.
-
 ### Run Command Inside Container
 
 **Preferred:**
@@ -153,12 +157,6 @@ sudo su - jellyfin -s /bin/sh -c "XDG_RUNTIME_DIR=/run/user/\$(id -u) podman exe
 # General pattern (replace jellyfin with service name):
 sudo su - <service_user> -s /bin/sh -c "XDG_RUNTIME_DIR=/run/user/\$(id -u) podman exec systemd-<service_name> <command>"
 ```
-
-**Important:**
-
-- Container names are `systemd-<service-name>` (e.g., `systemd-jellyfin`), not just the service name
-- Must run in the service user's context with `XDG_RUNTIME_DIR=/run/user/$(id -u)` set
-- List available containers first: `sudo su - <user> -s /bin/sh -c "XDG_RUNTIME_DIR=/run/user/$(id -u) podman ps"`
 
 ---
 
