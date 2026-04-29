@@ -2,7 +2,7 @@
 # Uses podman quadlets for container management
 # See: https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html
 
-FROM quay.io/fedora/fedora-bootc:43
+FROM quay.io/fedora/fedora-bootc:44
 
 ARG TARGETARCH
 
