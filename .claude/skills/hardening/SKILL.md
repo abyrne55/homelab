@@ -30,6 +30,8 @@ ReadOnlyTmpfs=true        # /tmp is also read-only
 Notify=healthy            # systemd waits for healthy state, not just process start
 ```
 
+**When using `Notify=healthy`**, you **must** also set `TimeoutStartSec=` in `[Service]` to a value greater than `HealthStartPeriod` + expected image pull time. Fedora's default `TimeoutStartSec` is 45s (not the upstream 90s), which is too short for most containers on first boot. Without this, systemd kills the service before the health check can pass, leaving Podman storage in a dirty state that can crash co-resident services like `prometheus-podman-exporter`. See `podman-systemd.unit.5.md` lines 87–98.
+
 **Also consider:**
 
 - `ConditionPathExists=` / `ConditionPathIsDirectory=` in `[Unit]` — guard against starting without required config (e.g., a missing Caddyfile or config directory)
@@ -73,6 +75,7 @@ The `[Service]` section of a quadlet should contain **only** runtime policy and 
 [Service]
 Restart=on-failure
 RestartSec=5
+TimeoutStartSec=5min      # required when using Notify=healthy (Fedora default is 45s)
 LoadCredential=...        # age-encrypted credentials if needed
 Type=oneshot              # if applicable
 RuntimeDirectory=...      # if applicable
