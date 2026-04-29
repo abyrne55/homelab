@@ -172,7 +172,7 @@ jobs:
         run: |
           images=""
           for tag in ${TAGS}; do
-            images+="${tag}@$(docker buildx imagetools inspect "${tag}" --format '{{.Digest}}') "
+            images+="${tag}@$(docker buildx imagetools inspect "${tag}" --format '{{json .Manifest.Digest}}' | tr -d '"') "
           done
           # shellcheck disable=SC2086
           cosign sign --yes ${images}
