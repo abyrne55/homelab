@@ -1,7 +1,7 @@
 # Reference Documentation
 
-Last updated: 2026-03-03
-Sources: Podman v5.8.0 (<https://docs.podman.io/>) · bootc v1.13.0 (<https://bootc-dev.github.io/bootc/>) · Fedora bootc docs (<https://docs.fedoraproject.org/en-US/bootc/>) · systemd (<https://systemd.io/>)
+Last updated: 2026-04-29
+Sources: Podman v5.8.1 (<https://docs.podman.io/>) · bootc v1.12.1 (<https://bootc-dev.github.io/bootc/>) · Fedora bootc docs (<https://docs.fedoraproject.org/en-US/bootc/>) · systemd v260.1 (<https://systemd.io/>)
 
 If today's date is more than ~3 months past the date above, suggest that the user refresh the reference docs.
 

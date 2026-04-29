@@ -2,7 +2,7 @@
 # Uses podman quadlets for container management
 # See: https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html
 
-FROM quay.io/fedora/fedora-bootc:43
+FROM quay.io/fedora/fedora-bootc:44
 
 ARG TARGETARCH
 
@@ -38,11 +38,9 @@ COPY selinux/systemd_age_creds.cil selinux/container_tun.cil /tmp/
 RUN semodule -i /tmp/systemd_age_creds.cil /tmp/container_tun.cil && rm /tmp/systemd_age_creds.cil /tmp/container_tun.cil
 
 # Enable services and suppress upstream services that don't apply to our setup:
-# - bootloader-update.service: bootupd is not installed in our image so this always fails
 # - rpm-ostree-fix-shadow-mode.service: pre-create its stamp file so it knows the fix is
 #   already applied; with transient /etc the stamp would otherwise be reset every boot
 RUN systemctl enable firewalld podman-image-prune.timer bootc-fetch-apply-updates.timer secrets-inject.service ssh-generate-identity.service age-generate-identity.service init-content-dirs.service boot.mount boot-efi.mount var-mnt-data.mount homelab-secrets-sync.service homelab-secrets-sync.timer homelab-config-sync.service homelab-config-sync.timer systemd-age-creds.socket wg-nas.service greenboot-healthcheck.service greenboot-set-rollback-trigger.service && \
-    systemctl mask bootloader-update.service && \
     touch /etc/.rpm-ostree-shadow-mode-fixed2.stamp && \
     ln -sf /usr/share/zoneinfo/America/New_York /etc/localtime
 
