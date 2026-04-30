@@ -106,6 +106,7 @@
       matchPackageNames: [
         'quay.io/fedora/fedora-bootc',
       ],
+      allowedVersions: '44',
       schedule: [
         'before 9am on monday',
         'before 9am on thursday',
