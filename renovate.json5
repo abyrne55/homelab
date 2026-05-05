@@ -88,5 +88,14 @@
       automerge: true,
       automergeType: 'pr',
     },
+    {
+      matchDatasources: [
+        'docker',
+      ],
+      matchPackageNames: [
+        '/^lscr\\.io//',
+      ],
+      pinDigests: false,
+    },
   ],
 }
