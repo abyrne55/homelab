@@ -27,17 +27,6 @@
         '/^Containerfile$/',
       ],
       matchStrings: [
-        'FROM (?<depName>[a-zA-Z0-9][a-zA-Z0-9./_-]*):(?<currentValue>[a-zA-Z0-9._-]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?',
-      ],
-      datasourceTemplate: 'docker',
-      autoReplaceStringTemplate: 'FROM {{depName}}:{{newValue}}{{#if newDigest}}@{{newDigest}}{{/if}}',
-    },
-    {
-      customType: 'regex',
-      managerFilePatterns: [
-        '/^Containerfile$/',
-      ],
-      matchStrings: [
         'ARG COSIGN_VERSION=(?<currentValue>\\S+)',
       ],
       datasourceTemplate: 'github-releases',
@@ -98,19 +87,6 @@
       ],
       automerge: true,
       automergeType: 'pr',
-    },
-    {
-      matchDatasources: [
-        'docker',
-      ],
-      matchPackageNames: [
-        'quay.io/fedora/fedora-bootc',
-      ],
-      allowedVersions: '44',
-      schedule: [
-        'before 9am on monday',
-        'before 9am on thursday',
-      ],
     },
   ],
 }
