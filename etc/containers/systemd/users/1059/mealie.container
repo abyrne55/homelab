@@ -7,11 +7,9 @@ Wants=network-online.target mealie-configure.service
 Image=ghcr.io/abyrne55/mealie-hummingbird:v3.16.0
 AutoUpdate=registry
 PublishPort=20590:9000
-Volume=/var/local/lib/mealie/data:/app/data:Z
+Volume=/var/local/lib/mealie/data:/app/data:Z,U
 NoNewPrivileges=true
 DropCapability=all
-# mealie entrypoint runs as root then chowns /app/data and switches to UID 911
-AddCapability=CHOWN SETUID SETGID
 HealthCmd=curl -sf http://localhost:9000/api/app/about
 HealthStartPeriod=120s
 HealthInterval=30s
