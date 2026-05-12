@@ -1,11 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 config_path=/var/local/lib/prowlarr/config/config.xml
+api_key=$(cat "${CREDENTIALS_DIRECTORY}/prowlarr-api-key")
+
 if [[ -f "$config_path" ]]; then
-  echo "config.xml already exists, skipping"
-  exit 0
+  podman unshare sed -i "s|<ApiKey>.*</ApiKey>|<ApiKey>${api_key}</ApiKey>|" "$config_path"
+  echo "Prowlarr config.xml API key updated"
+else
+  printf '<Config>\n  <ApiKey>%s</ApiKey>\n</Config>\n' "$api_key" > "$config_path"
+  echo "Prowlarr config.xml initialized"
 fi
-printf '<Config>\n  <ApiKey>%s</ApiKey>\n</Config>\n' \
-  "$(cat "${CREDENTIALS_DIRECTORY}/prowlarr-api-key")" \
-  > "$config_path"
-echo "Prowlarr config.xml initialized"
