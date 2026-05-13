@@ -43,6 +43,9 @@
       matchPackageNames: [
         '/^ghcr\\.io/abyrne55//',
       ],
+      excludePackageNames: [
+        'ghcr.io/abyrne55/mealie-hummingbird',
+      ],
     },
     {
       matchDatasources: [
