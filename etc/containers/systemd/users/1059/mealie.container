@@ -34,6 +34,7 @@ Environment=THEME_DARK_SUCCESS=#81C784
 Environment=THEME_DARK_INFO=#78B2C0
 Environment=THEME_DARK_WARNING=#EBC86E
 Environment=THEME_DARK_ERROR=#E57373
+Environment=OPENAI_MODEL=gpt-5.4-mini
 EnvironmentFile=%t/mealie/mealie.env
 
 [Service]
