@@ -18,7 +18,7 @@ Environment=LLAMA_ARG_CTX_SIZE=8192
 Environment=LLAMA_ARG_THREADS=10
 Environment=LLAMA_ARG_FLASH_ATTN=on
 Environment=LLAMA_ARG_ENDPOINT_METRICS=1
-Exec=--temp 0.7 --top-p 0.8 --top-k 20 --min-p 0.0 --chat-template-kwargs "{\"enable_thinking\": false}"
+Exec=--temp 0.7 --top-p 0.8 --top-k 20 --min-p 0.0 --presence-penalty 1.5 --repeat-penalty 1.0 --chat-template-kwargs "{\"enable_thinking\": false}"
 HealthCmd=curl -sf http://localhost:8080/health
 HealthStartPeriod=10m
 HealthInterval=30s
