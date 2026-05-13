@@ -34,18 +34,14 @@ Environment=THEME_DARK_SUCCESS=#81C784
 Environment=THEME_DARK_INFO=#78B2C0
 Environment=THEME_DARK_WARNING=#EBC86E
 Environment=THEME_DARK_ERROR=#E57373
-Environment=OPENAI_BASE_URL=http://host.containers.internal:20600/v1
-Environment=OPENAI_API_KEY=sk-no-key-required
-Environment=OPENAI_MODEL=Qwen3.5-2B-GGUF
-Environment=OPENAI_ENABLE_IMAGE_SERVICES=true
-Environment=OPENAI_ENABLE_TRANSCRIPTION_SERVICES=false
-Environment=OPENAI_REQUEST_TIMEOUT=600
-Environment=OPENAI_WORKERS=1
-Environment=OPENAI_SEND_DATABASE_DATA=true
+EnvironmentFile=%t/mealie/mealie.env
 
 [Service]
 Restart=on-failure
 RestartSec=5
+LoadCredential=openai-api-key:/run/systemd-age-creds.sock
+RuntimeDirectory=mealie
+ExecStartPre=/bin/bash -c 'printf "OPENAI_API_KEY=%%s\n" "$(tr -d "[:space:]" < "${CREDENTIALS_DIRECTORY}/openai-api-key")" > "${RUNTIME_DIRECTORY}/mealie.env"'
 TimeoutStartSec=10min
 
 [Install]
