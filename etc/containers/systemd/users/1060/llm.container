@@ -10,7 +10,7 @@ PublishPort=20600:8080
 Volume=/var/local/lib/llm/models:/models:Z
 NoNewPrivileges=true
 DropCapability=all
-Environment=LLAMA_ARG_HF_REPO=unsloth/Qwen3.5-4B-GGUF:UD-Q4_K_XL
+Environment=LLAMA_ARG_HF_REPO=unsloth/Qwen3.5-2B-GGUF:UD-Q5_K_XL
 Environment=LLAMA_CACHE=/models
 Environment=LLAMA_ARG_HOST=0.0.0.0
 Environment=LLAMA_ARG_PORT=8080
