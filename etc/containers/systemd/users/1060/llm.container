@@ -1,0 +1,35 @@
+[Unit]
+Description=LLM inference server (llama.cpp)
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+# renovate: datasource=docker depName=ghcr.io/ggml-org/llama.cpp
+Image=ghcr.io/ggml-org/llama.cpp:server-b9128
+PublishPort=20600:8080
+Volume=/var/local/lib/llm/models:/models:Z
+NoNewPrivileges=true
+DropCapability=all
+Environment=LLAMA_ARG_HF_REPO=unsloth/Qwen3.5-4B-GGUF:UD-Q4_K_XL
+Environment=LLAMA_CACHE=/models
+Environment=LLAMA_ARG_HOST=0.0.0.0
+Environment=LLAMA_ARG_PORT=8080
+Environment=LLAMA_ARG_CTX_SIZE=8192
+Environment=LLAMA_ARG_THREADS=10
+Environment=LLAMA_ARG_FLASH_ATTN=on
+Environment=LLAMA_ARG_ENDPOINT_METRICS=1
+Exec=--temp 0.7 --top-p 0.8 --top-k 20 --min-p 0.0 --chat-template-kwargs "{\"enable_thinking\": false}"
+HealthCmd=curl -sf http://localhost:8080/health
+HealthStartPeriod=10m
+HealthInterval=30s
+HealthRetries=5
+HealthOnFailure=kill
+Notify=healthy
+
+[Service]
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=30min
+
+[Install]
+WantedBy=default.target
