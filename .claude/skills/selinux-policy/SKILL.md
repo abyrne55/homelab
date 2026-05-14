@@ -97,10 +97,10 @@ Allows systemd (`init_t`) to connect to the systemd-age-creds UNIX socket (`unco
 
 ### 1. Collect AVC denials
 
-Read from the VM's kernel audit log using `journalctl`:
+Read from the system's kernel audit log using `journalctl`. Replace `ssh nook --` with `vsh` for QEMU VM.
 
 ```bash
-vsh "sudo journalctl -k --grep='avc:' -n 50"
+ssh nook -- "sudo journalctl -k --grep='avc:' -n 50"
 ```
 
 This retrieves the last 50 lines containing "avc:" from the kernel log. Increase `-n 50` if you
@@ -109,9 +109,9 @@ need more history (e.g., `-n 100` for the last 100 matches).
 **Tip:** To collect multiple AVC denials at once without rebooting, toggle permissive mode:
 
 ```bash
-vsh "sudo setenforce 0"    # switch to permissive mode
+ssh nook -- "sudo setenforce 0"    # switch to permissive mode
 # ... run your service/test, denials will be logged ...
-vsh "sudo setenforce 1"    # switch back to enforcing mode
+ssh nook -- "sudo setenforce 1"    # switch back to enforcing mode
 ```
 
 Then review the collected denials and write all the CIL rules at once. No reboot needed.
@@ -165,7 +165,7 @@ make await-ghcr vm-switch       # rolling upgrade if no /var/ changes
 make await-ghcr clean run-vm-from-ghcr
 
 # Check for remaining denials after the upgrade:
-vsh "sudo journalctl -k --grep='avc:.*denied' -n 20"
+ssh nook -- "sudo journalctl -k --grep='avc:.*denied' -n 20"
 ```
 
 ## Tips

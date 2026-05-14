@@ -1,6 +1,6 @@
 ---
 name: fallback-cmd
-description: Reveals the raw shell commands underlying preferred tools like 'vsh' and 'hl'. Use this skill ONLY if a preferred tool is unavailable or unable to complete a certain task.
+description: Reveals the raw shell commands underlying preferred tools like 'ssh nook', 'vsh', and 'hl'. Use this skill ONLY if a preferred tool is unavailable or unable to complete a certain task.
 argument-hint: [tool-name]
 ---
 
@@ -16,7 +16,7 @@ Use these raw commands **only if** the preferred tool (`vsh`, `hl`) is unavailab
 
 ---
 
-## vsh (VM SSH wrapper)
+## vsh (QEMU VM SSH wrapper)
 
 **When:** `vsh` is unavailable or broken.
 
@@ -43,6 +43,22 @@ ssh -i ./secrets/core/id_ed25519 -p 2222 \
 ```bash
 ssh -i ./secrets/core/id_ed25519 -p 2222 -o LogLevel=QUIET -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o PreferredAuthentications=publickey core@127.0.0.1 -- "YOUR_COMMAND"
 ```
+
+---
+
+## ssh nook (production SSH)
+
+**When:** running commands on the production nook hardware.
+
+**Preferred:**
+
+```bash
+ssh nook -- "<your command here>"
+```
+
+No special flags needed — assumes `~/.ssh/config` has nook configured with user `core`.
+
+**Note:** `ssh nook` is NOT sandbox-safe. Run with `dangerouslyDisableSandbox: true`, or disable the sandbox first.
 
 ---
 

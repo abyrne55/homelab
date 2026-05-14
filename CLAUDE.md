@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This repo contains GitOps-style homelab infrastructure-as-code based around a bootable container (bootc). The system is built as a multi-arch (arm64 + amd64) fedora-bootc container image and either converted to a VM disk for dev-testing via QEMU or pushed to a container registry for deployment on a Raspberry Pi (arm64) or x86_64 hardware using `bootc switch`.
+This repo contains GitOps-style homelab infrastructure-as-code based around a bootable container (bootc). The system is built as a multi-arch (arm64 + amd64) fedora-bootc container image and either converted to a VM disk for dev-testing via QEMU or pushed to a container registry for deployment on nook (Intel NUC, x86_64) or other hardware using `bootc switch`.
 
 Note that none of the software referenced/defined in this repo is meant to be run directly on the local machine; it is meant to run on the deployment target or within a QEMU VM. The local machine may be macOS (arm64 or x86_64) or Linux (x86_64 or aarch64) — the Makefile auto-detects the platform and selects the correct QEMU binary, accelerator, and firmware.
 
@@ -98,7 +98,7 @@ Two top-level directories mirror their target filesystem counterparts, with a de
 `/var/local/lib/` dirs are created at boot by `usr/lib/tmpfiles.d/service-state-dirs.conf`. `/var/mnt/data` is an NFSv4.1 share mounted over a WireGuard VPN tunnel to the NAS — see `usr/lib/systemd/system/wg-nas.service` and `var-mnt-data.mount`.
 
 - `secrets/` - Pre-generated keys for injection into QEMU VM (.gitignored)
-  - These secrets are injected into the VM during development for convenience. On the Raspberry Pi, unique credentials will be generated on first boot
+  - These secrets are injected into the VM during development for convenience. On nook and other production targets, unique credentials are generated on first boot.
 
 ## Secrets Management
 
@@ -130,22 +130,29 @@ Note: there's also an `ssh-vm` target, but do not use it yourself; that target i
 
 The Makefile allows you to build container images locally or via GitHub Actions — **prefer GitHub Actions (`from-ghcr` targets)**, as GitHub can build container images much more quickly than the user's machine can.
 
-**Testing workflow:**
+**Dev (QEMU VM):**
 
 1. Commit your changes to a non-main branch and push to origin
-2. Wait for the build to complete and then trigger a bootc upgrade inside the running VM
+2. Trigger a bootc upgrade inside the running VM:
 
    ```bash
    make await-ghcr vm-switch
+   # If /var/ is affected or VM isn't running, do a clean rebuild instead:
+   make await-ghcr clean run-vm-from-ghcr
    ```
 
-If the VM isn't running or if you're testing changes that affect persistent/mutable parts of the container's filesystem (e.g., /var/), rebuild from scratch instead of doing a bootc upgrade:
+**Production (nook):**
 
-```bash
-make await-ghcr clean run-vm-from-ghcr
-```
+1. Commit, push, and (when ready) merge to main
+2. Wait for the build, then upgrade nook:
 
-To more-quickly test small changes, try interacting with the already-running VM via SSH (see below) before rebuilding.
+   ```bash
+   make await-ghcr
+   ssh nook -- sudo bootc upgrade
+   # bootc upgrade stages the image; reboot to activate, or it auto-applies on next reboot
+   ```
+
+To test small changes quickly, interact with the target directly before rebuilding (see `ssh nook` / `vsh` below).
 
 Once the VM is running, use `vsh` (`~/.local/bin/vsh`) to run commands on it:
 
@@ -155,9 +162,18 @@ vsh "sudo dmesg | tail -20"          # quote when using pipes/redirects/subshell
 vsh 'echo $(hostname)-$(date +%s)'   # single-quote to defer expansion to remote
 ```
 
-Note: `vsh` is always safe to run in the sandbox. Do NOT run `vsh` with `dangerouslyDisableSandbox: true`.
+Note: `vsh` is always safe to run in the sandbox (connects to localhost:2222).
 
-Use `/test-vm [service-name]` whenever you're testing, debugging, or doing other complex/multi-step interactions with the VM.
+For nook (production hardware), use `ssh nook` instead:
+
+```bash
+ssh nook -- hl failed
+ssh nook -- "sudo dmesg | tail -20"
+```
+
+Note: `ssh nook` connects to a separate physical machine and is NOT sandbox-safe. Run it with `dangerouslyDisableSandbox: true`, or disable the sandbox first.
+
+Use `/test-deploy [service-name]` whenever you're testing, debugging, or doing other complex/multi-step interactions with the system.
 
 Use `hl` (baked into the image at `/usr/local/bin/hl`) to manage rootless quadlets:
 
@@ -181,7 +197,7 @@ hl help                              # full usage
 
 ## Adding New Software
 
-Use `/add-quadlet [service-name]` for the full step-by-step checklist. The short version: each service gets a dedicated system user (sysusers.d), home directory (tmpfiles homedirs), linger entry, subid range, a `.container` quadlet file under `etc/containers/systemd/users/<uid>/`, and a Caddy route in homelab-config. Use `/test-vm [service-name]` for testing and troubleshooting. For hardening directives to apply to the quadlet, use `/hardening`.
+Use `/add-quadlet [service-name]` for the full step-by-step checklist. The short version: each service gets a dedicated system user (sysusers.d), home directory (tmpfiles homedirs), linger entry, subid range, a `.container` quadlet file under `etc/containers/systemd/users/<uid>/`, and a Caddy route in homelab-config. Use `/test-deploy [service-name]` for testing and troubleshooting. For hardening directives to apply to the quadlet, use `/hardening`.
 
 **Port assignment scheme:** `2<last 3 digits of UID><index>` — e.g. UID 1051 → 20510, 20511, … All ports stay in 20000–29999 (below the ephemeral port floor of 32768). Tinyproxy is an exception — it is not published to the host and is only reachable via container-internal DNS.
 
@@ -217,6 +233,6 @@ New system units (not quadlets) must also be appended to the `RUN systemctl enab
 |---|---|
 | `/add-quadlet [name]` | Full checklist for adding a new rootless quadlet service |
 | `/hardening` | Baseline hardening directives for quadlets and systemd units |
-| `/test-vm [service]` | Guided testing/troubleshooting of new or problematic features/services |
+| `/test-deploy [service]` | Guided testing/troubleshooting of new or problematic features/services |
 | `/selinux-policy` | Write, debug, and extend custom SELinux CIL policy modules |
 | `/fallback-cmd` | Raw shell commands when `hl`/`vsh` can't complete a task |

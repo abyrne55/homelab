@@ -1,10 +1,10 @@
 ---
-name: test-vm
-description: Tests changes using the running homelab VM. Use this skill when testing a new service or troubleshooting something (e.g., a service isn't starting, a container is unhealthy, the VM behaves unexpectedly, or the user asks to investigate an error on the VM). Triggered via /test-vm [service-name or symptom].
+name: test-deploy
+description: Tests changes using the running homelab system (QEMU VM or nook production hardware). Use this skill when testing a new service or troubleshooting something (e.g., a service isn't starting, a container is unhealthy, the system behaves unexpectedly, or the user asks to investigate an error on the system). Triggered via /test-deploy [service-name or symptom].
 argument-hint: [service-name or symptom]
 ---
 
-# Test VM: $ARGUMENTS
+# Test Deploy: $ARGUMENTS
 
 Work through these steps in order. Stop when you've confirmed the target service is working or if you've identified the root cause of any issues.
 
@@ -19,10 +19,12 @@ Triage: $ARGUMENTS
 - [ ] 7. Check credentials
 ```
 
+> **Target:** These commands use `ssh nook` (production hardware). Replace `ssh nook --` with `vsh` if testing against the QEMU VM instead.
+
 ## 1. Check for any failed units
 
 ```bash
-vsh hl failed
+ssh nook -- hl failed
 ```
 
 This lists failed units across both system and all service users. If something is unexpectedly failed, start there.
@@ -30,27 +32,27 @@ This lists failed units across both system and all service users. If something i
 ## 2. Check service status and recent logs
 
 ```bash
-vsh hl status $ARGUMENTS
-vsh hl logs $ARGUMENTS -n 50
+ssh nook -- hl status $ARGUMENTS
+ssh nook -- hl logs $ARGUMENTS -n 50
 ```
 
 For system units (not quadlets):
 
 ```bash
-vsh hl status -s $ARGUMENTS
-vsh hl logs -s $ARGUMENTS -n 50
+ssh nook -- hl status -s $ARGUMENTS
+ssh nook -- hl logs -s $ARGUMENTS -n 50
 ```
 
 For user-level non-quadlet units (configure/bootstrap scripts like `radarr-configure`, `mealie-configure`, `jellarr-bootstrap`):
 
 ```bash
-vsh "hl logs -u radarr radarr-configure -n 50"   # -u <service-user> <unit-name>
+ssh nook -- "hl logs -u radarr radarr-configure -n 50"   # -u <service-user> <unit-name>
 ```
 
 ## 3. Check container health
 
 ```bash
-vsh hl ps
+ssh nook -- hl ps
 ```
 
 Look for containers with non-`healthy` status. A container stuck in `starting` may have a failing `HealthCmd`.
@@ -58,7 +60,7 @@ Look for containers with non-`healthy` status. A container stuck in `starting` m
 ## 4. Check the systemd journal for boot-time errors
 
 ```bash
-vsh "sudo journalctl -b -p err --no-pager | tail -40"
+ssh nook -- "sudo journalctl -b -p err --no-pager | tail -40"
 ```
 
 ## 5. Check a specific unit's full journal
@@ -66,13 +68,13 @@ vsh "sudo journalctl -b -p err --no-pager | tail -40"
 `--user-unit` doesn't work on this system; `hl logs` uses journal field matching instead:
 
 ```bash
-vsh hl logs $ARGUMENTS -n 200
+ssh nook -- hl logs $ARGUMENTS -n 200
 ```
 
 For system units:
 
 ```bash
-vsh hl logs -s $ARGUMENTS -n 200
+ssh nook -- hl logs -s $ARGUMENTS -n 200
 ```
 
 ## 6. Inspect a container directly
@@ -80,9 +82,9 @@ vsh hl logs -s $ARGUMENTS -n 200
 `machinectl` is not installed. Use `hl ps` to list containers, then `hl sudo` to exec into one:
 
 ```bash
-vsh hl ps -u $ARGUMENTS
-vsh "hl sudo $ARGUMENTS -- <cmd>"                          # exec into container
-vsh "hl sudo -u $ARGUMENTS <container> -- <cmd>"           # exec (explicit user)
+ssh nook -- hl ps -u $ARGUMENTS
+ssh nook -- "hl sudo $ARGUMENTS -- <cmd>"                          # exec into container
+ssh nook -- "hl sudo -u $ARGUMENTS <container> -- <cmd>"           # exec (explicit user)
 ```
 
 For raw podman commands when `hl` is unavailable, use the `/fallback-cmd` skill.
@@ -92,9 +94,9 @@ For raw podman commands when `hl` is unavailable, use the `/fallback-cmd` skill.
 Check that secrets were synced and the socket is decrypting correctly:
 
 ```bash
-vsh hl logs -s homelab-secrets-sync -n 30
-vsh hl logs -s systemd-age-creds -n 30
-vsh "ls /run/credentials/"
+ssh nook -- hl logs -s homelab-secrets-sync -n 30
+ssh nook -- hl logs -s systemd-age-creds -n 30
+ssh nook -- "ls /run/credentials/"
 ```
 
 The `systemd-age-creds` log shows each credential request (service name, UID, credential name) — use this to confirm whether the failing service ever successfully requested its credential, and whether decryption succeeded or failed.
@@ -103,24 +105,30 @@ The `systemd-age-creds` log shows each credential request (service name, UID, cr
 
 ## Fallback Commands
 
-If `vsh` is unavailable, use the `/fallback-cmd` skill to access raw SSH and systemctl/journalctl/podman commands.
+If `ssh nook` (or `vsh` for QEMU) is unavailable, use the `/fallback-cmd` skill to access raw SSH and systemctl/journalctl/podman commands.
 
 ## Greenboot reboot loops
 
-If the VM reboots repeatedly after an upgrade, greenboot is likely failing a `required.d` check. The journal doesn't persist across reboots by default, so use the serial log and GRUB env:
+If the system reboots repeatedly after an upgrade, greenboot is likely failing a `required.d` check.
+
+**On nook:** The journal persists across reboots — use `ssh nook -- sudo journalctl -b -1 -p err --no-pager` to check the previous boot.
+
+**On QEMU VM:** The journal doesn't persist across reboots by default, so use the serial log and GRUB env:
 
 ```bash
 # Check GRUB state (boot_counter counts down; rollback fires when it reaches 0)
 vsh 'sudo grub2-editenv list'
 
-# Check serial log for greenboot outcomes across all recent boots
+# The serial log is a local QEMU artifact (not available for nook)
 strings build/serial.log | grep -E "(greenboot-healthcheck|Rebooting|boot_success)"
+```
 
+```bash
 # Run the healthcheck binary directly (RefuseManualStart=yes blocks `systemctl start`)
-vsh 'sudo /usr/libexec/greenboot/greenboot health-check 2>&1'
+ssh nook -- 'sudo /usr/libexec/greenboot/greenboot health-check 2>&1'
 
 # Test individual check scripts
-vsh 'sudo /usr/lib/greenboot/check/required.d/20-caddy.sh'
+ssh nook -- 'sudo /usr/lib/greenboot/check/required.d/20-caddy.sh'
 ```
 
 Greenboot spawns each check script as a transient systemd unit internally. "Connection reset by peer" / "Transport endpoint is not connected" in greenboot's output means the user session D-Bus socket was transiently unavailable — not necessarily that the service is broken. Run the script directly to confirm actual state.
