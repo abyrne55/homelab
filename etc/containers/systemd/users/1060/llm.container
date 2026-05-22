@@ -1,5 +1,7 @@
 [Unit]
 Description=LLM inference server (llama.cpp)
+# Don't run in resource-constrained VMs
+ConditionVirtualization=false
 After=network-online.target
 Wants=network-online.target
 
