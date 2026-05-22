@@ -1,7 +1,7 @@
 [Unit]
 Description=Daily restic backup of /var/local/lib to NFS
 Documentation=https://restic.readthedocs.io/
-Wants=network-online.target var-mnt-backup.mount
+Wants=network-online.target var-mnt-backup.mount homelab-secrets-sync.service
 After=network-online.target var-mnt-backup.mount homelab-secrets-sync.service
 Requires=var-mnt-backup.mount
 ConditionPathIsMountPoint=/var/mnt/backup
