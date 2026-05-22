@@ -1,0 +1,55 @@
+[Unit]
+Description=Daily restic backup of /var/local/lib to NFS
+Documentation=https://restic.readthedocs.io/
+Wants=network-online.target var-mnt-backup.mount
+After=network-online.target var-mnt-backup.mount homelab-secrets-sync.service
+Requires=var-mnt-backup.mount
+ConditionPathIsMountPoint=/var/mnt/backup
+
+[Service]
+Type=oneshot
+User=root
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+LockPersonality=yes
+RestrictRealtime=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/local/lib /var/mnt/backup /var/cache/restic
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+PrivateDevices=yes
+ProtectClock=yes
+MemoryDenyWriteExecute=yes
+ProtectHostname=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+SystemCallArchitectures=native
+ProtectProc=noaccess
+ProcSubset=pid
+UMask=0077
+
+LoadCredential=restic-password:%t/systemd-age-creds.sock
+
+Environment=RESTIC_REPOSITORY=/var/mnt/backup/restic/%H
+Environment=RESTIC_PASSWORD_FILE=%d/restic-password
+Environment=RESTIC_CACHE_DIR=/var/cache/restic
+
+# Init repo on first run — idempotent, leading dash suppresses "already initialized" failure
+ExecStartPre=-/usr/bin/restic init
+# Dump SQLite DBs to staging area under /var/local/lib/restic-staging/
+ExecStartPre=/usr/local/bin/sqlite-safe-dump
+# Clear any NFS stale lock left by a prior crashed run
+ExecStartPre=-/usr/bin/restic unlock
+ExecStart=/usr/bin/restic backup --compression auto --tag scheduled --host %H /var/local/lib
+ExecStartPost=/usr/bin/restic forget --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune
+# Amortizes full integrity verification across ~50 runs without paying full-check NFS cost daily
+ExecStartPost=-/usr/bin/restic check --read-data-subset=2%
+
+TimeoutStartSec=2h
+
+[Install]
+WantedBy=multi-user.target

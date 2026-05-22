@@ -94,8 +94,11 @@ Two top-level directories mirror their target filesystem counterparts, with a de
 |---|---|---|
 | `/var/local/lib/<service>/` | Service state: config DB, cache, app data | Yes — local disk |
 | `/var/mnt/data/` | Content: media files, downloads | Only when NFS/WireGuard is up |
+| `/var/mnt/backup/` | Restic backup repository (NFS, per-host) | Only when NFS/WireGuard is up |
 
 `/var/local/lib/` dirs are created at boot by `usr/lib/tmpfiles.d/service-state-dirs.conf`. `/var/mnt/data` is an NFSv4.1 share mounted over a WireGuard VPN tunnel to the NAS — see `usr/lib/systemd/system/wg-nas.service` and `var-mnt-data.mount`.
+
+**Backups:** `restic-backup.timer` runs daily at 03:00, dumps SQLite DBs via `usr/local/bin/sqlite-safe-dump`, then ships an encrypted restic snapshot to `/var/mnt/backup/restic/<hostname>/` on the NAS (`100.100.100.1:/volume1/hlbkup`). The restic repo password is stored in `homelab-secrets/restic-password.age` and **must be preserved out-of-band** (password manager / printed copy) — losing it makes every snapshot unrecoverable. Retention: daily×7, weekly×4, monthly×6.
 
 - `secrets/` - Pre-generated keys for injection into QEMU VM (.gitignored)
   - These secrets are injected into the VM during development for convenience. On nook and other production targets, unique credentials are generated on first boot.

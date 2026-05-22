@@ -1,0 +1,71 @@
+#!/usr/bin/bash
+# Dump live SQLite DBs to /var/local/lib/restic-staging/ using VACUUM INTO for crash-safe
+# point-in-time copies. Called as ExecStartPre= in restic-backup.service.
+set -euo pipefail
+
+STAGING_BASE="/var/local/lib/restic-staging"
+failures=0
+skipped=0
+dumped=0
+
+dump_db() {
+    local service="$1" src="$2"
+    local dest_dir="${STAGING_BASE}/${service}"
+    local dest
+    dest="${dest_dir}/$(basename "$src")"
+
+    if [ ! -f "$src" ]; then
+        echo "sqlite-safe-dump: skip ${src} (not found)"
+        (( skipped++ )) || true
+        return
+    fi
+
+    mkdir -p "$dest_dir"
+    rm -f "$dest"
+    if sqlite3 "$src" "VACUUM INTO '${dest}'"; then
+        echo "sqlite-safe-dump: dumped ${src} -> ${dest}"
+        (( dumped++ )) || true
+    else
+        echo "sqlite-safe-dump: ERROR dumping ${src}" >&2
+        (( failures++ )) || true
+    fi
+}
+
+# Home Assistant
+dump_db home-assistant /var/local/lib/home-assistant/config/home-assistant_v2.db
+
+# Mealie
+dump_db mealie /var/local/lib/mealie/data/mealie.db
+
+# Sonarr
+dump_db sonarr /var/local/lib/sonarr/config/sonarr.db
+dump_db sonarr /var/local/lib/sonarr/config/logs.db
+
+# Radarr
+dump_db radarr /var/local/lib/radarr/config/radarr.db
+dump_db radarr /var/local/lib/radarr/config/logs.db
+
+# Prowlarr
+dump_db prowlarr /var/local/lib/prowlarr/config/prowlarr.db
+dump_db prowlarr /var/local/lib/prowlarr/config/logs.db
+
+# Jellyfin — dump all .db files under config/data/
+if [ -d /var/local/lib/jellyfin/config/data ]; then
+    while IFS= read -r -d '' db; do
+        dump_db jellyfin "$db"
+    done < <(find /var/local/lib/jellyfin/config/data -maxdepth 1 -name '*.db' -print0)
+else
+    echo "sqlite-safe-dump: skip jellyfin/config/data (not found)"
+    (( skipped++ )) || true
+fi
+
+# qBittorrent — no SQLite, backed up as-is under /var/local/lib/qbittorrent/
+
+echo "sqlite-safe-dump: done (dumped=${dumped} skipped=${skipped} failures=${failures})"
+
+# Fail only if every attempted dump failed (partial success is acceptable)
+if [ "$failures" -gt 0 ] && [ "$dumped" -eq 0 ]; then
+    echo "sqlite-safe-dump: all dumps failed, aborting backup" >&2
+    exit 1
+fi
+exit 0
