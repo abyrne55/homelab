@@ -4,7 +4,7 @@ After=network-online.target
 Wants=network-online.target mealie-configure.service
 
 [Container]
-Image=ghcr.io/abyrne55/mealie-hummingbird:v3.17.0
+Image=ghcr.io/abyrne55/mealie-hummingbird:v3.18.0
 AutoUpdate=registry
 PublishPort=20590:9000
 Volume=/var/local/lib/mealie/data:/app/data:Z,U
