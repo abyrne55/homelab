@@ -22,6 +22,7 @@ Add Quadlet: $ARGUMENTS
 - [ ] 8. Greenboot wanted.d check script
 - [ ] 9. Allocations table updated in CLAUDE.md
 - [ ] 10. prometheus-podman-exporter wired up
+- [ ] 11. Backup coverage (sqlite-safe-dump / restic)
 ```
 
 ## 1. `usr/lib/sysusers.d/<N>-<name>-user.conf`
@@ -166,6 +167,23 @@ After=... $ARGUMENTS.service
 ### Netdata scrape config (in homelab-config)
 
 Add the new exporter endpoint to the Netdata Prometheus scrape config in the private `homelab-config` repo so metrics are actually collected.
+
+## 11. Backup coverage
+
+The `restic-backup.service` snapshots all of `/var/local/lib` daily, so flat config files are covered automatically. However, **live SQLite databases must be dumped first** — restic snapshotting an open WAL can produce a corrupt backup.
+
+Check whether the new service uses SQLite. If it does, add a `dump_db` call to `usr/local/bin/sqlite-safe-dump`:
+
+```bash
+# $ARGUMENTS
+dump_db $ARGUMENTS /var/local/lib/$ARGUMENTS/config/$ARGUMENTS.db
+```
+
+Run `sqlite3 /var/local/lib/$ARGUMENTS/... .tables` on the live system to confirm the DB path and filename. Some services create multiple DB files (e.g. a separate `logs.db`) — add one `dump_db` line per file.
+
+If the service stores no SQLite databases (e.g. only flat config files or a binary data store), no changes are needed — restic will back it up as-is.
+
+Large re-downloadable data (model weights, media files) lives on NFS (`/var/mnt/data/`) and is **not** included in the restic backup — that's intentional.
 
 ## Additional References
 
