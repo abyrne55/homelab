@@ -24,7 +24,7 @@ RUN set -eu; \
     curl -sfL --proto =https "https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign_checksums.txt" | \
         grep "cosign-${COSIGN_VERSION}-1.${RPM_ARCH}.rpm" | sha256sum -c && \
     dnf -y --setopt=install_weak_deps=False install \
-        jq age git firewalld sqlite nfs-utils wireguard-tools greenboot prometheus-podman-exporter qemu-guest-agent \
+        jq age git firewalld sqlite nfs-utils wireguard-tools greenboot prometheus-podman-exporter qemu-guest-agent restic \
         ./systemd-age-creds-*.rpm ./cosign-*.rpm && \
     dnf clean all && \
     rm -rf /run/dnf /var/cache/*dnf* /var/cache/ldconfig/* /var/lib/dnf /var/log/dnf*.log \
@@ -40,7 +40,7 @@ RUN semodule -i /tmp/systemd_age_creds.cil /tmp/container_tun.cil && rm /tmp/sys
 # Enable services and suppress upstream services that don't apply to our setup:
 # - rpm-ostree-fix-shadow-mode.service: pre-create its stamp file so it knows the fix is
 #   already applied; with transient /etc the stamp would otherwise be reset every boot
-RUN systemctl enable firewalld podman-image-prune.timer bootc-fetch-apply-updates.timer secrets-inject.service ssh-generate-identity.service age-generate-identity.service init-content-dirs.service boot.mount boot-efi.mount var-mnt-data.mount homelab-secrets-sync.service homelab-secrets-sync.timer homelab-config-sync.service homelab-config-sync.timer systemd-age-creds.socket wg-nas.service greenboot-healthcheck.service greenboot-set-rollback-trigger.service qemu-guest-agent.service && \
+RUN systemctl enable firewalld podman-image-prune.timer bootc-fetch-apply-updates.timer secrets-inject.service ssh-generate-identity.service age-generate-identity.service init-content-dirs.service boot.mount boot-efi.mount var-mnt-data.mount var-mnt-backup.mount homelab-secrets-sync.service homelab-secrets-sync.timer homelab-config-sync.service homelab-config-sync.timer systemd-age-creds.socket wg-nas.service greenboot-healthcheck.service greenboot-set-rollback-trigger.service qemu-guest-agent.service restic-backup.timer && \
     touch /etc/.rpm-ostree-shadow-mode-fixed2.stamp && \
     ln -sf /usr/share/zoneinfo/America/New_York /etc/localtime
 
