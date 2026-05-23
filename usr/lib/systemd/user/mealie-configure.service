@@ -19,6 +19,7 @@ PrivateTmp=yes
 PrivateUsers=yes
 
 ProtectSystem=strict
+ReadWritePaths=/var/local/lib/mealie/local-ai
 ProtectHome=tmpfs
 ProtectControlGroups=yes
 ProtectHostname=yes

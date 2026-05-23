@@ -223,7 +223,8 @@ Use `/add-quadlet [service-name]` for the full step-by-step checklist. The short
 | home-assistant | 1058 | 20580 | 8123 | No — via Caddy only |
 | matter-server | 1058 | none (pod-internal) | 5580 | No — sidecar in home-assistant pod |
 | home-assistant (exporter) | 1058 | 20589 (localhost only) | — | No — Netdata scrape only |
-| mealie | 1059 | 20590 | 9000 | No — via Caddy only |
+| mealie | 1059 | 20590 | 9000 | No — via Caddy only (pod owns 20590) |
+| mealie-local-ai | 1059 | none (pod-internal) | 8000 | No — sidecar in mealie pod |
 | mealie (exporter) | 1059 | 20599 (localhost only) | — | No — Netdata scrape only |
 | llm | 1060 | 20600 | 8080 | No — via Caddy only |
 | llm (exporter) | 1060 | 20609 (localhost only) | — | No — Netdata scrape only |

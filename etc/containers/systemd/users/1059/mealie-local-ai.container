@@ -1,0 +1,32 @@
+[Unit]
+Description=Mealie local-AI sidecar
+After=network-online.target mealie.service mealie-configure.service
+Wants=network-online.target
+ConditionPathExists=/var/local/lib/mealie/local-ai/api-key
+
+[Container]
+Image=ghcr.io/abyrne55/mealie-local-ai:main
+AutoUpdate=registry
+Pod=mealie.pod
+Volume=/var/local/lib/mealie/local-ai-models:/models:Z,U
+Volume=/var/local/lib/mealie/local-ai/api-key:/run/secrets/mealie-api-key:ro,Z
+Environment=MEALIE_URL=http://localhost:9000
+Environment=MEALIE_API_KEY_FILE=/run/secrets/mealie-api-key
+Environment=MODEL_LOADING_STRATEGY=all
+Environment=LOG_LEVEL=info
+NoNewPrivileges=true
+DropCapability=all
+HealthCmd=/app/.venv/bin/python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
+HealthStartPeriod=300s
+HealthInterval=30s
+HealthRetries=5
+HealthOnFailure=kill
+Notify=healthy
+
+[Service]
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=infinity
+
+[Install]
+WantedBy=default.target
