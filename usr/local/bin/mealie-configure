@@ -144,7 +144,7 @@ if [ ! -s "$API_KEY_FILE" ]; then
     echo "Failed to mint API token for mealie-local-ai" >&2
     exit 1
   fi
-  install -m 0600 /dev/null "$API_KEY_FILE"
+  install -m 0644 /dev/null "$API_KEY_FILE"
   echo -n "$API_TOKEN" > "$API_KEY_FILE"
   echo "API token written to $API_KEY_FILE"
 else
