@@ -1,0 +1,8 @@
+[Unit]
+Description=Mealie pod (Mealie + local-ai sidecar)
+
+[Pod]
+PublishPort=20590:9000
+
+[Install]
+WantedBy=default.target

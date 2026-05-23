@@ -6,7 +6,7 @@ Wants=network-online.target mealie-configure.service
 [Container]
 Image=ghcr.io/abyrne55/mealie-hummingbird:v3.18.0
 AutoUpdate=registry
-PublishPort=20590:9000
+Pod=mealie.pod
 Volume=/var/local/lib/mealie/data:/app/data:Z,U
 NoNewPrivileges=true
 DropCapability=all
@@ -16,6 +16,10 @@ HealthInterval=30s
 HealthRetries=5
 HealthOnFailure=kill
 Notify=healthy
+Environment=OPENAI_BASE_URL=http://localhost:8000/v1
+Environment=OPENAI_API_KEY=sk-dummy
+Environment=OPENAI_WORKERS=1
+Environment=OPENAI_REQUEST_TIMEOUT=300
 Environment=TZ=America/New_York
 Environment=ALLOW_SIGNUP=false
 Environment=MAX_WORKERS=1
