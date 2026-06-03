@@ -16,7 +16,7 @@ Environment=MODEL_LOADING_STRATEGY=all
 Environment=LOG_LEVEL=info
 NoNewPrivileges=true
 DropCapability=all
-HealthCmd=/app/.venv/bin/python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
+HealthCmd=CMD /app/healthcheck.py
 HealthStartPeriod=300s
 HealthInterval=30s
 HealthRetries=5
