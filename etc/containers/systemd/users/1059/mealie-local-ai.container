@@ -27,6 +27,8 @@ Notify=healthy
 Restart=on-failure
 RestartSec=5
 TimeoutStartSec=infinity
+RuntimeMaxSec=1d
+RuntimeRandomizedExtraSec=1h
 
 [Install]
 WantedBy=default.target
