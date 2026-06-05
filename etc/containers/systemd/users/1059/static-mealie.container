@@ -1,0 +1,25 @@
+[Unit]
+Description=Static Mealie - generate static recipe site
+After=mealie.service mealie-configure.service
+ConditionPathExists=/var/local/lib/mealie/static-mealie/api-key
+
+[Container]
+Image=ghcr.io/abyrne55/static-mealie:main
+Pod=mealie.pod
+Volume=/var/local/lib/mealie/static-mealie/api-key:/run/secrets/static-mealie-token:ro,Z
+Volume=/var/local/lib/mealie/static:/output:z,U
+Environment=SM_MEALIE_URL=http://localhost:9000
+Environment=SM_CLEAN_SLATE=true
+NoNewPrivileges=true
+ReadOnly=true
+ReadOnlyTmpfs=true
+DropCapability=all
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
+TimeoutStartSec=5min
+ExecStartPre=/usr/bin/cosign verify --certificate-identity-regexp='https://github.com/abyrne55/static-mealie/.*' --certificate-oidc-issuer='https://token.actions.githubusercontent.com' ghcr.io/abyrne55/static-mealie:main
+
+[Install]
+WantedBy=default.target
