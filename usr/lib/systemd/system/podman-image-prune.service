@@ -6,7 +6,8 @@ Documentation=man:podman-image-prune(1)
 Type=oneshot
 ExecStart=/usr/bin/podman image prune -af
 
-NoNewPrivileges=yes
+# NoNewPrivileges=yes omitted: Podman needs SELinux domain transitions to access
+# container_var_run_t paths (/run/libpod/), which NNP blocks
 PrivateTmp=yes
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
@@ -16,7 +17,7 @@ LockPersonality=yes
 RestrictRealtime=yes
 ProtectSystem=strict
 ProtectHome=yes
-ReadWritePaths=/var/lib/containers /run/containers /run/libpod
+ReadWritePaths=/var/lib/containers /run/containers /run/libpod /run/lock
 ProtectClock=yes
 MemoryDenyWriteExecute=yes
 ProtectHostname=yes
