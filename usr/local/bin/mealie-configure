@@ -95,42 +95,6 @@ else
   echo "Display name already set to '$FULL_NAME'; skipping"
 fi
 
-# Set Family household to not-private
-HOUSEHOLDS=$(api "$MEALIE_URL/api/admin/households")
-FAMILY=$(echo "$HOUSEHOLDS" | jq '.items[] | select(.name == "Family")')
-FAMILY_ID=$(echo "$FAMILY" | jq -r '.id')
-FAMILY_GROUP_ID=$(echo "$FAMILY" | jq -r '.groupId')
-FAMILY_PRIVATE=$(echo "$FAMILY" | jq -r '.preferences.privateHousehold')
-
-if [ "$FAMILY_PRIVATE" = "true" ]; then
-  echo "Setting Family household to public..."
-  api -o /dev/null -X PUT "$MEALIE_URL/api/admin/households/$FAMILY_ID" \
-    -d "$(jq -n \
-      --arg id "$FAMILY_ID" \
-      --arg gid "$FAMILY_GROUP_ID" \
-      '{id: $id, groupId: $gid, name: "Family", preferences: {privateHousehold: false}}')"
-  echo "Family household set to public"
-else
-  echo "Family household already public; skipping"
-fi
-
-# Set Home group to not-private
-GROUP_LIST=$(api "$MEALIE_URL/api/admin/groups")
-HOME_GROUP=$(echo "$GROUP_LIST" | jq '.items[] | select(.name == "Home")')
-HOME_GROUP_ID=$(echo "$HOME_GROUP" | jq -r '.id')
-HOME_PRIVATE=$(echo "$HOME_GROUP" | jq -r '.preferences.privateGroup')
-
-if [ "$HOME_PRIVATE" = "true" ]; then
-  echo "Setting Home group to public..."
-  api -o /dev/null -X PUT "$MEALIE_URL/api/admin/groups/$HOME_GROUP_ID" \
-    -d "$(jq -n \
-      --arg id "$HOME_GROUP_ID" \
-      '{id: $id, name: "Home", preferences: {privateGroup: false}}')"
-  echo "Home group set to public"
-else
-  echo "Home group already public; skipping"
-fi
-
 # Seed foods, units, and labels
 FOOD_COUNT=$(api "$MEALIE_URL/api/foods?per_page=1" | jq '.total')
 if [ "$FOOD_COUNT" -eq 0 ]; then
