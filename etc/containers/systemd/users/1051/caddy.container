@@ -25,7 +25,7 @@ ReadOnly=true
 ReadOnlyTmpfs=true
 Notify=healthy
 Volume=/var/lib/homelab-config/caddy:/etc/caddy:ro,z
-Volume=/var/local/lib/mealie/static:/srv/static-mealie:ro,z
+Volume=/var/local/lib/mealie/static:/srv/static-mealie:ro
 PublishPort=20510:8080
 PublishPort=20511:8443
 

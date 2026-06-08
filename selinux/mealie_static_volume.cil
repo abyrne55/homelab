@@ -1,0 +1,6 @@
+; Label /var/local/lib/mealie/static as container_file_t so that Caddy
+; (rootless Podman, UID 1051) can bind-mount it read-only without :z.
+; The directory is owned by mealie (UID 1059); without this filecon rule
+; Caddy's rootless Podman would need :z to relabel, which fails across
+; user boundaries (EPERM on lsetxattr).
+(filecon "/var/local/lib/mealie/static(/.*)?" any (system_u object_r container_file_t ((s0) (s0))))
