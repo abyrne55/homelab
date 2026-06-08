@@ -8,6 +8,7 @@ Image=ghcr.io/abyrne55/mealie-hummingbird:v3.19.2
 AutoUpdate=registry
 Pod=mealie.pod
 Volume=/var/local/lib/mealie/data:/app/data:Z,U
+Memory=1G
 NoNewPrivileges=true
 DropCapability=all
 HealthCmd=CMD /app/healthcheck.py
