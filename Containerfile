@@ -34,8 +34,8 @@ COPY etc/ /etc/
 COPY usr/ /usr/
 
 # Copy SELinux policy
-COPY selinux/systemd_age_creds.cil selinux/container_tun.cil /tmp/
-RUN semodule -i /tmp/systemd_age_creds.cil /tmp/container_tun.cil && rm /tmp/systemd_age_creds.cil /tmp/container_tun.cil
+COPY selinux/systemd_age_creds.cil selinux/container_tun.cil selinux/mealie_static_volume.cil /tmp/
+RUN semodule -i /tmp/systemd_age_creds.cil /tmp/container_tun.cil /tmp/mealie_static_volume.cil && rm /tmp/systemd_age_creds.cil /tmp/container_tun.cil /tmp/mealie_static_volume.cil
 
 # Enable services and suppress upstream services that don't apply to our setup:
 # - rpm-ostree-fix-shadow-mode.service: pre-create its stamp file so it knows the fix is
