@@ -14,6 +14,7 @@ Environment=MEALIE_URL=http://localhost:9000
 Environment=MEALIE_API_KEY_FILE=/run/secrets/mealie-api-key
 Environment=MODEL_LOADING_STRATEGY=all
 Environment=LOG_LEVEL=info
+Memory=1.5G
 NoNewPrivileges=true
 DropCapability=all
 HealthCmd=CMD /app/healthcheck.py

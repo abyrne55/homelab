@@ -10,6 +10,7 @@ Wants=network-online.target
 Image=ghcr.io/ggml-org/llama.cpp:server-b9128
 PublishPort=20600:8080
 Volume=/var/local/lib/llm/models:/models:Z
+Memory=6G
 NoNewPrivileges=true
 DropCapability=all
 Environment=LLAMA_ARG_HF_REPO=unsloth/Qwen3.5-2B-GGUF:UD-Q5_K_XL
