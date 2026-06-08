@@ -1,6 +1,7 @@
 [Unit]
 Description=Daily restic backup of /var/local/lib to NFS
 Documentation=https://restic.readthedocs.io/
+ConditionVirtualization=false
 Wants=network-online.target var-mnt-backup.mount homelab-secrets-sync.service
 After=network-online.target var-mnt-backup.mount homelab-secrets-sync.service
 Requires=var-mnt-backup.mount
@@ -44,7 +45,7 @@ ExecStartPre=-/usr/bin/restic init
 ExecStartPre=/usr/local/bin/sqlite-safe-dump
 # Clear any NFS stale lock left by a prior crashed run
 ExecStartPre=-/usr/bin/restic unlock
-ExecStart=/usr/bin/restic backup --compression auto --tag scheduled --host %H /var/local/lib
+ExecStart=/usr/bin/restic backup --compression auto --tag scheduled --host %H --exclude /var/local/lib/llm/models --exclude /var/local/lib/mealie/local-ai-models /var/local/lib
 ExecStartPost=/usr/bin/restic forget --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune
 # Amortizes full integrity verification across ~50 runs without paying full-check NFS cost daily
 ExecStartPost=-/usr/bin/restic check --read-data-subset=2%

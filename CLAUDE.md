@@ -100,6 +100,53 @@ Two top-level directories mirror their target filesystem counterparts, with a de
 
 **Backups:** `restic-backup.timer` runs daily at 03:00, dumps SQLite DBs via `usr/local/bin/sqlite-safe-dump`, then ships an encrypted restic snapshot to `/var/mnt/backup/restic/<hostname>/` on the NAS (`100.100.100.1:/volume1/hlbkup`). The restic repo password is stored in `homelab-secrets/restic-password.age` and **must be preserved out-of-band** (password manager / printed copy) — losing it makes every snapshot unrecoverable. Retention: daily×7, weekly×4, monthly×6.
 
+**What's backed up:** everything under `/var/local/lib` (all service state dirs, SQLite staging copies) **except** re-downloadable model directories (`llm/models`, `mealie/local-ai-models`). SQLite DBs are staged via `VACUUM INTO` before the snapshot to guarantee crash-consistent copies. The age identity key (`/var/lib/age/identity.txt`) is **not** backed up — it is generated on first boot and secrets are re-encrypted from an off-site master key when the identity rotates.
+
+**Checking backup status:**
+
+```bash
+# Timer and last-run status
+ssh nook -- systemctl status restic-backup.timer restic-backup.service
+
+# List snapshots (requires decrypting the restic password via age)
+ssh nook -- 'sudo age -d -i /var/lib/age/identity.txt /var/lib/age/credentials/restic-password.age | sudo RESTIC_REPOSITORY=/var/mnt/backup/restic/nook RESTIC_CACHE_DIR=/var/cache/restic RESTIC_PASSWORD_COMMAND="cat /dev/stdin" restic snapshots'
+
+# Repo size and stats
+ssh nook -- 'sudo age -d -i /var/lib/age/identity.txt /var/lib/age/credentials/restic-password.age | sudo RESTIC_REPOSITORY=/var/mnt/backup/restic/nook RESTIC_CACHE_DIR=/var/cache/restic RESTIC_PASSWORD_COMMAND="cat /dev/stdin" restic stats'
+
+# Trigger a manual backup
+ssh nook -- sudo systemctl start restic-backup.service
+# Then watch: ssh nook -- journalctl -u restic-backup.service -f
+```
+
+**Restoring from backup:**
+
+```bash
+# All restic commands below require these env vars — set them first:
+export RESTIC_REPOSITORY=/var/mnt/backup/restic/nook
+export RESTIC_CACHE_DIR=/var/cache/restic
+# Decrypt the password into a temp file (or pipe as above):
+sudo age -d -i /var/lib/age/identity.txt /var/lib/age/credentials/restic-password.age > /tmp/restic-pw
+export RESTIC_PASSWORD_FILE=/tmp/restic-pw
+
+# Browse a snapshot's contents
+sudo restic ls --latest 1
+
+# Restore a single service's state (e.g., mealie)
+sudo restic restore --latest 1 --include /var/local/lib/mealie --target /
+
+# Restore everything
+sudo restic restore --latest 1 --target /
+
+# Restore from a specific snapshot (use ID from `restic snapshots`)
+sudo restic restore <snapshot-id> --target /
+
+# Clean up
+rm -f /tmp/restic-pw
+```
+
+After restoring, restart affected services (`hl restart <service>`) and verify their state. Each snapshot contains both live DB files and crash-safe `VACUUM INTO` copies under `/var/local/lib/restic-staging/<service>/`. If a restored live DB is corrupt, replace it with the staged copy (e.g., `cp /var/local/lib/restic-staging/mealie/mealie.db /var/local/lib/mealie/data/mealie.db`).
+
 - `secrets/` - Pre-generated keys for injection into QEMU VM (.gitignored)
   - These secrets are injected into the VM during development for convenience. On nook and other production targets, unique credentials are generated on first boot.
 
