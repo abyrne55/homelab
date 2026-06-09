@@ -43,6 +43,7 @@ else ifeq ($(HOST_OS),Linux)
 endif
 
 # QEMU configuration
+QEMU_VM_UUID := 12345678-1234-1234-1234-123456789abc
 SSH_PORT ?= 2222
 HTTP_PORT ?= 8080
 HTTPS_PORT ?= 8443
@@ -326,6 +327,7 @@ _start-qemu:
 		-cpu host \
 		-smp 2 \
 		-m 4096 \
+		-smbios type=1,uuid=$(QEMU_VM_UUID) \
 		-drive if=pflash,format=raw,readonly=on,file=$(QEMU_BIOS) \
 		-drive if=pflash,format=raw,file=$(BUILD_DIR)/ovmf-vars.fd \
 		-serial file:$(BUILD_DIR)/serial.log \
@@ -344,6 +346,7 @@ _start-qemu:
 		-cpu host \
 		-smp 2 \
 		-m 4096 \
+		-smbios type=1,uuid=$(QEMU_VM_UUID) \
 		-bios $(QEMU_BIOS) \
 		-serial file:$(BUILD_DIR)/serial.log \
 		-display none \
