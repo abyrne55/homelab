@@ -1,0 +1,1 @@
+kargs = ["systemd.machine_id=firmware"]
