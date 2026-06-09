@@ -9,7 +9,7 @@ What=100.100.100.1:/volume1/hlbkup
 Where=/var/mnt/backup
 Type=nfs
 Options=defaults,_netdev,nfsvers=4.1,nconnect=4,noatime,rsize=131072,wsize=131072
-TimeoutSec=120
+TimeoutSec=600
 
 [Install]
 WantedBy=multi-user.target

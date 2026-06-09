@@ -6,9 +6,13 @@ Wants=network-online.target var-mnt-backup.mount homelab-secrets-sync.service
 After=network-online.target var-mnt-backup.mount homelab-secrets-sync.service
 Requires=var-mnt-backup.mount
 ConditionPathIsMountPoint=/var/mnt/backup
+StartLimitBurst=3
+StartLimitIntervalSec=3600
 
 [Service]
 Type=oneshot
+Restart=on-failure
+RestartSec=300
 User=root
 NoNewPrivileges=yes
 PrivateTmp=yes
