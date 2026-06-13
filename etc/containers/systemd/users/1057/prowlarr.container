@@ -4,7 +4,7 @@ After=network-online.target prowlarr-init-config.service
 Wants=network-online.target prowlarr-init-config.service prowlarr-configure.service
 
 [Container]
-Image=lscr.io/linuxserver/prowlarr:2.3.5
+Image=lscr.io/linuxserver/prowlarr:2.4.0
 AutoUpdate=registry
 PublishPort=20570:9696
 Volume=/var/local/lib/prowlarr/config:/config:Z
