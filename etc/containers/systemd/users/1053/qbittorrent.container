@@ -6,7 +6,7 @@ Wants=qbittorrent-configure.service
 Wants=demo-media.service
 
 [Container]
-Image=lscr.io/linuxserver/qbittorrent:5.2.2
+Image=lscr.io/linuxserver/qbittorrent:5.2.3
 AutoUpdate=registry
 Pod=torrent.pod
 Environment=PUID=1053
