@@ -47,6 +47,11 @@ ExecStart=/usr/bin/git -C /var/lib/homelab-config/ reset --hard @{u}
 # Relabel repo contents so rootless containers can read them (var_lib_t → container_file_t)
 ExecStartPost=/usr/bin/chcon -Rt container_file_t /var/lib/homelab-config/
 
+# Reload CrowdSec (SIGHUP via ReloadSignal=) to pick up acquis.d changes, or
+# start it once the crowdsec config dir first lands (re-evaluates the unit's
+# ConditionPathIsDirectory). Runs before caddy's reload so new acquisitions
+# are live when caddy reconnects.
+ExecStartPost=-/usr/bin/systemctl --user -M caddy@.host reload-or-restart crowdsec.service
 # Start Caddy if not running, or hot-reload it if already active
 ExecStartPost=-/usr/bin/systemctl --user -M caddy@.host reload-or-restart caddy.service
 # Reload Tinyproxy via SIGUSR1, or start it if not running (ReloadSignal=SIGUSR1 in quadlet)

@@ -2,9 +2,16 @@
 Description=Caddy reverse proxy
 ConditionPathIsDirectory=/var/lib/homelab-config/caddy
 ConditionPathExists=/var/lib/homelab-config/caddy/Caddyfile
+# Soft dependency only — the bouncer plugin fails open, and caddy has a
+# required.d greenboot check that must not hinge on crowdsec's health.
+Wants=crowdsec.service
+After=crowdsec.service
 
 [Service]
 ExecStartPre=/usr/bin/cosign verify --certificate-identity-regexp='https://github.com/abyrne55/caddy-homelab/.*' --certificate-oidc-issuer='https://token.actions.githubusercontent.com' ghcr.io/abyrne55/caddy-homelab:main
+ExecStartPre=/bin/bash -c 'printf "CROWDSEC_API_KEY=%%s\n" "$(tr -d "[:space:]" < "${CREDENTIALS_DIRECTORY}/crowdsec-caddy-bouncer-key")" > "${RUNTIME_DIRECTORY}/crowdsec.env"'
+LoadCredential=crowdsec-caddy-bouncer-key:/run/systemd-age-creds.sock
+RuntimeDirectory=caddy
 Restart=on-failure
 RestartSec=30
 TimeoutStartSec=5min
@@ -26,6 +33,9 @@ ReadOnlyTmpfs=true
 Notify=healthy
 Volume=/var/lib/homelab-config/caddy:/etc/caddy:ro,z
 Volume=/var/local/lib/mealie/static:/srv/static-mealie:ro
+# JSON access log sink tailed by the crowdsec container (see caddy-logs.volume)
+Volume=caddy-logs.volume:/var/log/caddy:z
+EnvironmentFile=%t/caddy/crowdsec.env
 PublishPort=20510:8080
 PublishPort=20511:8443
 
