@@ -33,8 +33,11 @@ ReadOnlyTmpfs=true
 Notify=healthy
 Volume=/var/lib/homelab-config/caddy:/etc/caddy:ro,z
 Volume=/var/local/lib/mealie/static:/srv/static-mealie:ro
-# JSON access log sink tailed by the crowdsec container (see caddy-logs.volume)
-Volume=caddy-logs.volume:/var/log/caddy:z
+# JSON access log sink tailed by the crowdsec container (see caddy-logs.volume).
+# ,U chowns the empty named volume to caddy's in-container UID (65532) so the
+# non-root caddy process can create/write access.log — without it the volume
+# stays root-of-userns-owned and Caddy fails to start with "permission denied".
+Volume=caddy-logs.volume:/var/log/caddy:z,U
 EnvironmentFile=%t/caddy/crowdsec.env
 PublishPort=20510:8080
 PublishPort=20511:8443

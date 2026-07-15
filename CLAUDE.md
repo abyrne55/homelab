@@ -256,7 +256,7 @@ Use `/add-quadlet [service-name]` for the full step-by-step checklist. The short
 |---|---|---|---|---|
 | caddy | 1051 | 20510, 20511 | 8080 (HTTP), 8443 (HTTPS) | Yes — firewalld forwards 80→20510, 443→20511 |
 | caddy (exporter) | 1051 | 20519 (localhost only) | — | No — Netdata scrape only |
-| crowdsec | 1051 | 20512 (LAPI), 20513 (AppSec, Phase 3) | 8080, 7422 | No — firewalled; caddy dials host.containers.internal:20512 |
+| crowdsec | 1051 | 20512 (LAPI), 20513 (AppSec WAF) | 8080, 7422 | No — firewalled; caddy dials host.containers.internal:20512/20513 |
 | jellyfin | 1052 | 20520 | 8096 | No — via Caddy only |
 | jellyfin (exporter) | 1052 | 20529 (localhost only) | — | No — Netdata scrape only |
 | qbittorrent | 1053 | 20530 | 20530 | No — via Caddy only |
