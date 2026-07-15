@@ -13,11 +13,14 @@ DropCapability=all
 # LAPI for the Caddy bouncer plugin; reachable as host.containers.internal:20512.
 # Firewalled from the LAN (only 20510/20511 are open) and API-key gated.
 PublishPort=20512:8080
+# AppSec WAF endpoint; reachable as host.containers.internal:20513. Also
+# firewalled from the LAN. The plugin's appsec handler fails open.
+PublishPort=20513:7422
 Volume=/var/local/lib/crowdsec/config:/etc/crowdsec:z
 Volume=/var/local/lib/crowdsec/data:/var/lib/crowdsec/data:z
 Volume=/var/lib/homelab-config/crowdsec/acquis.d:/etc/crowdsec/acquis.d:ro,z
 Volume=caddy-logs.volume:/var/log/caddy:ro,z
-Environment="COLLECTIONS=crowdsecurity/caddy crowdsecurity/http-cve crowdsecurity/base-http-scenarios crowdsecurity/whitelist-good-actors"
+Environment="COLLECTIONS=crowdsecurity/caddy crowdsecurity/http-cve crowdsecurity/base-http-scenarios crowdsecurity/whitelist-good-actors crowdsecurity/appsec-virtual-patching crowdsecurity/appsec-generic-rules"
 # whitelists parser exempts RFC1918 sources so LAN clients can't self-ban
 Environment=PARSERS=crowdsecurity/whitelists
 EnvironmentFile=%t/crowdsec/crowdsec.env
