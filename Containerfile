@@ -7,7 +7,7 @@ FROM quay.io/fedora/fedora-bootc:44
 ARG TARGETARCH
 
 # renovate: datasource=github-releases depName=sigstore/cosign extractVersion=^v(?<version>.*)$
-ARG COSIGN_VERSION=3.0.6
+ARG COSIGN_VERSION=3.1.1
 
 # Install dependencies
 RUN set -eu; \
