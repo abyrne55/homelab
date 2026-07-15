@@ -1,6 +1,6 @@
 [Unit]
 Description=NFS mount for NAS backup share
-After=network-online.target wg-nas.service
+After=network-online.target wg-nas.service var-mnt-data.mount
 Wants=network-online.target
 BindsTo=wg-nas.service
 
