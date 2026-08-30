@@ -1,0 +1,50 @@
+[Unit]
+Description=CrowdSec agent + Local API (threat detection for Caddy)
+# Inert until homelab-config delivers the acquisition config (see
+# homelab-config-sync.service, which reload-or-restarts this unit on sync).
+ConditionPathIsDirectory=/var/lib/homelab-config/crowdsec/acquis.d
+
+[Container]
+Image=docker.io/crowdsecurity/crowdsec:v1.7.8@sha256:2f527c9bb8b367120eb08b82890aa912ce96bfa1ada93dda0721700e4b4e0dde
+NoNewPrivileges=true
+DropCapability=all
+# ReadOnly=true intentionally omitted: the entrypoint (docker_start.sh) writes
+# outside the mounted config/data volumes (staging rsync, hub state) on start.
+# LAPI for the Caddy bouncer plugin; reachable as host.containers.internal:20512.
+# Firewalled from the LAN (only 20510/20511 are open) and API-key gated.
+PublishPort=20512:8080
+# AppSec WAF endpoint; reachable as host.containers.internal:20513. Also
+# firewalled from the LAN. The plugin's appsec handler fails open.
+PublishPort=20513:7422
+Volume=/var/local/lib/crowdsec/config:/etc/crowdsec:z
+Volume=/var/local/lib/crowdsec/data:/var/lib/crowdsec/data:z
+Volume=/var/lib/homelab-config/crowdsec/acquis.d:/etc/crowdsec/acquis.d:ro,z
+Volume=caddy-logs.volume:/var/log/caddy:ro,z
+Environment="COLLECTIONS=crowdsecurity/caddy crowdsecurity/http-cve crowdsecurity/base-http-scenarios crowdsecurity/whitelist-good-actors crowdsecurity/appsec-virtual-patching crowdsecurity/appsec-generic-rules"
+# whitelists parser exempts RFC1918 sources so LAN clients can't self-ban
+Environment=PARSERS=crowdsecurity/whitelists
+EnvironmentFile=%t/crowdsec/crowdsec.env
+# Entrypoint execs crowdsec as PID 1; upstream reloads acquis/config via SIGHUP
+ReloadSignal=SIGHUP
+HealthCmd=CMD cscli lapi status
+HealthStartPeriod=120s
+HealthInterval=30s
+HealthRetries=5
+HealthOnFailure=kill
+Notify=healthy
+
+[Service]
+Restart=on-failure
+RestartSec=10
+# First boot downloads/upgrades hub collections before LAPI comes up
+TimeoutStartSec=10min
+LoadCredential=crowdsec-caddy-bouncer-key:/run/systemd-age-creds.sock
+LoadCredential=crowdsec-enroll-key:/run/systemd-age-creds.sock
+RuntimeDirectory=crowdsec
+# BOUNCER_KEY_caddy: entrypoint registers the caddy bouncer idempotently.
+# ENROLL_KEY/ENROLL_INSTANCE_NAME: one-time console enrollment (idempotent,
+# instance named after the host so a dev VM never masquerades as nook).
+ExecStartPre=/bin/bash -c '{ printf "BOUNCER_KEY_caddy=%%s\n" "$(tr -d "[:space:]" < "${CREDENTIALS_DIRECTORY}/crowdsec-caddy-bouncer-key")"; printf "ENROLL_KEY=%%s\n" "$(tr -d "[:space:]" < "${CREDENTIALS_DIRECTORY}/crowdsec-enroll-key")"; printf "ENROLL_INSTANCE_NAME=%%s\n" "$(hostname -s)"; } > "${RUNTIME_DIRECTORY}/crowdsec.env"'
+
+[Install]
+WantedBy=default.target

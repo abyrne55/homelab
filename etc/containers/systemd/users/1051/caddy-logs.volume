@@ -1,0 +1,5 @@
+# Shared named volume for Caddy JSON access logs. Caddy writes
+# /var/log/caddy/access.log here; the crowdsec container tails it read-only.
+# A named volume (rather than /var/local/lib) keeps rotating logs out of the
+# restic backup set, which only covers /var/local/lib.
+[Volume]
