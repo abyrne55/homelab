@@ -4,7 +4,7 @@ After=network-online.target systemd-age-creds.service
 Wants=network-online.target
 
 [Container]
-Image=docker.io/netdata/netdata:v2.10.4@sha256:689145f603fed0ca341b4d8a0fb9910cd9d8c0590b0530cd24ae1912a9c7f8f3
+Image=docker.io/netdata/netdata:v2.12.0@sha256:1e50cc0b11f0941a2a4d8b8592a71d67a8777a4a6ddefbbd024b4725543e4b19
 Network=host
 PodmanArgs=--pid host
 AddCapability=SYS_PTRACE SYS_ADMIN
