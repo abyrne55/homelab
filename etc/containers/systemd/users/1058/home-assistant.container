@@ -5,7 +5,7 @@ Wants=network-online.target
 ConditionPathExists=/var/lib/homelab-config/home-assistant/configuration.yaml
 
 [Container]
-Image=ghcr.io/home-assistant/home-assistant:2026.7.4@sha256:5a531753cea96444200158fc2b0ac7ccd739291ec50414877b396de6e0bb29b3
+Image=ghcr.io/home-assistant/home-assistant:2026.10.1@sha256:130241f28d01fa80dfa3b44f7d89781c188d8642ecab9024f079f19f9f82baa0
 Pod=home-assistant.pod
 Volume=/var/local/lib/home-assistant/config:/config:Z
 Volume=/var/lib/homelab-config/home-assistant/configuration.yaml:/config/configuration.yaml:ro
