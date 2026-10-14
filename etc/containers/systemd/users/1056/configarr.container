@@ -4,7 +4,7 @@ After=homelab-config-sync.service
 ConditionPathIsDirectory=/var/lib/homelab-config/configarr
 
 [Container]
-Image=ghcr.io/raydak-labs/configarr:1.30.2@sha256:ec585b6d2530f6090ee26fdcc9701f279666c24dc96c9087208e88ec867c2416
+Image=ghcr.io/raydak-labs/configarr:1.35.0@sha256:13ef4d9a6ebc13178c8c74813dd12e11ea7331e186a492d79d938513887b96d4
 NoNewPrivileges=true
 DropCapability=all
 
