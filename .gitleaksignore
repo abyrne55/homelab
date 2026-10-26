@@ -1,2 +1,2 @@
 # False positive: base64-encoded credential example in systemd.exec(5) QEMU/SMBIOS docs
-.claude/references/systemd/systemd.exec.5.md:generic-api-key:1481
+.claude/references/systemd/systemd.exec.5.md:generic-api-key:1422

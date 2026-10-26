@@ -189,7 +189,7 @@ Large re-downloadable data (model weights, media files) lives on NFS (`/var/mnt/
 
 If in doubt about a directive or behavior, these docs may help:
 
-- `.claude/references/podman/podman-systemd.unit.5.md` (lines 225–860) — complete [Container] directive listing with podman-run equivalents and detailed descriptions
+- `.claude/references/podman/podman-systemd.unit.5.md` (lines 286–1015) — complete [Container] directive listing with podman-run equivalents and detailed descriptions
 - `.claude/references/podman/rootless.md` — rootless Podman behavior, user namespaces, subUID/subGID semantics
 - `.claude/references/bootc/users-and-groups.md` — sysusers.d patterns, subid allocation, user/group management in a bootc image
 - `.claude/references/bootc/filesystem.md` (lines 156–196) — `/var/` layout and persistent state patterns (home directories, data mounts)
