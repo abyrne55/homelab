@@ -12,7 +12,7 @@ systems (and bootc only supports Linux).
 Let's however restate a base goal of this project:
 
 > The original Docker container model of using "layers" to model
-> applications has been extremely successful. This project
+> applications has been extremely successful.  This project
 > aims to apply the same technique for bootable host systems - using
 > standard OCI/Docker containers as a transport and delivery format
 > for base operating system updates.
@@ -27,7 +27,7 @@ images have all parts of the filesystem (e.g. `/usr` in particular) as fully
 mutable state, and writing there is encouraged (see below).
 
 When "deployed" to a physical or virtual machine, the container image
-files are read-only by default; for more, see [filesystem](filesystem.md).
+files are read-only by default; for more, see [filesystem](https\:\/\/bootc\-dev\.github\.io\/bootc/bootc-filesystem.7.html).
 
 ## Installing software
 
@@ -38,7 +38,7 @@ the pattern of
 `RUN $pkgsystem install somepackage && $pkgsystem clean all`
 
 type flow Just Works here - the same way as it does
-"application" container images. This pattern is really how
+"application" container images.  This pattern is really how
 Docker got started.
 
 There's not much special to this that doesn't also apply
@@ -49,11 +49,11 @@ to application containers; but see below.
 The [OCI format](https://github.com/opencontainers/image-spec/blob/main/spec.md) uses
 "whiteouts" represented in the tar stream as special `.wh` files, and typically
 consumed by the Linux kernel `overlayfs` driver as special `0:0` character
-devices. Without special work, whiteouts cannot be nested.
+devices.  Without special work, whiteouts cannot be nested.
 
 Hence, an invocation like
 
-```text
+```
 RUN podman pull quay.io/exampleimage/someimage
 ```
 
@@ -61,7 +61,7 @@ will create problems, as the `podman` runtime will create whiteout files
 inside the container image filesystem itself.
 
 Special care and code changes will need to be made to container
-runtimes to support such nesting. Some more discussion in
+runtimes to support such nesting.  Some more discussion in
 [this tracker issue](https://github.com/bootc-dev/bootc/issues/128).
 
 ## systemd units
@@ -90,7 +90,7 @@ on a package-based system.
 ## Users and groups
 
 Note that the above `postgresql` today will allocate a user;
-this leads to the topic of [users, groups and SSH keys](users-and-groups.md).
+this leads to the topic of [users, groups and SSH keys](https\:\/\/bootc\-dev\.github\.io\/bootc/building/bootc-users-and-groups.7.html).
 
 ## Configuration
 
@@ -106,22 +106,26 @@ together in exactly the same way.
 You can add configuration files to the same places they're
 expected by typical package systems on Debian/Fedora/Arch
 etc. and others - in `/usr` (preferred where possible)
-or `/etc`. systemd has long advocated and supported
+or `/etc`.  systemd has long advocated and supported
 a model where `/usr` (e.g. `/usr/lib/systemd/system`)
 contains content owned by the operating system image.
 
-`/etc` is machine-local state. However, per [filesystem.md](filesystem.md)
+`/etc` is machine-local state.  However, per [filesystem.md](https\:\/\/bootc\-dev\.github\.io\/bootc/bootc-filesystem.7.html)
 it's important to note that the underlying OSTree
 system performs a 3-way merge of `/etc`, so changes you
 make in the container image to e.g. `/etc/postgresql.conf`
 will be applied on update, assuming it is not modified
 locally.
 
+Resolver configuration has an additional interaction with the container
+runtime used to build the image. See
+[DNS and `/etc/resolv.conf`](https\:\/\/bootc\-dev\.github\.io\/bootc/building/bootc-dns.7.html) for the recommended approach.
+
 ### Prefer using drop-in directories
 
-These "locally modified" files can be a source of state drift. The best
+These "locally modified" files can be a source of state drift.  The best
 pattern to use is "drop-in" directories that are merged dynamically by
-the relevant software. systemd supports this comprehensively; see
+the relevant software.  systemd supports this comprehensively; see
 [drop-ins](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html)
 for example in units.
 
@@ -134,7 +138,7 @@ is generic support for `/etc`.
 ### Configuration in /usr vs /etc
 
 Some software supports generic configuration both `/usr` and `/etc` - systemd,
-among others. Because bootc supports *derivation* (the way OCI
+among others.  Because bootc supports *derivation* (the way OCI
 containers work) - it is supported and encouraged to put configuration
 files in `/usr` (instead of `/etc`) where possible, because then
 the state is consistently immutable.
@@ -145,7 +149,7 @@ for example, although this can run afoul of SELinux labeling.
 
 ### Secrets
 
-There is a dedicated document for [secrets](https://bootc-dev.github.io/bootc/building/secrets.html),
+There is a dedicated document for [secrets](https\:\/\/bootc\-dev\.github\.io\/bootc/building/bootc-secrets.7.html),
 which is a special case of configuration.
 
 ## Handling read-only vs writable locations
@@ -159,8 +163,8 @@ this way:
 
 However, some software installs to `/opt/examplepkg` or another
 location outside of `/usr`, and may include all three types of data
-undernath its single toplevel directory. For example, it
-may write log files to `/opt/examplepkg/logs`. A simple way to handle
+undernath its single toplevel directory.  For example, it
+may write log files to `/opt/examplepkg/logs`.  A simple way to handle
 this is to change the directories that need to be writable to symbolic links
 to `/var`:
 
@@ -176,6 +180,6 @@ is one instance of this.
 Another option is to configure the systemd unit launching the service to do these mounts
 dynamically via e.g.
 
-```text
+```
 BindPaths=/var/log/exampleapp:/opt/exampleapp/logs
 ```

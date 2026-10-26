@@ -11,6 +11,9 @@ jobs:
           reporter: github-pr-check
           locale: "US"
           fail_level: warning
+          # Vendored upstream docs; keep verbatim (British spellings etc.)
+          exclude: |
+            ./.claude/references/*
   actionlint:
     runs-on: ubuntu-24.04-arm
     steps:

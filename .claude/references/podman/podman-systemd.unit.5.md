@@ -1,4 +1,4 @@
-# podman-systemd.unit(5)
+% podman-systemd.unit 5
 
 ## NAME
 
@@ -28,10 +28,10 @@ Distribution defined quadlets:
 
 Quadlet files for non-root users can be placed in the following directories:
 
-* $XDG_RUNTIME_DIR/containers/systemd/
-* $XDG_CONFIG_HOME/containers/systemd/ or ~/.config/containers/systemd/
-* /etc/containers/systemd/users/${UID}
-* /etc/containers/systemd/users/
+ * $XDG_RUNTIME_DIR/containers/systemd/
+ * $XDG_CONFIG_HOME/containers/systemd/ or ~/.config/containers/systemd/
+ * /etc/containers/systemd/users/$(UID)
+ * /etc/containers/systemd/users/
 
 ### Using symbolic links
 
@@ -88,12 +88,12 @@ and add the unit file to one of the above rootless unit search paths.
 When a Quadlet unit starts, Podman may need to pull or build container images, which can take significantly longer
 than systemd's default 90-second service startup limit. If this causes the unit to fail, you can either pre-pull the
 required images or increase the service's startup timeout using the *TimeoutStartSec* option. Keep in mind, however,
-that for units that specify `Type=oneshot`, the startup timeout is disabled by default (set to infinity), so
-*TimeoutStartSec* must be explicitly configured if a timeout is desired. For further details on *TimeoutStartSec*, see `systemd.service(5)`.
+that *TimeoutStartSec* cannot be used with units that specify `Type=oneshot` (their startup timeout is disabled by
+default). For further details on *TimeoutStartSec*, see `systemd.service(5)`.
 
 Adding the following snippet to a Quadlet file extends the startup timeout to 15 minutes.
 
-```text
+```
 [Service]
 TimeoutStartSec=900
 ```
@@ -115,10 +115,9 @@ leaves the job in a "started" state which prevents subsequent activations by the
 `systemd.service(5)` man page.
 
 Examples for such cases:
+- `.container` file with an image that exits after their entrypoint has finished
 
-* `.container` file with an image that exits after their entrypoint has finished
-
-* `.kube` file pointing to a Kubernetes Yaml file that does not define any containers. E.g. PVCs only
+- `.kube` file pointing to a Kubernetes Yaml file that does not define any containers. E.g. PVCs only
 
 ### Enabling unit files
 
@@ -131,7 +130,7 @@ unit files during generation, in the same way `systemctl enable` does when run l
 
 For example, to start a container on boot, add something like this to the file:
 
-```text
+```
 [Install]
 WantedBy=default.target
 ```
@@ -146,7 +145,7 @@ the drop-in.
 ### Template files
 
 Systemd supports a concept of [template files](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#Service%20Templates).
-They are units with names of the form "<basename@instancename.service>"
+They are units with names of the form "basename@instancename.service"
 when they are running, but that can be instantiated multiple times
 from a single "basename@.service" file. The individual instances can
 also be different by using drop-in files with the full instance name.
@@ -155,12 +154,12 @@ Quadlets support these in two ways. First of all, a quadlet unit with
 a template form will generate a systemd service with a template form,
 and the template systemd service can be used as a regular template.
 For example, "foo@.container" will generate "foo@.service" and you can
-then "systemctl start <foo@bar.service>".
+then "systemctl start foo@bar.service".
 
-Secondly, if you make a symlink like "<foo@instance.container>", that
+Secondly, if you make a symlink like "foo@instance.container", that
 will generate an instantiated template file. When generating this file
 quadlet will read drop-in files both from the instanced directory
-(<foo@instance.container>.d) and the template directory
+(foo@instance.container.d) and the template directory
 (foo@.container.d). This allows customization of individual instances.
 
 Instanced template files (like `foo@bar.container`) can be enabled
@@ -173,7 +172,7 @@ that are instantiated using symlinks.
 
 An example template file `sleep@.container` might look like this:
 
-```text
+```
 [Unit]
 Description=A templated sleepy container
 
@@ -200,8 +199,7 @@ In addition, if you do `ln -s sleep@.container sleep@10.container` you
 will also have a 10 second sleep running at boot. And, if you want
 that particular instance to be running with another image, you can
 create a drop-in file like `sleep@10.container.d/10-image.conf`:
-
-```text
+```
 [Container]
 Image=quay.io/centos/centos
 ```
@@ -223,14 +221,12 @@ used an option from a newer version of Podman Quadlet and the
 generator failed to create a service file.
 
 View the generated files and/or error messages with:
-
-```text
+```
 /usr/lib/systemd/system-generators/podman-system-generator {--user} --dryrun
 ```
 
 Alternatively, show only the errors with:
-
-```text
+```
 systemd-analyze {--user} --generators=true verify example.service
 ```
 
@@ -242,7 +238,7 @@ For details, see systemd-analyze(1) man page.
 If you would like to debug a limited set of unit files, you can copy them to a separate directory and set the
 `QUADLET_UNIT_DIRS` environment variable to this directory when running the command below:
 
-```text
+```
 QUADLET_UNIT_DIRS=<Directory> /usr/lib/systemd/system-generators/podman-system-generator {--user} --dryrun
 ```
 
@@ -261,7 +257,7 @@ a significant amount of issues we decided to work around this with our own speci
 the `network-online.target` unit is active with `systemctl is-active network-online.target`.
 
 This behavior can be disabled by adding `DefaultDependencies=false` in the `Quadlet` section.
-Note, the *systemd* `[Unit]` section has an option with the same name but a different meaning.
+Note, the _systemd_ `[Unit]` section has an option with the same name but a different meaning.
 
 ### Dependency between Quadlet units
 
@@ -270,8 +266,7 @@ Quadlet will automatically translate dependencies, specified in the keys
 of the `[Unit]` section, between different Quadlet units.
 
 For example the `fedora.container` unit below specifies a dependency on the `basic.container` unit.
-
-```text
+```
 [Unit]
 After=basic.container
 Requires=basic.container
@@ -378,7 +373,6 @@ Valid options for `[Container]` are listed below:
 | SecurityLabelLevel=s0:c1,c2          | --security-opt label=level:s0:c1,c2                  |
 | SecurityLabelNested=true             | --security-opt label=nested                          |
 | SecurityLabelType=spc_t              | --security-opt label=type:spc_t                      |
-| ServiceName=name                     | Name the systemd unit `name.service`                 |
 | ShmSize=100m                         | --shm-size=100m                                      |
 | StartWithPod=true                    | If Pod= is defined, container is started by pod      |
 | StopSignal=SIGINT                    | --stop-signal=SIGINT                                 |
@@ -405,8 +399,7 @@ Add these capabilities, in addition to the default Podman capability set, to the
 This is a space separated list of capabilities. This key can be listed multiple times.
 
 For example:
-
-```text
+```
 AddCapability=CAP_DAC_OVERRIDE CAP_IPC_OWNER
 ```
 
@@ -423,7 +416,7 @@ This key can be listed multiple times.
 
 ### `AddHost=`
 
-Add host-to-IP mapping to /etc/hosts.
+Add  host-to-IP mapping to /etc/hosts.
 The format is `hostname:ip`.
 
 Equivalent to the Podman `--add-host` option.
@@ -442,7 +435,7 @@ Sets the apparmor confinement profile for the container. A value of `unconfined`
 
 ### `AutoUpdate=`
 
-Indicates whether the container will be auto-updated ([podman-auto-update(1)](https://docs.podman.io/en/latest/markdown/podman-auto-update.1.html)). The following values are supported:
+Indicates whether the container will be auto-updated ([podman-auto-update(1)](podman-auto-update.1.md)). The following values are supported:
 
 * `registry`: Requires a fully-qualified image reference (e.g., quay.io/podman/stable:latest) to be used to create the container. This enforcement is necessary to know which image to actually check and pull. If an image ID was used, Podman does not know which image to check/pull anymore.
 
@@ -495,8 +488,7 @@ Drop these capabilities from the default podman capability set, or `all` to drop
 This is a space separated list of capabilities. This key can be listed multiple times.
 
 For example:
-
-```text
+```
 DropCapability=CAP_DAC_OVERRIDE CAP_IPC_OWNER
 ```
 
@@ -793,6 +785,7 @@ The value must take the form of `<name>.pod` and the `.pod` unit must exist.
 
 Quadlet will add all the necessary parameters to link between the container and the pod and between their corresponding services.
 
+
 ### `PodmanArgs=`
 
 This key contains a list of arguments passed directly to the end of the `podman run` command
@@ -812,8 +805,7 @@ Exposes a port, or a range of ports (e.g. `50-59`), from the container to the ho
 to the Podman `--publish` option. The format is similar to the Podman options, which is of
 the form `ip:hostPort:containerPort`, `ip::containerPort`, `hostPort:containerPort` or
 `containerPort`, where the number of host and container ports must be the same (in the case
-of a range). The protocol can be provided at the end, e.g., `hostPort:containerPort/tcp`.
-Valid protocols are `tcp` and `udp`; the `sctp` protocol is supported only for rootful containers.
+of a range).
 
 If the IP is set to 0.0.0.0 or not set at all, the port is bound on all IPv4 addresses on
 the host; use [::] for IPv6.
@@ -839,7 +831,7 @@ If ReadOnly is set to `true`, mount a read-write tmpfs on /dev, /dev/shm, /run, 
 
 ### `ReloadCmd=`
 
-Add `ExecReload` line to the `Service` that runs `podman exec` with this command in this container.
+Add `ExecReload` line to the `Service` that runs ` podman exec` with this command in this container.
 
 In order to execute the reload run `systemctl reload <Service>`
 
@@ -904,13 +896,6 @@ Allow SecurityLabels to function within the container. This allows separation of
 
 Set the label process type for the container processes.
 
-### `ServiceName=`
-
-By default, Quadlet will name the systemd service unit using the name of the Quadlet.
-Setting this key overrides this behavior by instructing Quadlet to use the provided name.
-
-Note, the name should not include the `.service` file extension
-
 ### `ShmSize=`
 
 Size of /dev/shm.
@@ -958,8 +943,7 @@ Configures namespaced kernel parameters for the container. The format is `Sysctl
 This is a space separated list of kernel parameters. This key can be listed multiple times.
 
 For example:
-
-```text
+```
 Sysctl=net.ipv6.conf.all.disable_ipv6=1 net.ipv6.conf.all.use_tempaddr=1
 ```
 
@@ -1040,11 +1024,6 @@ By default, the Podman pod has the same name as the unit, but with a `systemd-` 
 a `$name.pod` file creates a `$name-pod.service` unit and a `systemd-$name` Podman pod. The
 `PodName` option allows for overriding this default name with a user-provided one.
 
-The generated service defaults to `Restart=on-failure`. Note that with `ExitPolicy=stop` (the
-default for Quadlet pods), the pod exits cleanly (exit code 0) when all its containers stop, so
-`on-failure` will **not** trigger a restart in that case. To have the pod automatically restart
-when containers exit, set `Restart=always` in the `[Service]` section of the `.pod` file.
-
 Valid options for `[Pod]` are listed below:
 
 | **[Pod] options**                   | **podman pod create equivalent**       |
@@ -1079,7 +1058,7 @@ Supported keys in the `[Pod]` section are:
 
 ### `AddHost=`
 
-Add host-to-IP mapping to /etc/hosts.
+Add  host-to-IP mapping to /etc/hosts.
 The format is `hostname:ip`.
 
 Equivalent to the Podman `--add-host` option.
@@ -1141,6 +1120,7 @@ Set the pod’s hostname inside all containers.
 The given hostname is also added to the /etc/hosts file using the container’s primary IP address (also see the `--add-host` option).
 
 Equivalent to the Podman `--hostname` option.
+This key can be listed multiple times.
 
 ### `IP=`
 
@@ -1209,8 +1189,7 @@ Exposes a port, or a range of ports (e.g. `50-59`), from the pod to the host. Eq
 to the Podman `--publish` option. The format is similar to the Podman options, which is of
 the form `ip:hostPort:containerPort`, `ip::containerPort`, `hostPort:containerPort` or
 `containerPort`, where the number of host and container ports must be the same (in the case
-of a range). The protocol can be provided at the end, e.g., `hostPort:containerPort/tcp`.
-Valid protocols are `tcp` and `udp`; the `sctp` protocol is supported only for rootful containers.
+of a range).
 
 If the IP is set to 0.0.0.0 or not set at all, the port is bound on all IPv4 addresses on
 the host; use [::] for IPv6.
@@ -1222,6 +1201,7 @@ allocated port can be found with the `podman port` command.
 When using `host` networking via `Network=host`, the `PublishPort=` option cannot be used.
 
 This key can be listed multiple times.
+
 
 ### `ServiceName=`
 
@@ -1304,7 +1284,6 @@ Valid options for `[Kube]` are listed below:
 | Network=host                        | --network host                                                   |
 | PodmanArgs=\-\-annotation=key=value | --annotation=key=value                                           |
 | PublishPort=8080:80                 | --publish 8080:80                                                |
-| ServiceName=name                    | Name the systemd unit `name.service`                             |
 | SetWorkingDirectory=yaml            | Set `WorkingDirectory` of unit file to location of the YAML file |
 | UserNS=keep-id:uid=200,gid=210      | --userns keep-id:uid=200,gid=210                                 |
 | Yaml=/tmp/kube.yaml                 | podman kube play /tmp/kube.yaml                                  |
@@ -1313,7 +1292,7 @@ Supported keys in the `[Kube]` section are:
 
 ### `AutoUpdate=`
 
-Indicates whether containers will be auto-updated ([podman-auto-update(1)](https://docs.podman.io/en/latest/markdown/podman-auto-update.1.html)). AutoUpdate can be specified multiple times. The following values are supported:
+Indicates whether containers will be auto-updated ([podman-auto-update(1)](podman-auto-update.1.md)). AutoUpdate can be specified multiple times. The following values are supported:
 
 * `registry`: Requires a fully-qualified image reference (e.g., quay.io/podman/stable:latest) to be used to create the container. This enforcement is necessary to know which images to actually check and pull. If an image ID was used, Podman does not know which image to check/pull anymore.
 
@@ -1338,10 +1317,9 @@ This key can be listed multiple times.
 ### `ExitCodePropagation=`
 
 Control how the main PID of the systemd service should exit. The following values are supported:
-
-* `all`: exit non-zero if all containers have failed (i.e., exited non-zero)
-* `any`: exit non-zero if any container has failed
-* `none`: exit zero and ignore failed containers
+- `all`: exit non-zero if all containers have failed (i.e., exited non-zero)
+- `any`: exit non-zero if any container has failed
+- `none`: exit zero and ignore failed containers
 
 The current default value is `none`.
 
@@ -1398,8 +1376,7 @@ Exposes a port, or a range of ports (e.g. `50-59`), from the container to the ho
 to the `podman kube play`'s `--publish` option. The format is similar to the Podman options, which is of
 the form `ip:hostPort:containerPort`, `ip::containerPort`, `hostPort:containerPort` or
 `containerPort`, where the number of host and container ports must be the same (in the case
-of a range). The protocol can be provided at the end, e.g., `hostPort:containerPort/tcp`.
-Valid protocols are `tcp` and `udp`; the `sctp` protocol is supported only for rootful containers.
+of a range).
 
 If the IP is set to 0.0.0.0 or not set at all, the port is bound on all IPv4 addresses on
 the host; use [::] for IPv6.
@@ -1409,13 +1386,6 @@ in the Kubernetes YAML file. If the same container port and protocol is specifie
 entry from the unit file takes precedence
 
 This key can be listed multiple times.
-
-### `ServiceName=`
-
-By default, Quadlet will name the systemd service unit using the name of the Quadlet.
-Setting this key overrides this behavior by instructing Quadlet to use the provided name.
-
-Note, the name should not include the `.service` file extension
 
 ### `SetWorkingDirectory=`
 
@@ -1428,7 +1398,6 @@ Please note that if the `WorkingDirectory` field of the `Service` group is set,
 Quadlet will not set it even if `SetWorkingDirectory` is set
 
 Special case:
-
 * If multiple `Yaml` path are provided only `unit` is supported.
 
 ### `UserNS=`
@@ -1453,8 +1422,9 @@ a network file named `$NAME.network`, the generated Podman network is called `sy
 the generated service file is `$NAME-network.service`. The `NetworkName` option allows for
 overriding this default name with a user-provided one.
 
+Please note that stopping the corresponding service will not remove the podman network.
+In addition, updating an existing network is not supported.
 In order to update the network parameters you will first need to manually remove the podman network and then restart the service.
-Set `NetworkDeleteOnStop=true` to override the behavior and delete the network when the device is stopped.
 
 Using network units allows containers to depend on networks being automatically pre-created. This is
 particularly interesting when using special options to control network creation, as Podman otherwise creates networks with the default options.
@@ -1479,7 +1449,6 @@ Valid options for `[Network]` are listed below:
 | NetworkName=foo                     | podman network create foo                                       |
 | Options=isolate=true                | --opt isolate=true                                              |
 | PodmanArgs=--dns=192.168.55.1       | --dns=192.168.55.1                                              |
-| ServiceName=name                    | Name the systemd unit `name.service`                            |
 | Subnet=192.5.0.0/16                 | --subnet 192.5.0.0/16                                           |
 
 Supported keys in `[Network]` section are:
@@ -1601,13 +1570,6 @@ escaped to allow inclusion of whitespace and other control characters.
 
 This key can be listed multiple times.
 
-### `ServiceName=`
-
-By default, Quadlet will name the systemd service unit by appending `-network` to the name of the Quadlet.
-Setting this key overrides this behavior by instructing Quadlet to use the provided name.
-
-Note, the name should not include the `.service` file extension
-
 ### `Subnet=`
 
 The subnet in CIDR notation.
@@ -1639,16 +1601,13 @@ Valid options for `[Volume]` are listed below:
 | Copy=true                           | --opt copy                                |
 | Device=tmpfs                        | --opt device=tmpfs                        |
 | Driver=image                        | --driver=image                            |
-| GID=5678                            | --gid 5678                                |
 | GlobalArgs=--log-level=debug        | --log-level=debug                         |
 | Group=192                           | --opt "o=group=192"                       |
 | Image=quay.io/centos/centos\:latest | --opt image=quay.io/centos/centos\:latest |
 | Label="foo=bar"                     | --label "foo=bar"                         |
 | Options=XYZ                         | --opt "o=XYZ"                             |
 | PodmanArgs=--driver=image           | --driver=image                            |
-| ServiceName=name                    | Name the systemd unit `name.service`      |
 | Type=type                           | Filesystem type of Device                 |
-| UID=1234                            | --uid 1234                                |
 | User=123                            | --opt "o=uid=123"                         |
 | VolumeName=foo                      | podman volume create foo                  |
 
@@ -1675,10 +1634,6 @@ Specify the volume driver name. When set to `image`, the `Image` key must also b
 
 This is equivalent to the Podman `--driver` option.
 
-### `GID=`
-
-The GID that the volume will be created as. Differently than `Group=`, the specified value is not passed to the mount operation. The specified GID will own the volume's mount point directory and affects the volume chown operation.
-
 ### `GlobalArgs=`
 
 This key contains a list of arguments passed directly between `podman` and `volume`
@@ -1693,7 +1648,7 @@ This key can be listed multiple times.
 
 ### `Group=`
 
-The host (numeric) GID, or group name to use as the group for the volume. Differently than `GID`, the specified value is passed to the mount operation.
+The host (numeric) GID, or group name to use as the group for the volume
 
 ### `Image=`
 
@@ -1733,24 +1688,13 @@ escaped to allow inclusion of whitespace and other control characters.
 
 This key can be listed multiple times.
 
-### `ServiceName=`
-
-By default, Quadlet will name the systemd service unit by appending `-volume` to the name of the Quadlet.
-Setting this key overrides this behavior by instructing Quadlet to use the provided name.
-
-Note, the name should not include the `.service` file extension
-
 ### `Type=`
 
 The filesystem type of `Device` as used by the **mount(8)** commands `-t` option.
 
-### `UID=`
-
-The UID that the volume will be created as. Differently than `User`, the specified value is not passed to the mount operation. The specified UID will own the volume's mount point directory and affects the volume chown operation.
-
 ### `User=`
 
-The host (numeric) UID, or user name to use as the owner for the volume. Differently than `UID`, the specified value is passed to the mount operation.
+The host (numeric) UID, or user name to use as the owner for the volume
 
 ### `VolumeName=`
 
@@ -1800,7 +1744,6 @@ Valid options for `[Build]` are listed below:
 | Retry=5                             | --retry=5                                   |
 | RetryDelay=10s                      | --retry-delay=10s                           |
 | Secret=secret                       | --secret=id=mysecret,src=path               |
-| ServiceName=name                    | Name the systemd unit `name.service`        |
 | SetWorkingDirectory=unit            | Set `WorkingDirectory` of systemd unit file |
 | Target=my-app                       | --target=my-app                             |
 | TLSVerify=false                     | --tls-verify=false                          |
@@ -1976,13 +1919,6 @@ Pass secret information used in Containerfile build stages in a safe way.
 This is equivalent to the `--secret` option of `podman build` and generally has the form
 `secret[,opt=opt ...]`.
 
-### `ServiceName=`
-
-By default, Quadlet will name the systemd service unit by appending `-build` to the name of the Quadlet.
-Setting this key overrides this behavior by instructing Quadlet to use the provided name.
-
-Note, the name should not include the `.service` file extension
-
 ### `SetWorkingDirectory=`
 
 Provide context (a working directory) to `podman build`. Supported values are a path, a URL, or the
@@ -2065,7 +2001,6 @@ Valid options for `[Image]` are listed below:
 | Policy=always                          | --policy=always                                  |
 | Retry=5                                | --retry=5                                        |
 | RetryDelay=10s                         | --retry-delay=10s                                |
-| ServiceName=name                       | Name the systemd unit `name.service`             |
 | TLSVerify=false                        | --tls-verify=false                               |
 | Variant=arm/v7                         | --variant=arm/v7                                 |
 
@@ -2089,7 +2024,7 @@ This is equivalent to the Podman `--authfile` option.
 
 ### `CertDir=`
 
-Use certificates at path (*.crt,*.cert, *.key) to connect to the registry.
+Use certificates at path (*.crt, *.cert, *.key) to connect to the registry.
 
 This is equivalent to the Podman `--cert-dir` option.
 
@@ -2142,9 +2077,8 @@ For example, an image saved into a `docker-archive` with the following Podman co
 `podman image save --format docker-archive --output /tmp/archive-file.tar quay.io/podman/stable:latest`
 
 requires setting
-
-* `Image=docker-archive:/tmp/archive-file.tar`
-* `ImageTag=quay.io/podman/stable:latest`
+- `Image=docker-archive:/tmp/archive-file.tar`
+- `ImageTag=quay.io/podman/stable:latest`
 
 ### `OS=`
 
@@ -2178,13 +2112,6 @@ Number of times to retry the image pull when a HTTP error occurs. Equivalent to 
 ### `RetryDelay=`
 
 Delay between retries. Equivalent to the Podman `--retry-delay` option.
-
-### `ServiceName=`
-
-By default, Quadlet will name the systemd service unit by appending `-image` to the name of the Quadlet.
-Setting this key overrides this behavior by instructing Quadlet to use the provided name.
-
-Note, the name should not include the `.service` file extension
 
 ### `TLSVerify=`
 
@@ -2244,7 +2171,7 @@ This is equivalent to the Podman `--authfile` option.
 
 ### `CertDir=`
 
-Use certificates at path (*.crt,*.cert, *.key) to connect to the registry.
+Use certificates at path (*.crt, *.cert, *.key) to connect to the registry.
 
 This is equivalent to the Podman `--cert-dir` option.
 
@@ -2316,7 +2243,6 @@ Require HTTPS and verification of certificates when contacting registries.
 This is equivalent to the Podman `--tls-verify` option.
 
 ## Quadlet section [Quadlet]
-
 Some quadlet specific configuration is shared between different unit types. Those settings
 can be configured in the `[Quadlet]` section.
 
@@ -2333,14 +2259,14 @@ Add Quadlet's default network dependencies to the unit (default is `true`).
 When set to false, Quadlet will **not** add a dependency (After=, Wants=) to
 `network-online.target`/`podman-user-wait-network-online.service` to the generated unit.
 
-Note, this option is set in the `[Quadlet]` section. The *systemd* `[Unit]` section
+Note, this option is set in the `[Quadlet]` section. The _systemd_ `[Unit]` section
 has an option with the same name but a different meaning.
 
 ## EXAMPLES
 
 Example `test.container`:
 
-```text
+```
 [Unit]
 Description=A minimal container
 
@@ -2369,8 +2295,7 @@ WantedBy=multi-user.target default.target
 ```
 
 Example `test.kube`:
-
-```text
+```
 [Unit]
 Description=A kubernetes yaml based service
 Before=local-fs.target
@@ -2386,8 +2311,7 @@ WantedBy=multi-user.target default.target
 Example for locally built image to be used in a container with build-specific arguments:
 
 `test.build`
-
-```text
+```
 [Build]
 # Tag the image to be built
 ImageTag=localhost/imagename
@@ -2402,15 +2326,14 @@ BuildArg=VERSION=1.0 \
 ```
 
 `test.container`
-
-```text
+```
 [Container]
 Image=test.build
 ```
 
 Example `test.volume`:
 
-```text
+```
 [Volume]
 User=root
 Group=root
@@ -2418,8 +2341,7 @@ Label=org.test.Key=value
 ```
 
 Example `test.network`:
-
-```text
+```
 [Network]
 Subnet=172.16.0.0/24
 Gateway=172.16.0.1
@@ -2428,8 +2350,7 @@ Label=org.test.Key=value
 ```
 
 Example `test.artifact` to only pull the artifact using one auth file:
-
-```text
+```
 [Artifact]
 Artifact=quay.io/example/my-artifact:latest
 AuthFile=/etc/registry/auth.json
@@ -2439,15 +2360,13 @@ TLSVerify=false
 Example usage where a container depends on an artifact:
 
 `my-artifact.artifact`:
-
-```text
+```
 [Artifact]
 Artifact=quay.io/example/my-config:latest
 ```
 
 `my-app.container`:
-
-```text
+```
 [Container]
 Image=quay.io/example/my-app:latest
 Mount=type=artifact,source=my-artifact.artifact,destination=/etc/config
@@ -2456,15 +2375,13 @@ Mount=type=artifact,source=my-artifact.artifact,destination=/etc/config
 Example for a container in a Pod:
 
 `test.pod`
-
-```text
+```
 [Pod]
 PodName=test
 ```
 
 `centos.container`
-
-```text
+```
 [Container]
 Image=quay.io/centos/centos:latest
 Exec=sh -c "sleep inf"
@@ -2474,16 +2391,14 @@ Pod=test.pod
 Example for a Pod with a one-shot startup task:
 
 `test.pod`
-
-```text
+```
 [Pod]
 PodName=test
 ExitPolicy=continue
 ```
 
 `startup-task.container`
-
-```text
+```
 [Service]
 Type=oneshot
 RemainAfterExit=yes
@@ -2495,8 +2410,7 @@ Exec=sh -c "echo 'setup starting'; sleep 2; echo 'setup complete'"
 ```
 
 `app.container`
-
-```text
+```
 [Unit]
 Requires=startup-task.container
 After=startup-task.container
@@ -2513,14 +2427,14 @@ For further details, please see the [s3fs-fuse](https://github.com/s3fs-fuse/s3f
 Remember to read the [FAQ](https://github.com/s3fs-fuse/s3fs-fuse/wiki/FAQ)
 
 > NOTE: Enabling the cache massively speeds up access and write times on static files/objects.
->
+
 > However, `use_cache` is [UNBOUNDED](https://github.com/s3fs-fuse/s3fs-fuse/wiki/FAQ#q-how-does-the-local-file-cache-work)!
->
+
 > Be careful, it will fill up with any files accessed on the s3 bucket through the file system.
 
 Please remember to set `S3_BUCKET`, `PATH`, `AWS_REGION`. `CACHE_DIRECTORY` should be set up by [systemd](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#RuntimeDirectory=)
 
-```text
+```
 [Service]
 CacheDirectory=s3fs
 ExecStartPre=/usr/local/bin/aws s3api put-object --bucket ${S3_BUCKET} --key ${PATH}/
@@ -2534,10 +2448,9 @@ Options=iam_role,endpoint=${AWS_REGION},use_xattr,listobjectsv2,del_cache,use_ca
 ```
 
 ## SEE ALSO
-
 **[systemd.unit(5)](https://www.freedesktop.org/software/systemd/man/systemd.unit.html)**,
 **[systemd.service(5)](https://www.freedesktop.org/software/systemd/man/systemd.service.html)**,
 **[systemd-analyze(1)](https://www.freedesktop.org/software/systemd/man/latest/systemd-analyze.html)**,
-**[podman-run(1)](https://docs.podman.io/en/latest/markdown/podman-run.1.html)**,
-**[podman-network-create(1)](https://docs.podman.io/en/latest/markdown/podman-network-create.1.html)**,
-**[podman-auto-update(1)](https://docs.podman.io/en/latest/markdown/podman-auto-update.1.html)**
+**[podman-run(1)](podman-run.1.md)**,
+**[podman-network-create(1)](podman-network-create.1.md)**,
+**[podman-auto-update(1)](podman-auto-update.1.md)**

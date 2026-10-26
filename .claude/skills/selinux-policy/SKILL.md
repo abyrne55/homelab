@@ -183,4 +183,4 @@ ssh nook -- "sudo journalctl -k --grep='avc:.*denied' -n 20"
 
 ## Additional References
 
-- `.claude/references/fedora-bootc/building-containers.md` (lines 14–59) — overview of Containerfile build-environment constraints; useful context for understanding how `semodule -i` runs at image build time (shared host kernel, no running systemd)
+- `.claude/references/fedora-bootc/building-containers.md` (lines 7–48) — overview of Containerfile build-environment constraints; useful context for understanding how `semodule -i` runs at image build time (shared host kernel, no running systemd)

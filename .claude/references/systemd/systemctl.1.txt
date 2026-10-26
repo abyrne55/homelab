@@ -31,7 +31,7 @@ COMMANDS
            instances of unit templates. Units templates that are not
            instantiated are not runnable, and will thus never show up in the
            output of this command. Specifically this means that foo@.service
-           will never be shown in this list -- unless instantiated, e.g. as
+           will never be shown in this list — unless instantiated, e.g. as
            foo@bar.service. Use list-unit-files (see below) for listing
            installed unit template files.
 
@@ -43,7 +43,7 @@ COMMANDS
                  boot-efi.mount               loaded active mounted /boot/efi
                  systemd-journald.service     loaded active running Journal Service
                  systemd-logind.service       loaded active running Login Service
-               <?> user@1000.service            loaded failed failed  User Manager for UID 1000
+               ● user@1000.service            loaded failed failed  User Manager for UID 1000
                  ...
                  systemd-tmpfiles-clean.timer loaded active waiting Daily Cleanup of Temporary Directories
 
@@ -64,43 +64,43 @@ COMMANDS
 
            Table 1. Unit ACTIVE states
 
-           +-------------+---------------------------+
-           |State        | Description               |
-           +-------------+---------------------------+
-           |active       | Started, bound, plugged   |
-           |             | in, ..., depending on the |
-           |             | unit type.                |
-           +-------------+---------------------------+
-           |inactive     | Stopped, unbound,         |
-           |             | unplugged, ..., depending |
-           |             | on the unit type.         |
-           +-------------+---------------------------+
-           |failed       | Similar to inactive, but  |
-           |             | the unit failed in some   |
-           |             | way (process returned     |
-           |             | error code on exit,       |
-           |             | crashed, an operation     |
-           |             | timed out, or after too   |
-           |             | many restarts).           |
-           +-------------+---------------------------+
-           |activating   | Changing from inactive to |
-           |             | active.                   |
-           +-------------+---------------------------+
-           |deactivating | Changing from active to   |
-           |             | inactive.                 |
-           +-------------+---------------------------+
-           |maintenance  | Unit is inactive and a    |
-           |             | maintenance operation is  |
-           |             | in progress.              |
-           +-------------+---------------------------+
-           |reloading    | Unit is active and it is  |
-           |             | reloading its             |
-           |             | configuration.            |
-           +-------------+---------------------------+
-           |refreshing   | Unit is active and a new  |
-           |             | mount is being activated  |
-           |             | in its namespace.         |
-           +-------------+---------------------------+
+           ┌─────────────┬───────────────────────────┐
+           │State        │ Description               │
+           ├─────────────┼───────────────────────────┤
+           │active       │ Started, bound, plugged   │
+           │             │ in, ..., depending on the │
+           │             │ unit type.                │
+           ├─────────────┼───────────────────────────┤
+           │inactive     │ Stopped, unbound,         │
+           │             │ unplugged, ..., depending │
+           │             │ on the unit type.         │
+           ├─────────────┼───────────────────────────┤
+           │failed       │ Similar to inactive, but  │
+           │             │ the unit failed in some   │
+           │             │ way (process returned     │
+           │             │ error code on exit,       │
+           │             │ crashed, an operation     │
+           │             │ timed out, or after too   │
+           │             │ many restarts).           │
+           ├─────────────┼───────────────────────────┤
+           │activating   │ Changing from inactive to │
+           │             │ active.                   │
+           ├─────────────┼───────────────────────────┤
+           │deactivating │ Changing from active to   │
+           │             │ inactive.                 │
+           ├─────────────┼───────────────────────────┤
+           │maintenance  │ Unit is inactive and a    │
+           │             │ maintenance operation is  │
+           │             │ in progress.              │
+           ├─────────────┼───────────────────────────┤
+           │reloading    │ Unit is active and it is  │
+           │             │ reloading its             │
+           │             │ configuration.            │
+           ├─────────────┼───────────────────────────┤
+           │refreshing   │ Unit is active and a new  │
+           │             │ mount is being activated  │
+           │             │ in its namespace.         │
+           └─────────────┴───────────────────────────┘
            The SUB column shows the unit-type-specific detailed state of the
            unit, possible values vary by unit type. The list of possible LOAD,
            ACTIVE, and SUB states is not constant and new systemd releases may
@@ -245,7 +245,7 @@ COMMANDS
            Example 1. Example output from systemctl status
 
                $ systemctl status bluetooth
-               <?> bluetooth.service - Bluetooth service
+               ● bluetooth.service - Bluetooth service
                   Loaded: loaded (/usr/lib/systemd/system/bluetooth.service; enabled; preset: enabled)
                   Active: active (running) since Wed 2017-01-04 13:54:04 EST; 1 weeks 0 days ago
                     Docs: man:bluetoothd(8)
@@ -255,19 +255,19 @@ COMMANDS
                   Memory: 648.0K
                      CPU: 435ms
                   CGroup: /system.slice/bluetooth.service
-                          <?><?>930 /usr/lib/bluetooth/bluetoothd
+                          └─930 /usr/lib/bluetooth/bluetoothd
 
                Jan 12 10:46:45 example.com bluetoothd[8900]: Not enough free handles to register service
                Jan 12 10:46:45 example.com bluetoothd[8900]: Current Time Service could not be registered
                Jan 12 10:46:45 example.com bluetoothd[8900]: gatt-time-server: Input/output error (5)
 
-           The dot ("<?>") uses color on supported terminals to summarize the
+           The dot ("●") uses color on supported terminals to summarize the
            unit state at a glance. Along with its color, its shape varies
            according to its state: "inactive" or "maintenance" is a white
-           circle ("O"), "active" is a green dot ("<?>"), "deactivating" is a
-           white dot, "failed" or "error" is a red cross ("x"), and
+           circle ("○"), "active" is a green dot ("●"), "deactivating" is a
+           white dot, "failed" or "error" is a red cross ("×"), and
            "reloading" or "refreshing" is a green clockwise circle arrow
-           ("<?>").
+           ("↻").
 
            The "Loaded:" line in the output will show "loaded" if the unit has
            been loaded into memory. Other possible values for "Loaded:"
@@ -278,8 +278,8 @@ COMMANDS
            line will also show the enablement state. Enabled units are
            included in the dependency network between units, and thus are
            started at boot or via some other form of activation. See the full
-           table of possible enablement states -- including the definition of
-           "masked" -- in the documentation for the is-enabled command.
+           table of possible enablement states — including the definition of
+           "masked" — in the documentation for the is-enabled command.
 
            The "Active:" line shows active state. The value is usually
            "active" or "inactive". Active could mean started, bound, plugged
@@ -422,24 +422,13 @@ COMMANDS
            if the units are running. This does nothing if units are not
            running.
 
-       enqueue-marked
-           Enqueue start/stop/restart/reload jobs for all units that have the
-           respective "needs-*" markers set. When a unit marked for reload
-           does not support reload, restart will be queued. Those properties
-           can be set using set-property Markers=....
-
-           Unless --no-block is used, systemctl will wait for the queued jobs
-           to finish.
-
-           Added in version 260.
-
        reload-or-restart PATTERN...
            Reload one or more units if they support it. If not, stop and then
            start them instead. If the units are not running yet, they will be
            started.
 
-           When used in combination with --marked, it is a deprecated alias of
-           enqueue-marked.
+           This has a slightly differing functionality when used in
+           combination with --marked, see below.
 
        try-reload-or-restart PATTERN...
            Reload one or more units if they support it. If not, stop and then
@@ -487,26 +476,26 @@ COMMANDS
 
            Table 2.  Possible values for --what=
 
-           +----------------+------------------------------+
-           |Value           | Unit Setting                 |
-           +----------------+------------------------------+
-           |"runtime"       | RuntimeDirectory=            |
-           +----------------+------------------------------+
-           |"state"         | StateDirectory=              |
-           +----------------+------------------------------+
-           |"cache"         | CacheDirectory=              |
-           +----------------+------------------------------+
-           |"logs"          | LogsDirectory=               |
-           +----------------+------------------------------+
-           |"configuration" | ConfigurationDirectory=      |
-           +----------------+------------------------------+
-           |"fdstore"       | FileDescriptorStorePreserve= |
-           +----------------+------------------------------+
-           |"all"           | All of the above             |
-           +----------------+------------------------------+
-           |"help"          | Show the supported values    |
-           |                | and exit                     |
-           +----------------+------------------------------+
+           ┌────────────────┬──────────────────────────────┐
+           │Value           │ Unit Setting                 │
+           ├────────────────┼──────────────────────────────┤
+           │"runtime"       │ RuntimeDirectory=            │
+           ├────────────────┼──────────────────────────────┤
+           │"state"         │ StateDirectory=              │
+           ├────────────────┼──────────────────────────────┤
+           │"cache"         │ CacheDirectory=              │
+           ├────────────────┼──────────────────────────────┤
+           │"logs"          │ LogsDirectory=               │
+           ├────────────────┼──────────────────────────────┤
+           │"configuration" │ ConfigurationDirectory=      │
+           ├────────────────┼──────────────────────────────┤
+           │"fdstore"       │ FileDescriptorStorePreserve= │
+           ├────────────────┼──────────────────────────────┤
+           │"all"           │ All of the above             │
+           ├────────────────┼──────────────────────────────┤
+           │"help"          │ Show the supported values    │
+           │                │ and exit                     │
+           └────────────────┴──────────────────────────────┘
            Added in version 243.
 
        freeze PATTERN...
@@ -577,10 +566,10 @@ COMMANDS
            PrivateMounts=, etc.). This command supports bind-mounting
            directories, regular files, device nodes, AF_UNIX socket nodes, as
            well as FIFOs. The bind mount is ephemeral, and it is undone as
-           soon as the current unit process exists. Note that the namespace
+           soon as the current unit process exits. Note that the namespace
            mentioned here, where the bind mount will be added to, is the one
            where the main service process runs. Other processes (those
-           exececuted by ExecReload=, ExecStartPre=, etc.) run in distinct
+           executed by ExecReload=, ExecStartPre=, etc.) run in distinct
            namespaces.
 
            If supported by the kernel, any prior mount on the selected target
@@ -598,17 +587,15 @@ COMMANDS
            tuple of partition name and comma-separated list of mount options
            for that partition. The format is the same as the service
            MountImages= setting. When combined with the --read-only switch, a
-           ready-only mount is created. When combined with the --mkdir switch,
+           read-only mount is created. When combined with the --mkdir switch,
            the destination path is first created before the mount is applied.
 
            Note that this option is currently only supported for units that
            run within a mount namespace (i.e. with RootImage=, PrivateMounts=,
-           etc.). Note that the namespace mentioned here where the image mount
-           will be added to, is the one where the main service process runs.
-           Note that the namespace mentioned here, where the bind mount will
-           be added to, is the one where the main service process runs. Other
-           processes (those exececuted by ExecReload=, ExecStartPre=, etc.)
-           run in distinct namespaces.
+           etc.). Note that the namespace mentioned here, where the image
+           mount will be added to, is the one where the main service process
+           runs. Other processes (those executed by ExecReload=,
+           ExecStartPre=, etc.) run in distinct namespaces.
 
            If supported by the kernel, any prior mount on the selected target
            will be replaced by the new mount. If not supported, any prior
@@ -865,110 +852,110 @@ COMMANDS
 
            Table 3.  is-enabled output
 
-           +------------------+-------------------------+-----------+
-           |Name              | Description             | Exit Code |
-           +------------------+-------------------------+-----------+
-           |"enabled"         | Enabled via .wants/,    | 0         |
-           |                  | .requires/ or Alias=    |           |
-           |                  | symlinks (permanently   |           |
-           |                  | in                      |           |
-           |                  | /etc/systemd/system/,   |           |
-           |                  | or transiently in       |           |
-           |                  | /run/systemd/system/).  |           |
-           +------------------+                         |           |
-           |"enabled-runtime" |                         |           |
-           +------------------+-------------------------+-----------+
-           |"linked"          | Made available through  | > 0       |
-           |                  | one or more symlinks to |           |
-           |                  | the unit file           |           |
-           |                  | (permanently in         |           |
-           |                  | /etc/systemd/system/ or |           |
-           |                  | transiently in          |           |
-           |                  | /run/systemd/system/),  |           |
-           |                  | even though the unit    |           |
-           |                  | file might reside       |           |
-           |                  | outside of the unit     |           |
-           |                  | file search path.       |           |
-           +------------------+                         |           |
-           |"linked-runtime"  |                         |           |
-           +------------------+-------------------------+-----------+
-           |"alias"           | The name is an alias    | 0         |
-           |                  | (symlink to another     |           |
-           |                  | unit file).             |           |
-           +------------------+-------------------------+-----------+
-           |"masked"          | Completely disabled, so | > 0       |
-           |                  | that any start          |           |
-           |                  | operation on it fails   |           |
-           |                  | (permanently in         |           |
-           |                  | /etc/systemd/system/ or |           |
-           |                  | transiently in          |           |
-           |                  | /run/systemd/systemd/). |           |
-           +------------------+                         |           |
-           |"masked-runtime"  |                         |           |
-           +------------------+-------------------------+-----------+
-           |"static"          | The unit file is not    | 0         |
-           |                  | enabled, and has no     |           |
-           |                  | provisions for enabling |           |
-           |                  | in the [Install] unit   |           |
-           |                  | file section.           |           |
-           +------------------+-------------------------+-----------+
-           |"indirect"        | The unit file itself is | 0         |
-           |                  | not enabled, but it has |           |
-           |                  | a non-empty Also=       |           |
-           |                  | setting in the          |           |
-           |                  | [Install] unit file     |           |
-           |                  | section, listing other  |           |
-           |                  | unit files that might   |           |
-           |                  | be enabled, or it has   |           |
-           |                  | an alias under a        |           |
-           |                  | different name through  |           |
-           |                  | a symlink that is not   |           |
-           |                  | specified in Also=. For |           |
-           |                  | template unit files, an |           |
-           |                  | instance different than |           |
-           |                  | the one specified in    |           |
-           |                  | DefaultInstance= is     |           |
-           |                  | enabled.                |           |
-           +------------------+-------------------------+-----------+
-           |"disabled"        | The unit file is not    | > 0       |
-           |                  | enabled, but contains   |           |
-           |                  | an [Install] section    |           |
-           |                  | with installation       |           |
-           |                  | instructions.           |           |
-           +------------------+-------------------------+-----------+
-           |"generated"       | The unit file was       | 0         |
-           |                  | generated dynamically   |           |
-           |                  | via a generator tool.   |           |
-           |                  | See                     |           |
-           |                  | systemd.generator(7).   |           |
-           |                  | Generated unit files    |           |
-           |                  | may not be enabled,     |           |
-           |                  | they are enabled        |           |
-           |                  | implicitly by their     |           |
-           |                  | generator.              |           |
-           +------------------+-------------------------+-----------+
-           |"transient"       | The unit file has been  | 0         |
-           |                  | created dynamically     |           |
-           |                  | with the runtime API.   |           |
-           |                  | Transient units may not |           |
-           |                  | be enabled.             |           |
-           +------------------+-------------------------+-----------+
-           |"bad"             | The unit file is        | > 0       |
-           |                  | invalid or another      |           |
-           |                  | error occurred. Note    |           |
-           |                  | that is-enabled will    |           |
-           |                  | not actually return     |           |
-           |                  | this state, but print   |           |
-           |                  | an error message        |           |
-           |                  | instead. However, the   |           |
-           |                  | unit file listing       |           |
-           |                  | printed by              |           |
-           |                  | list-unit-files might   |           |
-           |                  | show it.                |           |
-           +------------------+-------------------------+-----------+
-           |"not-found"       | The unit file does not  | 4         |
-           |                  | exist.                  |           |
-           +------------------+-------------------------+-----------+
+           ┌──────────────────┬─────────────────────────┬───────────┐
+           │Name              │ Description             │ Exit Code │
+           ├──────────────────┼─────────────────────────┼───────────┤
+           │"enabled"         │ Enabled via .wants/,    │ 0         │
+           │                  │ .requires/ or Alias=    │           │
+           │                  │ symlinks (permanently   │           │
+           │                  │ in                      │           │
+           │                  │ /etc/systemd/system/,   │           │
+           │                  │ or transiently in       │           │
+           │                  │ /run/systemd/system/).  │           │
+           ├──────────────────┤                         │           │
+           │"enabled-runtime" │                         │           │
+           ├──────────────────┼─────────────────────────┼───────────┤
+           │"linked"          │ Made available through  │ > 0       │
+           │                  │ one or more symlinks to │           │
+           │                  │ the unit file           │           │
+           │                  │ (permanently in         │           │
+           │                  │ /etc/systemd/system/ or │           │
+           │                  │ transiently in          │           │
+           │                  │ /run/systemd/system/),  │           │
+           │                  │ even though the unit    │           │
+           │                  │ file might reside       │           │
+           │                  │ outside of the unit     │           │
+           │                  │ file search path.       │           │
+           ├──────────────────┤                         │           │
+           │"linked-runtime"  │                         │           │
+           ├──────────────────┼─────────────────────────┼───────────┤
+           │"alias"           │ The name is an alias    │ 0         │
+           │                  │ (symlink to another     │           │
+           │                  │ unit file).             │           │
+           ├──────────────────┼─────────────────────────┼───────────┤
+           │"masked"          │ Completely disabled, so │ > 0       │
+           │                  │ that any start          │           │
+           │                  │ operation on it fails   │           │
+           │                  │ (permanently in         │           │
+           │                  │ /etc/systemd/system/ or │           │
+           │                  │ transiently in          │           │
+           │                  │ /run/systemd/systemd/). │           │
+           ├──────────────────┤                         │           │
+           │"masked-runtime"  │                         │           │
+           ├──────────────────┼─────────────────────────┼───────────┤
+           │"static"          │ The unit file is not    │ 0         │
+           │                  │ enabled, and has no     │           │
+           │                  │ provisions for enabling │           │
+           │                  │ in the [Install] unit   │           │
+           │                  │ file section.           │           │
+           ├──────────────────┼─────────────────────────┼───────────┤
+           │"indirect"        │ The unit file itself is │ 0         │
+           │                  │ not enabled, but it has │           │
+           │                  │ a non-empty Also=       │           │
+           │                  │ setting in the          │           │
+           │                  │ [Install] unit file     │           │
+           │                  │ section, listing other  │           │
+           │                  │ unit files that might   │           │
+           │                  │ be enabled, or it has   │           │
+           │                  │ an alias under a        │           │
+           │                  │ different name through  │           │
+           │                  │ a symlink that is not   │           │
+           │                  │ specified in Also=. For │           │
+           │                  │ template unit files, an │           │
+           │                  │ instance different than │           │
+           │                  │ the one specified in    │           │
+           │                  │ DefaultInstance= is     │           │
+           │                  │ enabled.                │           │
+           ├──────────────────┼─────────────────────────┼───────────┤
+           │"disabled"        │ The unit file is not    │ > 0       │
+           │                  │ enabled, but contains   │           │
+           │                  │ an [Install] section    │           │
+           │                  │ with installation       │           │
+           │                  │ instructions.           │           │
+           ├──────────────────┼─────────────────────────┼───────────┤
+           │"generated"       │ The unit file was       │ 0         │
+           │                  │ generated dynamically   │           │
+           │                  │ via a generator tool.   │           │
+           │                  │ See                     │           │
+           │                  │ systemd.generator(7).   │           │
+           │                  │ Generated unit files    │           │
+           │                  │ may not be enabled,     │           │
+           │                  │ they are enabled        │           │
+           │                  │ implicitly by their     │           │
+           │                  │ generator.              │           │
+           ├──────────────────┼─────────────────────────┼───────────┤
+           │"transient"       │ The unit file has been  │ 0         │
+           │                  │ created dynamically     │           │
+           │                  │ with the runtime API.   │           │
+           │                  │ Transient units may not │           │
+           │                  │ be enabled.             │           │
+           ├──────────────────┼─────────────────────────┼───────────┤
+           │"bad"             │ The unit file is        │ > 0       │
+           │                  │ invalid or another      │           │
+           │                  │ error occurred. Note    │           │
+           │                  │ that is-enabled will    │           │
+           │                  │ not actually return     │           │
+           │                  │ this state, but print   │           │
+           │                  │ an error message        │           │
+           │                  │ instead. However, the   │           │
+           │                  │ unit file listing       │           │
+           │                  │ printed by              │           │
+           │                  │ list-unit-files might   │           │
+           │                  │ show it.                │           │
+           ├──────────────────┼─────────────────────────┼───────────┤
+           │"not-found"       │ The unit file does not  │ 4         │
+           │                  │ exist.                  │           │
+           └──────────────────┴─────────────────────────┴───────────┘
            Added in version 238.
 
        mask UNIT...
@@ -1280,55 +1267,55 @@ COMMANDS
 
            Table 4. is-system-running output
 
-           +-------------+---------------------+-----------+
-           |Name         | Description         | Exit Code |
-           +-------------+---------------------+-----------+
-           |initializing | Early bootup,       | > 0       |
-           |             | before basic.target |           |
-           |             | is reached or the   |           |
-           |             | maintenance state   |           |
-           |             | entered.            |           |
-           +-------------+---------------------+-----------+
-           |starting     | Late bootup, before | > 0       |
-           |             | the job queue       |           |
-           |             | becomes idle for    |           |
-           |             | the first time, or  |           |
-           |             | one of the rescue   |           |
-           |             | targets are         |           |
-           |             | reached.            |           |
-           +-------------+---------------------+-----------+
-           |running      | The system is fully | 0         |
-           |             | operational.        |           |
-           +-------------+---------------------+-----------+
-           |degraded     | The system is       | > 0       |
-           |             | operational but one |           |
-           |             | or more units       |           |
-           |             | failed.             |           |
-           +-------------+---------------------+-----------+
-           |maintenance  | The rescue or       | > 0       |
-           |             | emergency target is |           |
-           |             | active.             |           |
-           +-------------+---------------------+-----------+
-           |stopping     | The manager is      | > 0       |
-           |             | shutting down.      |           |
-           +-------------+---------------------+-----------+
-           |offline      | The manager is not  | > 0       |
-           |             | running.            |           |
-           |             | Specifically, this  |           |
-           |             | is the operational  |           |
-           |             | state if an         |           |
-           |             | incompatible        |           |
-           |             | program is running  |           |
-           |             | as system manager   |           |
-           |             | (PID 1).            |           |
-           +-------------+---------------------+-----------+
-           |unknown      | The operational     | > 0       |
-           |             | state could not be  |           |
-           |             | determined, due to  |           |
-           |             | lack of resources   |           |
-           |             | or another error    |           |
-           |             | cause.              |           |
-           +-------------+---------------------+-----------+
+           ┌─────────────┬─────────────────────┬───────────┐
+           │Name         │ Description         │ Exit Code │
+           ├─────────────┼─────────────────────┼───────────┤
+           │initializing │ Early bootup,       │ > 0       │
+           │             │ before basic.target │           │
+           │             │ is reached or the   │           │
+           │             │ maintenance state   │           │
+           │             │ entered.            │           │
+           ├─────────────┼─────────────────────┼───────────┤
+           │starting     │ Late bootup, before │ > 0       │
+           │             │ the job queue       │           │
+           │             │ becomes idle for    │           │
+           │             │ the first time, or  │           │
+           │             │ one of the rescue   │           │
+           │             │ targets are         │           │
+           │             │ reached.            │           │
+           ├─────────────┼─────────────────────┼───────────┤
+           │running      │ The system is fully │ 0         │
+           │             │ operational.        │           │
+           ├─────────────┼─────────────────────┼───────────┤
+           │degraded     │ The system is       │ > 0       │
+           │             │ operational but one │           │
+           │             │ or more units       │           │
+           │             │ failed.             │           │
+           ├─────────────┼─────────────────────┼───────────┤
+           │maintenance  │ The rescue or       │ > 0       │
+           │             │ emergency target is │           │
+           │             │ active.             │           │
+           ├─────────────┼─────────────────────┼───────────┤
+           │stopping     │ The manager is      │ > 0       │
+           │             │ shutting down.      │           │
+           ├─────────────┼─────────────────────┼───────────┤
+           │offline      │ The manager is not  │ > 0       │
+           │             │ running.            │           │
+           │             │ Specifically, this  │           │
+           │             │ is the operational  │           │
+           │             │ state if an         │           │
+           │             │ incompatible        │           │
+           │             │ program is running  │           │
+           │             │ as system manager   │           │
+           │             │ (PID 1).            │           │
+           ├─────────────┼─────────────────────┼───────────┤
+           │unknown      │ The operational     │ > 0       │
+           │             │ state could not be  │           │
+           │             │ determined, due to  │           │
+           │             │ lack of resources   │           │
+           │             │ or another error    │           │
+           │             │ cause.              │           │
+           └─────────────┴─────────────────────┴───────────┘
            Added in version 215.
 
        default
@@ -1860,19 +1847,19 @@ OPTIONS
            Do not generate the warnings shown by default in the following
            cases:
 
-           o   when systemctl is invoked without procfs mounted on /proc/,
+           •   when systemctl is invoked without procfs mounted on /proc/,
 
-           o   when using enable or disable on units without install
+           •   when using enable or disable on units without install
                information (i.e. do not have or have an empty [Install]
                section),
 
-           o   when using disable combined with --user on units that are
+           •   when using disable combined with --user on units that are
                enabled in global scope,
 
-           o   when a stop-ped, disable-d, or mask-ed unit still has active
+           •   when a stop-ped, disable-d, or mask-ed unit still has active
                triggering units,
 
-           o   when a unit file is changed and requires daemon-reload.
+           •   when a unit file is changed and requires daemon-reload.
 
            Added in version 253.
 
@@ -1973,7 +1960,7 @@ OPTIONS
            Takes a control group sub-path to send signals to, for use with the
            kill command. By default the chosen signal is delivered to all
            processes of the unit's cgroups (as well as the main/control
-           processes (if outside) - subject to --kill-whom=). But with this
+           processes (if outside) – subject to --kill-whom=). But with this
            option a subgroup can be selelected instead. This functionality is
            only available if "cgroup" or "cgroup-fail" are used with
            --kill-whom=, and in fact the former is the default if
@@ -2124,7 +2111,7 @@ OPTIONS
        --boot-loader-menu=timeout
            When used with the reboot, poweroff, or halt command, indicate to
            the system's boot loader to show the boot loader menu on the
-           following boot. Takes a time value as parameter -- indicating the
+           following boot. Takes a time value as parameter — indicating the
            menu timeout. Pass zero in order to disable the menu timeout. Note
            that not all boot loaders support this functionality.
 
@@ -2143,7 +2130,7 @@ OPTIONS
            This switch is used with reboot. The value is architecture and
            firmware specific. As an example, "recovery" might be used to
            trigger system recovery, and "fota" might be used to trigger a
-           "firmware over the air" update.
+           “firmware over the air” update.
 
            Added in version 246.
 
@@ -2168,7 +2155,7 @@ OPTIONS
 
                Added in version 251.
 
-           us, <mu>s
+           us, μs
                "Day YYYY-MM-DD HH:MM:SS.UUUUUU TZ"
 
                Added in version 248.
@@ -2178,7 +2165,7 @@ OPTIONS
 
                Added in version 248.
 
-           us+utc, <mu>s+utc
+           us+utc, μs+utc
                "Day YYYY-MM-DD HH:MM:SS.UUUUUU UTC"
 
                Added in version 248.
@@ -2192,6 +2179,18 @@ OPTIONS
            option also creates the destination file node to mount over if the
            object to mount is not a directory, but a regular file, device
            node, socket or FIFO.
+
+           Added in version 248.
+
+       --marked
+           Only allowed with reload-or-restart. Enqueues restart jobs for all
+           units that have the "needs-restart" mark, and reload jobs for units
+           that have the "needs-reload" mark. When a unit marked for reload
+           does not support reload, restart will be queued. Those properties
+           can be set using set-property Markers=....
+
+           Unless --no-block is used, systemctl will wait for the queued jobs
+           to finish.
 
            Added in version 248.
 
@@ -2214,6 +2213,23 @@ OPTIONS
            be shown, which can be canceled by passing an empty string or
            "cancel".  "auto" will schedule the action according to maintenance
            window or one minute in the future.
+
+           The specified timestamp is a lower bound only: it declares the
+           earliest point in time the requested action may take place, i.e.
+           the action is executed as soon as possible, but not before the
+           given timestamp. It is not a condition that is checked, and
+           specifying a timestamp in the past is not an error: the action is
+           then executed immediately. This is intentional, as the alternative
+           would be racy and surprising — consider --when=now, which by the
+           time the request is processed necessarily refers to the past, or
+           --when=+50ms, which might well already have elapsed due to
+           scheduling latencies before the request is dispatched. In both
+           cases the requested action is still carried out, as the user asked
+           for it.
+
+           If a timestamp in the past shall not result in the action being
+           executed, this must be checked for explicitly before invoking
+           systemctl.
 
            Added in version 254.
 
@@ -2286,26 +2302,26 @@ EXIT STATUS
 
        Table 5. LSB return codes
 
-       +------+---------------------+---------------------+
-       |Value | Description in LSB  | Use in systemd      |
-       +------+---------------------+---------------------+
-       |0     | "program is running | unit is active      |
-       |      | or service is OK"   |                     |
-       +------+---------------------+---------------------+
-       |1     | "program is dead    | unit not failed     |
-       |      | and /var/run pid    | (used by is-failed) |
-       |      | file exists"        |                     |
-       +------+---------------------+---------------------+
-       |2     | "program is dead    | unused              |
-       |      | and /var/lock lock  |                     |
-       |      | file exists"        |                     |
-       +------+---------------------+---------------------+
-       |3     | "program is not     | unit is not active  |
-       |      | running"            |                     |
-       +------+---------------------+---------------------+
-       |4     | "program or service | no such unit        |
-       |      | status is unknown"  |                     |
-       +------+---------------------+---------------------+
+       ┌──────┬─────────────────────┬─────────────────────┐
+       │Value │ Description in LSB  │ Use in systemd      │
+       ├──────┼─────────────────────┼─────────────────────┤
+       │0     │ "program is running │ unit is active      │
+       │      │ or service is OK"   │                     │
+       ├──────┼─────────────────────┼─────────────────────┤
+       │1     │ "program is dead    │ unit not failed     │
+       │      │ and /var/run pid    │ (used by is-failed) │
+       │      │ file exists"        │                     │
+       ├──────┼─────────────────────┼─────────────────────┤
+       │2     │ "program is dead    │ unused              │
+       │      │ and /var/lock lock  │                     │
+       │      │ file exists"        │                     │
+       ├──────┼─────────────────────┼─────────────────────┤
+       │3     │ "program is not     │ unit is not active  │
+       │      │ running"            │                     │
+       ├──────┼─────────────────────┼─────────────────────┤
+       │4     │ "program or service │ no such unit        │
+       │      │ status is unknown"  │                     │
+       └──────┴─────────────────────┴─────────────────────┘
 
        The mapping of LSB service states to systemd unit states is imperfect,
        so it is better to not rely on those return values but to look for
@@ -2460,25 +2476,13 @@ ENVIRONMENT
            must be set too.
 
        $SYSTEMD_COLORS
-           Takes a boolean argument, or a special value. By default (unset),
-           systemd and related utilities will use colors in their output if
-           possible. If $COLORTERM is set to "truecolor" or "24bit", 24-bit
-           colors will be enabled, 256 colors otherwise, unless $NO_COLOR or
-           $TERM indicates colors are disabled.
-
-           true
-               Same as unset, except that $NO_COLOR is ignored.
-
-           false
-               The output will be monochrome.
-
-           "16", "256", "24bit"
-               Always use the base 16 ANSI colors, 256 colors, or 24 bit
-               color, respectively.
-
-           "auto-16", "auto-256", "auto-24bit"
-               Use the given quantity of colours, subject to $TERM, and what
-               the console is connected to.
+           Takes a boolean argument. When true, systemd and related utilities
+           will use colors in their output, otherwise the output will be
+           monochrome. Additionally, the variable can take one of the
+           following special values: "16", "256" to restrict the use of colors
+           to the base 16 or 256 ANSI colors, respectively. This can be
+           specified to override the automatic decision based on $TERM and
+           what the console is connected to.
 
        $SYSTEMD_URLIFY
            The value must be a boolean. Controls whether clickable links
@@ -2508,4 +2512,4 @@ NOTES
            appropriate, treating it is a common interface.
 
 
-systemd 260.1                                                     SYSTEMCTL(1)
+systemd 259.10                                                    SYSTEMCTL(1)

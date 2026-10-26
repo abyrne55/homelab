@@ -51,15 +51,13 @@ SYNOPSIS
 
        systemd-analyze [OPTIONS...] inspect-elf FILE...
 
-       systemd-analyze [OPTIONS...] malloc [D-BUS SERVICE...]
+       systemd-analyze [OPTIONS...] malloc [D-BUS_SERVICE...]
 
        systemd-analyze [OPTIONS...] fdstore UNIT...
 
        systemd-analyze [OPTIONS...] image-policy POLICY...
 
        systemd-analyze [OPTIONS...] has-tpm2
-
-       systemd-analyze [OPTIONS...] identify-tpm2
 
        systemd-analyze [OPTIONS...] pcrs [PCR...]
 
@@ -152,17 +150,17 @@ DESCRIPTION
 
            $ systemd-analyze critical-chain
            multi-user.target @47.820s
-           <?><?>pmie.service @35.968s +548ms
-             <?><?>pmcd.service @33.715s +2.247s
-               <?><?>network-online.target @33.712s
-                 <?><?>systemd-networkd-wait-online.service @12.804s +20.905s
-                   <?><?>systemd-networkd.service @11.109s +1.690s
-                     <?><?>systemd-udevd.service @9.201s +1.904s
-                       <?><?>systemd-tmpfiles-setup-dev.service @7.306s +1.776s
-                         <?><?>kmod-static-nodes.service @6.976s +177ms
-                           <?><?>systemd-journald.socket
-                             <?><?>system.slice
-                               <?><?>-.slice
+           └─pmie.service @35.968s +548ms
+             └─pmcd.service @33.715s +2.247s
+               └─network-online.target @33.712s
+                 └─systemd-networkd-wait-online.service @12.804s +20.905s
+                   └─systemd-networkd.service @11.109s +1.690s
+                     └─systemd-udevd.service @9.201s +1.904s
+                       └─systemd-tmpfiles-setup-dev.service @7.306s +1.776s
+                         └─kmod-static-nodes.service @6.976s +177ms
+                           └─systemd-journald.socket
+                             └─system.slice
+                               └─-.slice
 
    systemd-analyze dump [pattern...]
        Without any parameter, this command outputs a (usually very long)
@@ -413,15 +411,15 @@ DESCRIPTION
 
            $ systemd-analyze timespan 1s 300s '1year 0.000001s'
            Original: 1s
-                 <mu>s: 1000000
+                 μs: 1000000
               Human: 1s
 
            Original: 300s
-                 <mu>s: 300000000
+                 μs: 300000000
               Human: 5min
 
            Original: 1year 0.000001s
-                 <mu>s: 31557600000001
+                 μs: 31557600000001
               Human: 1y 1us
 
    systemd-analyze cat-config NAME|PATH...
@@ -452,15 +450,15 @@ DESCRIPTION
        This command has two distinct modes of operation, depending on whether
        the operator OP is specified.
 
-       In the first mode -- when OP is not specified --, it will compare the
-       two version strings and print either "VERSION1 < VERSION2", or
-       "VERSION1 == VERSION2", or "VERSION1 > VERSION2" as appropriate.
+       In the first mode — when OP is not specified —, it will compare the two
+       version strings and print either "VERSION1 < VERSION2", or "VERSION1 ==
+       VERSION2", or "VERSION1 > VERSION2" as appropriate.
 
        The exit status is 0 if the versions are equal, 11 if the version of
        the right is smaller, and 12 if the version of the left is smaller.
        (This matches the convention used by rpmdev-vercmp.)
 
-       In the second mode -- when OP is specified -- it will compare the two
+       In the second mode — when OP is specified — it will compare the two
        version strings using the operation OP and return 0 (success) if they
        condition is satisfied, and 1 (failure) otherwise.  OP may be lt, le,
        eq, ne, ge, gt. In this mode, no output is printed. (This matches the
@@ -495,14 +493,14 @@ DESCRIPTION
 
        The following errors are currently detected:
 
-       o   unknown sections and directives,
+       •   unknown sections and directives,
 
-       o   missing dependencies which are required to start the given unit,
+       •   missing dependencies which are required to start the given unit,
 
-       o   man pages listed in Documentation= which are not found in the
+       •   man pages listed in Documentation= which are not found in the
            system,
 
-       o   commands listed in ExecStart= and similar which are not found in
+       •   commands listed in ExecStart= and similar which are not found in
            the system or not executable.
 
        Example 18. Misspelt directives
@@ -582,7 +580,7 @@ DESCRIPTION
        benefit from additional settings applied to them.
 
        Please note that many of the security and sandboxing settings
-       individually can be circumvented -- unless combined with others. For
+       individually can be circumvented — unless combined with others. For
        example, if a service retains the privilege to establish or undo mount
        points many of the sandboxing options can be undone by the service code
        itself. Due to that is essential that each service uses the most
@@ -600,12 +598,12 @@ DESCRIPTION
 
            $ systemd-analyze security --no-pager systemd-logind.service
              NAME                DESCRIPTION                              EXPOSURE
-           <?> PrivateNetwork=     Service has access to the host's network      0.5
-           <?> User=/DynamicUser=  Service runs as root user                     0.4
-           <?> DeviceAllow=        Service has no device ACL                     0.2
-           \/ IPAddressDeny=      Service blocks all IP address ranges
+           ✗ PrivateNetwork=     Service has access to the host's network      0.5
+           ✗ User=/DynamicUser=  Service runs as root user                     0.4
+           ✗ DeviceAllow=        Service has no device ACL                     0.2
+           ✓ IPAddressDeny=      Service blocks all IP address ranges
            ...
-           -> Overall exposure level for systemd-logind.service: 4.1 OK <?>
+           → Overall exposure level for systemd-logind.service: 4.1 OK 🙂
 
    systemd-analyze inspect-elf FILE...
        This command will load the specified files, and if they are ELF objects
@@ -726,27 +724,11 @@ DESCRIPTION
 
        Added in version 257.
 
-   systemd-analyze identify-tpm2
-       Shows vendor information about the TPM 2.0 device discovered.
-
-       Example 26. Example Output
-
-             Family Indicator: 2.0
-                        Level: 0
-                     Revision: 1.59
-           Specification Date: Mon 2023-01-09
-                 Manufacturer: STM
-                Vendor String: ST33KTPM2XSPI
-             Firmware Version: 9.258
-              Modalias String: fi2.0:lv0:rv1.59:sy2023:sd9:mfSTM:vsST33KTPM2XSPI:ty0:fw9.258.0:
-
-       Added in version 260.
-
    systemd-analyze pcrs [PCR...]
        This command shows the known TPM2 PCRs along with their identifying
        names and current values.
 
-       Example 27. Example Output
+       Example 26. Example Output
 
            $ systemd-analyze pcrs
            NR NAME                SHA256
@@ -779,7 +761,7 @@ DESCRIPTION
        This command shows the known TPM2 NvPCRs (additional PCRs stored in
        TPM2 NV indexes) along with their identifying names and current values.
 
-       Example 28. Example Output
+       Example 27. Example Output
 
            $ systemd-analyze nvpcrs
            NAME         NVINDEX VALUE
@@ -794,7 +776,7 @@ DESCRIPTION
        non-printable data, so it should be redirected to a file or into a
        pipe.
 
-       Example 29. Save the Storage Root Key to srk.tpm2b_public
+       Example 28. Save the Storage Root Key to srk.tpm2b_public
 
            systemd-analyze srk >srk.tpm2b_public
 
@@ -804,7 +786,7 @@ DESCRIPTION
        see systemd.unit(5) for details. If architecture names are specified
        only those specified are listed.
 
-       Example 30. Table output
+       Example 29. Table output
 
            $ systemd-analyze architectures
            NAME        SUPPORT
@@ -824,7 +806,7 @@ DESCRIPTION
        Shows a list of SMBIOS Type #11 strings passed to the system. Also see
        smbios-type-11(7).
 
-       Example 31. Example output
+       Example 30. Example output
 
            $ systemd-analyze smbios11
            io.systemd.stub.kernel-cmdline-extra=console=ttyS0
@@ -841,7 +823,7 @@ DESCRIPTION
        data. See Using Computer Hardware IDs (CHIDs)[4] for details about
        CHIDs.
 
-       Example 32. Example output
+       Example 31. Example output
 
            $ systemd-analyze chid
            TYPE INPUT  CHID
@@ -856,9 +838,9 @@ DESCRIPTION
              11 MF---- bb9122bb-8a5c-50d2-a742-a85beb719909
              13 M---mp bfc36935-5032-5987-a0a3-6311f01de33a
 
-           LEGEND: M -> sys_vendor (LENOVO) <?> F -> product_family (ThinkPad X1 Carbon Gen 9) <?> P -> product_name (20XW0055GE)
-                   S -> product_sku (LENOVO_MT_20XW_BU_Think_FM_ThinkPad X1 Carbon Gen 9) <?> m -> board_vendor (LENOVO)
-                   p -> board_name (20XW0055GE)
+           LEGEND: M → sys_vendor (LENOVO) ┄ F → product_family (ThinkPad X1 Carbon Gen 9) ┄ P → product_name (20XW0055GE)
+                   S → product_sku (LENOVO_MT_20XW_BU_Think_FM_ThinkPad X1 Carbon Gen 9) ┄ m → board_vendor (LENOVO)
+                   p → board_name (20XW0055GE)
 
        Added in version 258.
 
@@ -890,7 +872,7 @@ DESCRIPTION
        service. If no command is given, spawn and attach a shell with the
        namespace to the service.
 
-       Example 33. Example output
+       Example 32. Example output
 
            $ systemd-analyze unit-shell systemd-resolved.service ls
            bin   dev  etc    home  lib   lib64     lost+found  mnt  proc  run   srv  tmp  var   vmlinuz.old
@@ -905,7 +887,7 @@ DESCRIPTION
        option to pass extra command line arguments to the debugger and quote
        as appropriate when ARGS contain whitespace (See Example).
 
-       Example 34.
+       Example 33.
 
            $ systemd-analyze --debugger-arguments="-batch -ex 'info all-registers'" unit-gdb systemd-oomd.service
 
@@ -1060,169 +1042,169 @@ OPTIONS
 
            Table 1. Accepted Assessment Test Identifiers
 
-           +---------------------------------------------------------+
-           |Assessment Test Identifier                               |
-           +---------------------------------------------------------+
-           |UserOrDynamicUser                                        |
-           +---------------------------------------------------------+
-           |SupplementaryGroups                                      |
-           +---------------------------------------------------------+
-           |PrivateMounts                                            |
-           +---------------------------------------------------------+
-           |PrivateDevices                                           |
-           +---------------------------------------------------------+
-           |PrivateTmp                                               |
-           +---------------------------------------------------------+
-           |PrivateNetwork                                           |
-           +---------------------------------------------------------+
-           |PrivateUsers                                             |
-           +---------------------------------------------------------+
-           |ProtectControlGroups                                     |
-           +---------------------------------------------------------+
-           |ProtectKernelModules                                     |
-           +---------------------------------------------------------+
-           |ProtectKernelTunables                                    |
-           +---------------------------------------------------------+
-           |ProtectKernelLogs                                        |
-           +---------------------------------------------------------+
-           |ProtectClock                                             |
-           +---------------------------------------------------------+
-           |ProtectHome                                              |
-           +---------------------------------------------------------+
-           |ProtectHostname                                          |
-           +---------------------------------------------------------+
-           |ProtectSystem                                            |
-           +---------------------------------------------------------+
-           |RootDirectoryOrRootImage                                 |
-           +---------------------------------------------------------+
-           |LockPersonality                                          |
-           +---------------------------------------------------------+
-           |MemoryDenyWriteExecute                                   |
-           +---------------------------------------------------------+
-           |NoNewPrivileges                                          |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_SYS_ADMIN                      |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_SET_UID_GID_PCAP               |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_SYS_PTRACE                     |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_SYS_TIME                       |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_NET_ADMIN                      |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_SYS_RAWIO                      |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_SYS_MODULE                     |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_AUDIT                          |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_SYSLOG                         |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_SYS_NICE_RESOURCE              |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_MKNOD                          |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_CHOWN_FSETID_SETFCAP           |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_DAC_FOWNER_IPC_OWNER           |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_KILL                           |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_NET_BIND_SERVICE_BROADCAST_RAW |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_SYS_BOOT                       |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_MAC                            |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_LINUX_IMMUTABLE                |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_IPC_LOCK                       |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_SYS_CHROOT                     |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_BLOCK_SUSPEND                  |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_WAKE_ALARM                     |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_LEASE                          |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_SYS_TTY_CONFIG                 |
-           +---------------------------------------------------------+
-           |CapabilityBoundingSet_CAP_BPF                            |
-           +---------------------------------------------------------+
-           |UMask                                                    |
-           +---------------------------------------------------------+
-           |KeyringMode                                              |
-           +---------------------------------------------------------+
-           |ProtectProc                                              |
-           +---------------------------------------------------------+
-           |ProcSubset                                               |
-           +---------------------------------------------------------+
-           |NotifyAccess                                             |
-           +---------------------------------------------------------+
-           |RemoveIPC                                                |
-           +---------------------------------------------------------+
-           |Delegate                                                 |
-           +---------------------------------------------------------+
-           |RestrictRealtime                                         |
-           +---------------------------------------------------------+
-           |RestrictSUIDSGID                                         |
-           +---------------------------------------------------------+
-           |RestrictNamespaces_user                                  |
-           +---------------------------------------------------------+
-           |RestrictNamespaces_mnt                                   |
-           +---------------------------------------------------------+
-           |RestrictNamespaces_ipc                                   |
-           +---------------------------------------------------------+
-           |RestrictNamespaces_pid                                   |
-           +---------------------------------------------------------+
-           |RestrictNamespaces_cgroup                                |
-           +---------------------------------------------------------+
-           |RestrictNamespaces_uts                                   |
-           +---------------------------------------------------------+
-           |RestrictNamespaces_net                                   |
-           +---------------------------------------------------------+
-           |RestrictAddressFamilies_AF_INET_INET6                    |
-           +---------------------------------------------------------+
-           |RestrictAddressFamilies_AF_UNIX                          |
-           +---------------------------------------------------------+
-           |RestrictAddressFamilies_AF_NETLINK                       |
-           +---------------------------------------------------------+
-           |RestrictAddressFamilies_AF_PACKET                        |
-           +---------------------------------------------------------+
-           |RestrictAddressFamilies_OTHER                            |
-           +---------------------------------------------------------+
-           |SystemCallArchitectures                                  |
-           +---------------------------------------------------------+
-           |SystemCallFilter_swap                                    |
-           +---------------------------------------------------------+
-           |SystemCallFilter_obsolete                                |
-           +---------------------------------------------------------+
-           |SystemCallFilter_clock                                   |
-           +---------------------------------------------------------+
-           |SystemCallFilter_cpu_emulation                           |
-           +---------------------------------------------------------+
-           |SystemCallFilter_debug                                   |
-           +---------------------------------------------------------+
-           |SystemCallFilter_mount                                   |
-           +---------------------------------------------------------+
-           |SystemCallFilter_module                                  |
-           +---------------------------------------------------------+
-           |SystemCallFilter_raw_io                                  |
-           +---------------------------------------------------------+
-           |SystemCallFilter_reboot                                  |
-           +---------------------------------------------------------+
-           |SystemCallFilter_privileged                              |
-           +---------------------------------------------------------+
-           |SystemCallFilter_resources                               |
-           +---------------------------------------------------------+
-           |IPAddressDeny                                            |
-           +---------------------------------------------------------+
-           |DeviceAllow                                              |
-           +---------------------------------------------------------+
-           |AmbientCapabilities                                      |
-           +---------------------------------------------------------+
+           ┌─────────────────────────────────────────────────────────┐
+           │Assessment Test Identifier                               │
+           ├─────────────────────────────────────────────────────────┤
+           │UserOrDynamicUser                                        │
+           ├─────────────────────────────────────────────────────────┤
+           │SupplementaryGroups                                      │
+           ├─────────────────────────────────────────────────────────┤
+           │PrivateMounts                                            │
+           ├─────────────────────────────────────────────────────────┤
+           │PrivateDevices                                           │
+           ├─────────────────────────────────────────────────────────┤
+           │PrivateTmp                                               │
+           ├─────────────────────────────────────────────────────────┤
+           │PrivateNetwork                                           │
+           ├─────────────────────────────────────────────────────────┤
+           │PrivateUsers                                             │
+           ├─────────────────────────────────────────────────────────┤
+           │ProtectControlGroups                                     │
+           ├─────────────────────────────────────────────────────────┤
+           │ProtectKernelModules                                     │
+           ├─────────────────────────────────────────────────────────┤
+           │ProtectKernelTunables                                    │
+           ├─────────────────────────────────────────────────────────┤
+           │ProtectKernelLogs                                        │
+           ├─────────────────────────────────────────────────────────┤
+           │ProtectClock                                             │
+           ├─────────────────────────────────────────────────────────┤
+           │ProtectHome                                              │
+           ├─────────────────────────────────────────────────────────┤
+           │ProtectHostname                                          │
+           ├─────────────────────────────────────────────────────────┤
+           │ProtectSystem                                            │
+           ├─────────────────────────────────────────────────────────┤
+           │RootDirectoryOrRootImage                                 │
+           ├─────────────────────────────────────────────────────────┤
+           │LockPersonality                                          │
+           ├─────────────────────────────────────────────────────────┤
+           │MemoryDenyWriteExecute                                   │
+           ├─────────────────────────────────────────────────────────┤
+           │NoNewPrivileges                                          │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_SYS_ADMIN                      │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_SET_UID_GID_PCAP               │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_SYS_PTRACE                     │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_SYS_TIME                       │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_NET_ADMIN                      │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_SYS_RAWIO                      │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_SYS_MODULE                     │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_AUDIT                          │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_SYSLOG                         │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_SYS_NICE_RESOURCE              │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_MKNOD                          │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_CHOWN_FSETID_SETFCAP           │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_DAC_FOWNER_IPC_OWNER           │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_KILL                           │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_NET_BIND_SERVICE_BROADCAST_RAW │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_SYS_BOOT                       │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_MAC                            │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_LINUX_IMMUTABLE                │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_IPC_LOCK                       │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_SYS_CHROOT                     │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_BLOCK_SUSPEND                  │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_WAKE_ALARM                     │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_LEASE                          │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_SYS_TTY_CONFIG                 │
+           ├─────────────────────────────────────────────────────────┤
+           │CapabilityBoundingSet_CAP_BPF                            │
+           ├─────────────────────────────────────────────────────────┤
+           │UMask                                                    │
+           ├─────────────────────────────────────────────────────────┤
+           │KeyringMode                                              │
+           ├─────────────────────────────────────────────────────────┤
+           │ProtectProc                                              │
+           ├─────────────────────────────────────────────────────────┤
+           │ProcSubset                                               │
+           ├─────────────────────────────────────────────────────────┤
+           │NotifyAccess                                             │
+           ├─────────────────────────────────────────────────────────┤
+           │RemoveIPC                                                │
+           ├─────────────────────────────────────────────────────────┤
+           │Delegate                                                 │
+           ├─────────────────────────────────────────────────────────┤
+           │RestrictRealtime                                         │
+           ├─────────────────────────────────────────────────────────┤
+           │RestrictSUIDSGID                                         │
+           ├─────────────────────────────────────────────────────────┤
+           │RestrictNamespaces_user                                  │
+           ├─────────────────────────────────────────────────────────┤
+           │RestrictNamespaces_mnt                                   │
+           ├─────────────────────────────────────────────────────────┤
+           │RestrictNamespaces_ipc                                   │
+           ├─────────────────────────────────────────────────────────┤
+           │RestrictNamespaces_pid                                   │
+           ├─────────────────────────────────────────────────────────┤
+           │RestrictNamespaces_cgroup                                │
+           ├─────────────────────────────────────────────────────────┤
+           │RestrictNamespaces_uts                                   │
+           ├─────────────────────────────────────────────────────────┤
+           │RestrictNamespaces_net                                   │
+           ├─────────────────────────────────────────────────────────┤
+           │RestrictAddressFamilies_AF_INET_INET6                    │
+           ├─────────────────────────────────────────────────────────┤
+           │RestrictAddressFamilies_AF_UNIX                          │
+           ├─────────────────────────────────────────────────────────┤
+           │RestrictAddressFamilies_AF_NETLINK                       │
+           ├─────────────────────────────────────────────────────────┤
+           │RestrictAddressFamilies_AF_PACKET                        │
+           ├─────────────────────────────────────────────────────────┤
+           │RestrictAddressFamilies_OTHER                            │
+           ├─────────────────────────────────────────────────────────┤
+           │SystemCallArchitectures                                  │
+           ├─────────────────────────────────────────────────────────┤
+           │SystemCallFilter_swap                                    │
+           ├─────────────────────────────────────────────────────────┤
+           │SystemCallFilter_obsolete                                │
+           ├─────────────────────────────────────────────────────────┤
+           │SystemCallFilter_clock                                   │
+           ├─────────────────────────────────────────────────────────┤
+           │SystemCallFilter_cpu_emulation                           │
+           ├─────────────────────────────────────────────────────────┤
+           │SystemCallFilter_debug                                   │
+           ├─────────────────────────────────────────────────────────┤
+           │SystemCallFilter_mount                                   │
+           ├─────────────────────────────────────────────────────────┤
+           │SystemCallFilter_module                                  │
+           ├─────────────────────────────────────────────────────────┤
+           │SystemCallFilter_raw_io                                  │
+           ├─────────────────────────────────────────────────────────┤
+           │SystemCallFilter_reboot                                  │
+           ├─────────────────────────────────────────────────────────┤
+           │SystemCallFilter_privileged                              │
+           ├─────────────────────────────────────────────────────────┤
+           │SystemCallFilter_resources                               │
+           ├─────────────────────────────────────────────────────────┤
+           │IPAddressDeny                                            │
+           ├─────────────────────────────────────────────────────────┤
+           │DeviceAllow                                              │
+           ├─────────────────────────────────────────────────────────┤
+           │AmbientCapabilities                                      │
+           └─────────────────────────────────────────────────────────┘
            See example "JSON Policy" below.
 
            Added in version 250.
@@ -1535,25 +1517,13 @@ ENVIRONMENT
            must be set too.
 
        $SYSTEMD_COLORS
-           Takes a boolean argument, or a special value. By default (unset),
-           systemd and related utilities will use colors in their output if
-           possible. If $COLORTERM is set to "truecolor" or "24bit", 24-bit
-           colors will be enabled, 256 colors otherwise, unless $NO_COLOR or
-           $TERM indicates colors are disabled.
-
-           true
-               Same as unset, except that $NO_COLOR is ignored.
-
-           false
-               The output will be monochrome.
-
-           "16", "256", "24bit"
-               Always use the base 16 ANSI colors, 256 colors, or 24 bit
-               color, respectively.
-
-           "auto-16", "auto-256", "auto-24bit"
-               Use the given quantity of colours, subject to $TERM, and what
-               the console is connected to.
+           Takes a boolean argument. When true, systemd and related utilities
+           will use colors in their output, otherwise the output will be
+           monochrome. Additionally, the variable can take one of the
+           following special values: "16", "256" to restrict the use of colors
+           to the base 16 or 256 ANSI colors, respectively. This can be
+           specified to override the automatic decision based on $TERM and
+           what the console is connected to.
 
        $SYSTEMD_URLIFY
            The value must be a boolean. Controls whether clickable links
@@ -1562,7 +1532,7 @@ ENVIRONMENT
            makes based on $TERM and other conditions.
 
 EXAMPLES
-       Example 35. JSON Policy
+       Example 34. JSON Policy
 
        The JSON file passed as a path parameter to --security-policy= has a
        top-level JSON object, with keys being the assessment test identifiers
@@ -1644,4 +1614,4 @@ NOTES
            appropriate, treating it is a common interface.
 
 
-systemd 260.1                                               SYSTEMD-ANALYZE(1)
+systemd 259.10                                              SYSTEMD-ANALYZE(1)

@@ -2,11 +2,11 @@
 
 bootc-switch - Target a new container image reference to boot
 
-## SYNOPSIS
+# SYNOPSIS
 
 **bootc switch** \[*OPTIONS...*\] <*TARGET*>
 
-## DESCRIPTION
+# DESCRIPTION
 
 Target a new container image reference to boot.
 
@@ -23,31 +23,26 @@ It is also supported to provide explicit digests, via e.g. `bootc switch quay.io
 
 ## Applying Changes
 
-The `--apply` option will automatically take action (rebooting) if the system has changed after switching to the new image. Currently, this option always reboots the system. In the future, this command may detect cases where no kernel changes are queued and perform a userspace-only restart instead.
+The `--apply` option will automatically restart the system if it has
+changed after switching to the new image.
 
 ## Soft Reboot
 
-The `--soft-reboot` option configures soft reboot behavior when used with `--apply`:
+For shared `--apply` and `--soft-reboot` behavior, see
+[Soft reboots](https\:\/\/bootc\-dev\.github\.io\/bootc/bootc-upgrades.7.html#soft-reboots).
 
-- `required`: The operation will fail if soft reboot is not available on the target system
-- `auto`: Uses soft reboot if available on the target system, otherwise falls back to a regular reboot
-
-Soft reboot allows faster system restart by avoiding full hardware reboot when possible.
-
-## OPTIONS
+# OPTIONS
 
 <!-- BEGIN GENERATED OPTIONS -->
 **TARGET**
 
-    Target image to use for the next boot
+    Target image to use for the next boot. Required unless `--from-downloaded` is present
 
-    This argument is required.
-
-### --quiet
+**--quiet**
 
     Don't display progress
 
-#### --apply
+**--apply**
 
     Restart or reboot into the new target image
 
@@ -65,17 +60,25 @@ Soft reboot allows faster system restart by avoiding full hardware reboot when p
 
     Default: registry
 
-#### --enforce-container-sigpolicy
+**--download-only**
+
+    Download and stage the update without applying it
+
+**--from-downloaded**
+
+    Apply a staged deployment that was previously downloaded with --download-only
+
+**--enforce-container-sigpolicy**
 
     This is the inverse of the previous `--target-no-signature-verification` (which is now a no-op)
 
-#### --retain
+**--retain**
 
     Retain reference to currently booted image
 
 <!-- END GENERATED OPTIONS -->
 
-## EXAMPLES
+# EXAMPLES
 
 Switch to a different image version:
 
@@ -89,10 +92,10 @@ Switch with soft reboot if possible:
 
     bootc switch --apply --soft-reboot=auto quay.io/exampleos/myapp:v1.1
 
-## SEE ALSO
+# SEE ALSO
 
 **bootc**(8), **bootc-upgrade**(8), **bootc-status**(8), **bootc-rollback**(8)
 
-## VERSION
+# VERSION
 
 <!-- VERSION PLACEHOLDER -->
