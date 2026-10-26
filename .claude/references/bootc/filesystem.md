@@ -2,7 +2,7 @@
 
 As noted in other chapters, the bootc project currently
 depends on the [ostree project](https://github.com/ostreedev/ostree/)
-for storing the base container image. Additionally there is a [containers/storage](https://github.com/containers/storage) instance for [logically bound images](https://bootc-dev.github.io/bootc/logically-bound-images.html).
+for storing the base container image. Additionally there is a [containers/storage](https://github.com/containers/storage) instance for [logically bound images](bootc-logically-bound-images.7.md).
 
 However, bootc is intending to be a "fresh, new container-native interface",
 and ostree is an implementation detail.
@@ -23,7 +23,7 @@ is very important for achieving correct semantics.
 
 When run *as a container* (e.g. as part of a container build), the
 filesystem is fully mutable in order to allow derivation to work.
-For more on container builds, see [build guidance](https://bootc-dev.github.io/bootc/building/guidance.html).
+For more on container builds, see [build guidance](building/bootc-building-images.7.md).
 
 The rest of this document describes the state of the system when
 "deployed" to a physical or virtual machine, and managed by `bootc`.
@@ -38,11 +38,11 @@ For more information, see [this tracker issue](https://github.com/bootc-dev/boot
 
 When the system is fully booted, it is into the equivalent of a `chroot`.
 The "physical" host root filesystem will be mounted at `/sysroot`.
-For more on this, see [filesystem: sysroot](https://bootc-dev.github.io/bootc/filesystem-sysroot.html).
+For more on this, see [filesystem: sysroot](bootc-sysroot.7.md).
 
 This `chroot` filesystem is called a "deployment root". All the remaining
 filesystem paths below are part of a deployment root which is used as a
-final target for the system boot. The target deployment is determined
+final target for the system boot.  The target deployment is determined
 via the `ostree=` kernel commandline argument.
 
 ## `/usr`
@@ -52,7 +52,7 @@ with directories such as `/bin` being symbolic links to `/usr/bin`, etc.
 See [UsrMove](https://fedoraproject.org/wiki/Features/UsrMove) for example.
 
 However, with composefs enabled `/usr` is not different from `/`;
-they are part of the same immutable image. So there is not a fundamental
+they are part of the same immutable image.  So there is not a fundamental
 need to do a full "UsrMove" with a bootc system.
 
 ### `/usr/local`
@@ -74,7 +74,7 @@ it is supported (and encouraged) to enable the [`etc.transient` config option](h
 see below as well.
 
 When in persistent mode, it inherits the OSTree semantics of [performing a 3-way merge](https://ostreedev.github.io/ostree/atomic-upgrades/#assembling-a-new-deployment-directory)
-across upgrades. In a nutshell:
+across upgrades.  In a nutshell:
 
 - The *new default* `/etc` is used as a base
 - The diff between current and previous `/etc` is applied to the new `/etc`
@@ -88,17 +88,17 @@ The implementation of this defaults to being executed by `ostree-finalize-staged
 at shutdown time, before the new bootloader entry is created.
 
 The rationale for this design is that in practice today, many components of a Linux system end up shipping
-default configuration files in `/etc`. And even if the default package doesn't, often the software
+default configuration files in `/etc`.  And even if the default package doesn't, often the software
 only looks for config files there by default.
 
 Some other image-based update systems do not have distinct "versions" of `/etc` and
-it may be populated only set up at install time, and untouched thereafter. But
+it may be populated only set up at install time, and untouched thereafter.  But
 that creates "hysteresis" where the state of the system's `/etc` is strongly
-influenced by the initial image version. This can lead to problems
+influenced by the initial image version.  This can lead to problems
 where e.g. a change to `/etc/sudoers` (to give one simple example)
 would require external intervention to apply.
 
-For more on configuration file best practices, see [Building](https://bootc-dev.github.io/bootc/building/guidance.html).
+For more on configuration file best practices, see [Building](building/bootc-building-images.7.md).
 
 To emphasize again, it's recommended to enable `etc.transient` if possible, though
 when using that you may need to store some machine-specific state in e.g. the
@@ -111,10 +111,52 @@ view of `/etc`. This should generally be considered an internal implementation d
 of bootc/ostree. Do *not* explicitly put files into this location, it can create
 undefined behavior. There is a check for this in `bootc container lint`.
 
+### systemd-confext and systemd-sysext
+
+[systemd-confext](https://www.freedesktop.org/software/systemd/man/systemd-confext.html)
+and [systemd-sysext](https://www.freedesktop.org/software/systemd/man/systemd-sysext.html)
+are not currently supported on bootc-managed systems.
+
+These tools may be present in the operating system image (for example, because
+they ship in the `systemd` package), but bootc has not validated them on deployed
+systems. Using them on a bootc host is not recommended. There are two categories
+of concern to be aware of.
+
+#### Conflicts with transient overlays
+
+confext and sysext apply their content by stacking overlayfs mounts. This can
+conflict with the non-default use of transient overlays for `/` and `/etc`.
+bootc systems commonly use composefs for the root filesystem, and may also enable
+[transient root](#enabling-transient-root) and/or
+[transient `/etc`](#enabling-transient-etc), each of which also uses overlayfs
+stacking. The Linux kernel limits filesystem stacking depth
+(`FILESYSTEM_MAX_STACK_DEPTH = 2`), so combining these features can exhaust the
+available depth and cause confext or sysext overlays to fail.
+
+The `/etc` case in particular is expected to become tractable: configuring the
+composefs backend with `etc = none` (there is not yet a corresponding ostree
+knob) leaves `/etc` free for confext to manage.
+
+#### OS-specific integration concerns
+
+Beyond the bootc-specific overlay concerns above, there may be additional
+integration issues (for example, SELinux labeling) that are specific to a
+particular OS or distribution. Consult your OS/distribution documentation for
+guidance on confext and sysext.
+
+For per-host configuration, use the patterns described in
+[Building images: Configuration](building/bootc-building-images.7.md#configuration) instead:
+image-embedded configuration (prefer `/usr` where possible), persistent `/etc`
+with day-2 configuration management tools, or machine-local kernel arguments
+via `rpm-ostree kargs` or `/usr/lib/bootc/kargs.d`.
+
+For more on the design rationale, see
+[Relationship with systemd "particles"](bootc-systemd-particles.7.md).
+
 ## `/var`
 
 Content in `/var` persists by default; it is however supported to make it or subdirectories
-mount points (whether network or `tmpfs`). There is exactly one `/var`. If it is
+mount points (whether network or `tmpfs`).  There is exactly one `/var`.  If it is
 not a distinct partition, then it is automatically made a bind from
 `/ostree/deploy/$stateroot/var` and shared across "deployments" (bootloader entries).
 
@@ -129,20 +171,20 @@ in a container image are not automatically applied.
 
 A common case is for applications to want some directory structure (e.g. `/var/lib/postgresql`) to be pre-created.
 It's recommended to use [systemd tmpfiles.d](https://www.freedesktop.org/software/systemd/man/latest/tmpfiles.d.html)
-for this. An even better approach where applicable is [StateDirectory=](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#RuntimeDirectory=)
+for this.  An even better approach where applicable is [StateDirectory=](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#RuntimeDirectory=)
 in units.
 
 As of bootc 1.1.6, the `bootc container lint` command will check for missing `tmpfiles.d`
 entries and warn.
 
-Note this is very different from the handling of `/etc`. The rationale for this is
+Note this is very different from the handling of `/etc`.   The rationale for this is
 that `/etc` is relatively small configuration files, and the expected configuration
 files are often bound to the operating system binaries in `/usr`.
 
-But `/var` has arbitrarily large data (system logs, databases, etc.). It would
+But `/var` has arbitrarily large data (system logs, databases, etc.).  It would
 also not be expected to be rolled back if the operating system state is rolled
 back.  A simple example is that an `apt|dnf downgrade postgresql` should not
-affect the physical database in general in `/var/lib/postgres`. Similarly,
+affect the physical database in general in `/var/lib/postgres`.  Similarly,
 a bootc update or rollback should not affect this application data.
 
 Having `/var` separate also makes it work cleanly to "stage" new
@@ -166,7 +208,7 @@ other toplevels such as `/usr`.
 Some software (especially "3rd party" deb/rpm packages) expect to be able to write to
 a subdirectory of `/opt` such as `/opt/examplepkg`.
 
-See [building images](https://bootc-dev.github.io/bootc/building/guidance.html) for recommendations on how to build
+See [building images](building/bootc-building-images.7.md) for recommendations on how to build
 container images and adjust the filesystem for cases like this.
 
 However, for some use cases, it may be easier to allow some level of mutability.
@@ -202,7 +244,7 @@ To do this, set the
 transient = true
 ```
 
-option in `/usr/lib/ostree/prepare-root.conf`. In particular this will allow software to
+option in `/usr/lib/ostree/prepare-root.conf`.  In particular this will allow software to
 write (transiently, i.e. until the next reboot) to all top-level directories,
 including `/usr` and `/opt`, with symlinks to `/var` for content that should
 persist.
@@ -213,6 +255,27 @@ More on prepare-root: <https://ostreedev.github.io/ostree/man/ostree-prepare-roo
 
 Note that regenerating the initramfs is required when changing this file.
 
+<!-- TODO: root.transient-ro is not yet handled by bootc's Rust code.
+     The upstream ostree C code (ostree-prepare-root) fully supports both
+     root.transient and root.transient-ro as separate keys, with mutual
+     exclusion and implicit root_transient=TRUE when transient-ro is set.
+     bootc's Rust side needs updates in three places:
+
+     1. crates/ostree-ext/src/ostree_prepareroot.rs — overlayfs_enabled_in_config()
+        only checks root.transient, not root.transient-ro. A config that sets only
+        transient-ro=true without composefs.enabled will produce a false-negative
+        in the baseimage-composefs lint.
+
+     2. crates/initramfs/src/lib.rs — RootConfig only has a `transient: bool` field.
+        It needs a `transient_ro: bool` field with #[serde(rename = "transient-ro")]
+        and the composefs-native boot path must handle it (read-only overlayfs upper).
+
+     3. crates/lib/src/lints.rs — no lint validates or warns about the transient-ro
+        key; the existing composefs/overlayfs lint should be extended.
+
+     Note: changing prepare-root.conf requires initramfs regeneration at container
+     build time, so the fix must also account for that in any lint messaging.
+-->
 ## Dynamic mountpoints with transient-ro
 
 The `transient-ro` option allows privileged users to create dynamic toplevel mountpoints
@@ -292,19 +355,17 @@ The semantics here are somewhat nuanced:
 - During updates, new files from the container image override any locally modified version
 
 The advantages are:
-
 - It makes it very easy to make compatible applications that install into `/opt`.
 - In contrast to transient root (above), a smaller surface of the filesystem is mutable.
 
 The disadvantages are:
-
 - There is no equivalent to this feature in the Docker/Podman ecosystem.
 - It allows for some temporary state drift until the next update.
 
 To enable this feature, instantiate the `ostree-state-overlay@.service`
 unit template on the target path. For example, for `/opt`:
 
-```text
+```
 RUN systemctl enable ostree-state-overlay@opt.service
 ```
 
@@ -314,7 +375,7 @@ Both transient root and state overlays above provide ways for packages
 that install in `/opt` to operate. However, for maximum immutability the
 best approach is simply to symlink just the parts of the `/opt` needed
 into `/var`. See the section on `/opt` in [Image building and configuration
-guidance](https://bootc-dev.github.io/bootc/building/guidance.html) for a more concrete example.
+guidance](building/bootc-building-images.7.md) for a more concrete example.
 
 ## Increased filesystem integrity with fsverity
 
@@ -331,7 +392,7 @@ not enable fsverity.
 To enable this, inside your container build update
 `/usr/lib/ostree/prepare-root.conf` with:
 
-```text
+```
 [composefs]
 enabled = verity
 ```
@@ -351,7 +412,7 @@ want a "transient etc" model.
 
 #### Does not apply to logically bound images
 
-The [logically bound images](https://bootc-dev.github.io/bootc/logically-bound-images.html) store is currently
+The [logically bound images](bootc-logically-bound-images.7.md) store is currently
 implemented using a separate mechanism and configuring fsverity
 for the bootc storage has no effect on it.
 

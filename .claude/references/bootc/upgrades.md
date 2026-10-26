@@ -1,14 +1,14 @@
 # Managing upgrades
 
 Right now, bootc is a quite simple tool that is designed to do just
-a few things well. One of those is transactionally fetching new operating system
+a few things well.  One of those is transactionally fetching new operating system
 updates from a registry and booting into them, while supporting rollback.
 
 ## The `bootc upgrade` verb
 
 This will query the container image source and queue an updated container image for the next boot.
 
-This is backed today by ostree, implementing an A/B style upgrade system.
+With the default OSTree backend, this implements an A/B style upgrade system.
 Changes to the base image are staged, and the running system is not
 changed by default.
 
@@ -42,7 +42,7 @@ In the output, you'll see `Download-only: yes` for deployments in download-only 
 
 There are three ways to apply a staged update that is in download-only mode:
 
-#### Option 1: Apply the staged update without checking for newer updates
+**Option 1: Apply the staged update without checking for newer updates**
 
 ```shell
 bootc upgrade --from-downloaded
@@ -52,7 +52,7 @@ This unlocks the staged deployment for automatic application on the next shutdow
 without fetching updates from the container image source. This is useful when you want to apply the
 already-downloaded update at a scheduled time.
 
-#### Option 2: Apply the staged update and reboot immediately
+**Option 2: Apply the staged update and reboot immediately**
 
 ```shell
 bootc upgrade --from-downloaded --apply
@@ -61,7 +61,7 @@ bootc upgrade --from-downloaded --apply
 This unlocks the staged deployment and immediately reboots into it, without checking for
 newer updates.
 
-#### Option 3: Check for newer updates and apply
+**Option 3: Check for newer updates and apply**
 
 ```shell
 bootc upgrade
@@ -126,7 +126,7 @@ There is also an opinionated `bootc-fetch-apply-updates.timer` and corresponding
 service available in upstream for operating systems and distributions
 to enable.
 
-Man page: [bootc-upgrade](https://bootc-dev.github.io/bootc/man/bootc-upgrade.8.html).
+Man page: [bootc-upgrade](man/bootc-upgrade.8.md).
 
 ## Changing the container image source
 
@@ -146,12 +146,33 @@ container image being tracked.
 This will preserve existing state in `/etc` and `/var` - for example,
 host SSH keys and home directories.
 
-Man page: [bootc-switch](bootc-switch.8.md).
+Man page: [bootc-switch](man/bootc-switch.8.md).
+
+## Soft reboots
+
+Soft reboot restarts userspace without restarting the kernel, avoiding a full
+hardware reboot. On the OSTree backend, `bootc upgrade` and `bootc switch`
+support these `--soft-reboot` modes:
+
+- `required`: Fails if the target deployment is not soft-reboot capable.
+- `auto`: Prepares a soft reboot if the target deployment is capable;
+  otherwise, leaves it configured for a regular reboot.
+
+Use `--apply` to request an immediate restart after preparing the deployment.
+Without `--apply`, `--soft-reboot` prepares the deployment but does not restart
+the system immediately. Without `--soft-reboot`, `--apply` requests a regular
+reboot.
+
+The [composefs backend](bootc-composefs.7.md) currently
+differs: both modes fail if systemd lacks soft-reboot support. If the target
+deployment is not soft-reboot capable, `auto` leaves it staged without
+restarting, even with `--apply`; it does not automatically fall back to a
+regular reboot in this case.
 
 ## Rollback
 
-There is a `bootc rollback` verb, and associated declarative interface
-accessible to tools via `bootc edit`. This will swap the bootloader
+There is a  `bootc rollback` verb, and associated declarative interface
+accessible to tools via `bootc edit`.  This will swap the bootloader
 ordering to the previous boot entry.
 
-Man page: [bootc-rollback](https://bootc-dev.github.io/bootc/man/bootc-rollback.8.html).
+Man page: [bootc-rollback](man/bootc-rollback.8.md).
