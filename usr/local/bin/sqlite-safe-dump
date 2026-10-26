@@ -31,6 +31,9 @@ dump_db() {
     fi
 }
 
+# CrowdSec
+dump_db crowdsec /var/local/lib/crowdsec/data/crowdsec.db
+
 # Home Assistant
 dump_db home-assistant /var/local/lib/home-assistant/config/home-assistant_v2.db
 

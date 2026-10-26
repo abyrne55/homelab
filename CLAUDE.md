@@ -55,7 +55,7 @@ Quick file-level index — consult this before exploring the repo.
 
 | User | UID | Host port(s) | subUID range start | Next port index |
 |---|---|---|---|---|
-| caddy | 1051 | 20510, 20511, 20519 | 231072 | 20512 |
+| caddy | 1051 | 20510, 20511, 20512, 20513, 20519 | 231072 | 20514 |
 | jellyfin | 1052 | 20520, 20529 | 296608 | 20521 |
 | qbittorrent | 1053 | 20530, 20539 | 362144 | 20531 |
 | radarr | 1054 | 20540, 20549 | 427680 | 20541 |
@@ -256,6 +256,7 @@ Use `/add-quadlet [service-name]` for the full step-by-step checklist. The short
 |---|---|---|---|---|
 | caddy | 1051 | 20510, 20511 | 8080 (HTTP), 8443 (HTTPS) | Yes — firewalld forwards 80→20510, 443→20511 |
 | caddy (exporter) | 1051 | 20519 (localhost only) | — | No — Netdata scrape only |
+| crowdsec | 1051 | 20512 (LAPI), 20513 (AppSec WAF) | 8080, 7422 | No — firewalled; caddy dials host.containers.internal:20512/20513 |
 | jellyfin | 1052 | 20520 | 8096 | No — via Caddy only |
 | jellyfin (exporter) | 1052 | 20529 (localhost only) | — | No — Netdata scrape only |
 | qbittorrent | 1053 | 20530 | 20530 | No — via Caddy only |
@@ -276,6 +277,8 @@ Use `/add-quadlet [service-name]` for the full step-by-step checklist. The short
 | mealie (exporter) | 1059 | 20599 (localhost only) | — | No — Netdata scrape only |
 | llm | 1060 | 20600 | 8080 | No — via Caddy only |
 | llm (exporter) | 1060 | 20609 (localhost only) | — | No — Netdata scrape only |
+
+> **Note:** CrowdSec runs as a second container under caddy's UID 1051 (like tinyproxy under jellyfin). Caddy writes JSON access logs to the shared named volume `systemd-caddy-logs` (`etc/containers/systemd/users/1051/caddy-logs.volume`), which crowdsec tails read-only — a named volume keeps rotating logs out of the restic backup set. The caddy bouncer plugin authenticates to the LAPI with the `crowdsec-caddy-bouncer-key` secret.
 
 New system units (not quadlets) must also be appended to the `RUN systemctl enable` line in `Containerfile`.
 
