@@ -29,7 +29,7 @@ changed after switching to the new image.
 ## Soft Reboot
 
 For shared `--apply` and `--soft-reboot` behavior, see
-[Soft reboots](../bootc-upgrades.7.md#soft-reboots).
+[Soft reboots](https\:\/\/bootc\-dev\.github\.io\/bootc/bootc-upgrades.7.html#soft-reboots).
 
 # OPTIONS
 

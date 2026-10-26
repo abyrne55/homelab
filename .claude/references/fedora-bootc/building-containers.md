@@ -8,7 +8,7 @@ With bootable containers, you can build and customize the entire host OS with th
 
 It is crucial to understand that a container-build environment has certain limitations that impact the commands we can run in a Containerfile.
 
-The kernel, for instance, is shared with the one of the host environment. Hence, changes to kernel tunables (sysctl) should be made in the form of configuration files as explained in the <a href="../sysctl/" class="xref page">system-configuration docs</a>.
+The kernel, for instance, is shared with the one of the host environment. Hence, changes to kernel tunables (sysctl) should be made in the form of configuration files as explained in the [system-configuration docs](https://docs.fedoraproject.org/en-US/bootc/sysctl/).
 
 You may find solutions in our [examples repository](https://gitlab.com/fedora/bootc/examples).
 
@@ -60,7 +60,7 @@ Do **not** attempt to invoke `dnf -y update` (or `upgrade`) in general. While so
 
 The secondary reason to avoid this: Often people choose image-based updates for their predicability, and you can easily "pin" the base image by digest for example. The default for dnf repositories is to "float" - so what happens with an image build today could be different tomorrow. Packages can be locked with extra effort.
 
-If you want to make large scale changes to the base image, instead look at using the <a href="../building-from-scratch/" class="xref page">from scratch build</a>.
+If you want to make large scale changes to the base image, instead look at using the [from scratch build](https://docs.fedoraproject.org/en-US/bootc/building-from-scratch/).
 
 ### linting
 
@@ -214,7 +214,7 @@ RUN systemctl enable podman-auto-update.timer
 
 The container images above are just illustrative demonstrations that are not useful standalone. It is highly likely that you will want to run other container images, and perform other customizations.
 
-Among the most likely additions is configuring a mechanism for remote SSH; see <a href="../authentication/" class="xref page">Authentication, Users, and Groups</a>.
+Among the most likely additions is configuring a mechanism for remote SSH; see [Authentication, Users, and Groups](https://docs.fedoraproject.org/en-US/bootc/authentication/).
 
 ### Invoking `useradd` as part of a container build
 

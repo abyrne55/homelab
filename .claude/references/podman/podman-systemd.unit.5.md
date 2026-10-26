@@ -6,19 +6,19 @@ podman-systemd.unit - systemd units using Podman Quadlet
 
 *name*.artifact, *name*.build, *name*.container, *name*.image, *name*.kube, *name*.network, *name*.pod, *name*.volume
 
-- **`.build`** — Builds a container image from a Containerfile. See <a href="podman-build.unit.5.html" class="reference internal">podman-build.unit(5)</a>.
+- **`.build`** — Builds a container image from a Containerfile. See [podman-build.unit(5)](https://docs.podman.io/en/latest/markdown/podman-build.unit.5.html).
 
-- **`.container`** — Defines and manages a single container. See <a href="podman-container.unit.5.html" class="reference internal">podman-container.unit(5)</a>.
+- **`.container`** — Defines and manages a single container. See [podman-container.unit(5)](https://docs.podman.io/en/latest/markdown/podman-container.unit.5.html).
 
-- **`.image`** — Pulls and caches a container image. See <a href="podman-image.unit.5.html" class="reference internal">podman-image.unit(5)</a>.
+- **`.image`** — Pulls and caches a container image. See [podman-image.unit(5)](https://docs.podman.io/en/latest/markdown/podman-image.unit.5.html).
 
-- **`.kube`** — Deploys containers from Kubernetes YAML using <a href="podman-kube.unit.5.html" class="reference internal">podman-kube.unit(5)</a>.
+- **`.kube`** — Deploys containers from Kubernetes YAML using [podman-kube.unit(5)](https://docs.podman.io/en/latest/markdown/podman-kube.unit.5.html).
 
-- **`.network`** — Creates a Podman network for containers and pods. See <a href="podman-network.unit.5.html" class="reference internal">podman-network.unit(5)</a>.
+- **`.network`** — Creates a Podman network for containers and pods. See [podman-network.unit(5)](https://docs.podman.io/en/latest/markdown/podman-network.unit.5.html).
 
-- **`.pod`** — Creates a Podman pod that containers can join. See <a href="podman-pod.unit.5.html" class="reference internal">podman-pod.unit(5)</a>.
+- **`.pod`** — Creates a Podman pod that containers can join. See [podman-pod.unit(5)](https://docs.podman.io/en/latest/markdown/podman-pod.unit.5.html).
 
-- **`.volume`** — Ensures a named Podman volume exists. See <a href="podman-volume.unit.5.html" class="reference internal">podman-volume.unit(5)</a>.
+- **`.volume`** — Ensures a named Podman volume exists. See [podman-volume.unit(5)](https://docs.podman.io/en/latest/markdown/podman-volume.unit.5.html).
 
 ## Podman rootful unit search path
 
@@ -58,17 +58,17 @@ Quadlet supports using symbolic links for the base of the search paths and insid
 
 # DESCRIPTION
 
-Podman supports building and starting containers (and creating volumes) via systemd by using a <a href="https://www.freedesktop.org/software/systemd/man/systemd.generator.html" class="reference external">systemd generator</a>. These files are read during boot (and when `systemctl daemon-reload` is run) and generate corresponding regular systemd service unit files. Both system and user systemd units are supported. All options and tables available in standard systemd unit files are supported. For example, options defined in the \[Service\] table and \[Install\] tables pass directly to systemd and are handled by it. See systemd.unit(5) man page for more information.
+Podman supports building and starting containers (and creating volumes) via systemd by using a [systemd generator](https://www.freedesktop.org/software/systemd/man/systemd.generator.html). These files are read during boot (and when `systemctl daemon-reload` is run) and generate corresponding regular systemd service unit files. Both system and user systemd units are supported. All options and tables available in standard systemd unit files are supported. For example, options defined in the \[Service\] table and \[Install\] tables pass directly to systemd and are handled by it. See systemd.unit(5) man page for more information.
 
 The Podman generator reads the search paths above and reads files with the extensions `.container` `.volume`, `.network`, `.build`, `.pod`, `.kube`, and `.artifact`, and for each file generates a similarly named `.service` file. Be aware that existing vendor services (i.e., in `/usr/`) are replaced if they have the same name. The generated unit files can be started and managed with `systemctl` like any other systemd service. `systemctl {--user} list-unit-files` lists existing unit files on the system. To list unit files of a user who has `/sbin/nologin` as a login shell, run `sudo systemctl --machine username@ --user list-unit-files`.
 
-The Podman files use the same format as <a href="https://www.freedesktop.org/software/systemd/man/systemd.syntax.html" class="reference external">regular systemd unit files</a>. Each file type has a custom section (for example, `[Container]`) that is handled by Podman, and all other sections are passed on untouched, allowing the use of any normal systemd configuration options like dependencies or cgroup limits.
+The Podman files use the same format as [regular systemd unit files](https://www.freedesktop.org/software/systemd/man/systemd.syntax.html). Each file type has a custom section (for example, `[Container]`) that is handled by Podman, and all other sections are passed on untouched, allowing the use of any normal systemd configuration options like dependencies or cgroup limits.
 
-The source files also support drop-ins in the same <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html" class="reference external">way systemd does</a>. For a given source file (`foo.container`), the corresponding `.d` directory (`foo.container.d`) will be scanned for files with a `.conf` extension, which are then merged into the base file in alphabetical order. Top-level type drop-ins (`container.d`) will also be included. If the unit contains dashes (“-“) in the name (`foo-bar-baz.container`), then the drop-in directories generated by truncating the name after the dash are searched as well (`foo-.container.d` and `foo-bar-.container.d`). Drop-in files with the same name further down the hierarchy override those further up (`foo-bar-baz.container.d/10-override.conf` overrides `foo-bar-.container.d/10-override.conf`, which overrides `foo-.service.d/10-override.conf`, which overrides `container.d/10-override.conf`). The format of these drop-in files is the same as the base file. This is useful to alter or add configuration settings for a unit, without having to modify unit files.
+The source files also support drop-ins in the same [way systemd does](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html). For a given source file (`foo.container`), the corresponding `.d` directory (`foo.container.d`) will be scanned for files with a `.conf` extension, which are then merged into the base file in alphabetical order. Top-level type drop-ins (`container.d`) will also be included. If the unit contains dashes (“-“) in the name (`foo-bar-baz.container`), then the drop-in directories generated by truncating the name after the dash are searched as well (`foo-.container.d` and `foo-bar-.container.d`). Drop-in files with the same name further down the hierarchy override those further up (`foo-bar-baz.container.d/10-override.conf` overrides `foo-bar-.container.d/10-override.conf`, which overrides `foo-.service.d/10-override.conf`, which overrides `container.d/10-override.conf`). The format of these drop-in files is the same as the base file. This is useful to alter or add configuration settings for a unit, without having to modify unit files.
 
 For rootless containers, when administrators place Quadlet files in the /etc/containers/systemd/users or /usr/share/containers/users directories, all users’ sessions execute the Quadlet when the login session begins. If the administrator places a Quadlet file in the /etc/containers/systemd/users/\${UID}/ or /usr/share/containers/users/\${UID} directory, then only the user with the matching UID executes the Quadlet when the login session gets started. For unit files placed in subdirectories within /etc/containers/systemd/users/\${UID}/, /usr/share/containers/users/\${UID} and the other user unit search paths, Quadlet will recursively search and run the unit files present in these subdirectories.
 
-Note that Quadlet units do not support running as a non-root user by defining the <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#User=" class="reference external">User, Group</a>, or <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#DynamicUser=" class="reference external">DynamicUser</a> systemd options. If you want to run a rootless Quadlet, you will need to create the user and add the unit file to one of the above rootless unit search paths.
+Note that Quadlet units do not support running as a non-root user by defining the [User, Group](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#User=), or [DynamicUser](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#DynamicUser=) systemd options. If you want to run a rootless Quadlet, you will need to create the user and add the unit file to one of the above rootless unit search paths.
 
 When a Quadlet unit starts, Podman may need to pull or build container images, which can take significantly longer than systemd’s default 90-second service startup limit. If this causes the unit to fail, you can either pre-pull the required images or increase the service’s startup timeout using the *TimeoutStartSec* option. Keep in mind, however, that for units that specify `Type=oneshot`, the startup timeout is disabled by default (set to infinity), so *TimeoutStartSec* must be explicitly configured if a timeout is desired. For further details on *TimeoutStartSec*, see `systemd.service(5)`.
 
@@ -110,7 +110,7 @@ The Install section can be part of the main file, or it can be in a separate dro
 
 ## Template files
 
-Systemd supports a concept of <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#Service%20Templates" class="reference external">template files</a>. They are units with names of the form “basename@instancename.service” when they are running, but that can be instantiated multiple times from a single “basename@.service” file. The individual instances can also be different by using drop-in files with the full instance name.
+Systemd supports a concept of [template files](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#Service%20Templates). They are units with names of the form “basename@instancename.service” when they are running, but that can be instantiated multiple times from a single “basename@.service” file. The individual instances can also be different by using drop-in files with the full instance name.
 
 Quadlets support these in two ways. First of all, a quadlet unit with a template form will generate a systemd service with a template form, and the template systemd service can be used as a regular template. For example, “foo@.container” will generate “foo@.service” and you can then “systemctl start foo@bar.service”.
 
@@ -362,7 +362,7 @@ Sets the apparmor confinement profile for the container. A value of `unconfined`
 
 ## `AutoUpdate=`
 
-Indicates whether the container will be auto-updated (<a href="podman-auto-update.1.html" class="reference internal">podman-auto-update(1)</a>). The following values are supported:
+Indicates whether the container will be auto-updated ([podman-auto-update(1)](https://docs.podman.io/en/latest/markdown/podman-auto-update.1.html)). The following values are supported:
 
 - `registry`: Requires a fully-qualified image reference (e.g., quay.io/podman/stable:latest) to be used to create the container. This enforcement is necessary to know which image to actually check and pull. If an image ID was used, Podman does not know which image to check/pull anymore.
 
@@ -420,7 +420,7 @@ Override the default ENTRYPOINT from the image. Equivalent to the Podman `--entr
 
 ## `Environment=`
 
-Set an environment variable in the container. This uses the same format as <a href="https://www.freedesktop.org/software/systemd/man/systemd.exec.html#Environment=" class="reference external">services in systemd</a> and can be listed multiple times.
+Set an environment variable in the container. This uses the same format as [services in systemd](https://www.freedesktop.org/software/systemd/man/systemd.exec.html#Environment=) and can be listed multiple times.
 
 ## `EnvironmentFile=`
 
@@ -434,11 +434,11 @@ Use the host environment inside of the container.
 
 Additional arguments for the container; this has exactly the same effect as passing more arguments after a `podman run <image> <arguments>` invocation.
 
-The format is the same as for <a href="https://www.freedesktop.org/software/systemd/man/systemd.service.html#Command%20lines" class="reference external">systemd command lines</a>, However, unlike the usage scenario for similarly-named systemd `ExecStart=` verb which operates on the ambient root filesystem, it is very common for container images to have their own `ENTRYPOINT` or `CMD` metadata which this interacts with.
+The format is the same as for [systemd command lines](https://www.freedesktop.org/software/systemd/man/systemd.service.html#Command%20lines), However, unlike the usage scenario for similarly-named systemd `ExecStart=` verb which operates on the ambient root filesystem, it is very common for container images to have their own `ENTRYPOINT` or `CMD` metadata which this interacts with.
 
 The default expectation for many images is that the image will include an `ENTRYPOINT` with a default binary, and this field will add arguments to that entrypoint.
 
-Another way to describe this is that it works the same way as the <a href="https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell" class="reference external">args field in a Kubernetes pod</a>.
+Another way to describe this is that it works the same way as the [args field in a Kubernetes pod](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell).
 
 ## `ExposeHostPort=`
 
@@ -630,7 +630,7 @@ If enabled, this disables the container processes from gaining additional privil
 
 ## `Notify=` (defaults to `false`)
 
-By default, Podman is run in such a way that the systemd startup notify command is handled by the container runtime. In other words, the service is deemed started when the container runtime starts the child in the container. However, if the container application supports <a href="https://www.freedesktop.org/software/systemd/man/sd_notify.html" class="reference external">sd_notify</a>, then setting `Notify` to true passes the notification details to the container allowing it to notify of startup on its own.
+By default, Podman is run in such a way that the systemd startup notify command is handled by the container runtime. In other words, the service is deemed started when the container runtime starts the child in the container. However, if the container application supports [sd_notify](https://www.freedesktop.org/software/systemd/man/sd_notify.html), then setting `Notify` to true passes the notification details to the container allowing it to notify of startup on its own.
 
 In addition, setting `Notify` to `healthy` will postpone startup notifications until such time as the container is marked healthy, as determined by Podman healthchecks. Note that this requires setting up a container healthcheck, see the `HealthCmd` option for more.
 
@@ -1091,7 +1091,7 @@ Supported keys in the `[Kube]` section are:
 
 ## `AutoUpdate=`
 
-Indicates whether containers will be auto-updated (<a href="podman-auto-update.1.html" class="reference internal">podman-auto-update(1)</a>). AutoUpdate can be specified multiple times. The following values are supported:
+Indicates whether containers will be auto-updated ([podman-auto-update(1)](https://docs.podman.io/en/latest/markdown/podman-auto-update.1.html)). AutoUpdate can be specified multiple times. The following values are supported:
 
 - `registry`: Requires a fully-qualified image reference (e.g., quay.io/podman/stable:latest) to be used to create the container. This enforcement is necessary to know which images to actually check and pull. If an image ID was used, Podman does not know which image to check/pull anymore.
 
@@ -1556,7 +1556,7 @@ This is equivalent to the `--dns-search` option of `podman build`.
 
 ## `Environment=`
 
-Add a value (e.g. env=*value*) to the built image. This uses the same format as <a href="https://www.freedesktop.org/software/systemd/man/systemd.exec.html#Environment=" class="reference external">services in systemd</a> and can be listed multiple times.
+Add a value (e.g. env=*value*) to the built image. This uses the same format as [services in systemd](https://www.freedesktop.org/software/systemd/man/systemd.exec.html#Environment=) and can be listed multiple times.
 
 ## `File=`
 
@@ -2122,15 +2122,15 @@ Example for a Pod with a one-shot startup task:
 
 Example `s3fs.volume`:
 
-For further details, please see the <a href="https://github.com/s3fs-fuse/s3fs-fuse" class="reference external">s3fs-fuse</a> project. Remember to read the <a href="https://github.com/s3fs-fuse/s3fs-fuse/wiki/FAQ" class="reference external">FAQ</a>
+For further details, please see the [s3fs-fuse](https://github.com/s3fs-fuse/s3fs-fuse) project. Remember to read the [FAQ](https://github.com/s3fs-fuse/s3fs-fuse/wiki/FAQ)
 
 > NOTE: Enabling the cache massively speeds up access and write times on static files/objects.
 
-> However, `use_cache` is <a href="https://github.com/s3fs-fuse/s3fs-fuse/wiki/FAQ#q-how-does-the-local-file-cache-work" class="reference external">UNBOUNDED</a>!
+> However, `use_cache` is [UNBOUNDED](https://github.com/s3fs-fuse/s3fs-fuse/wiki/FAQ#q-how-does-the-local-file-cache-work)!
 
 > Be careful, it will fill up with any files accessed on the s3 bucket through the file system.
 
-Please remember to set `S3_BUCKET`, `PATH`, `AWS_REGION`. `CACHE_DIRECTORY` should be set up by <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#RuntimeDirectory=" class="reference external">systemd</a>
+Please remember to set `S3_BUCKET`, `PATH`, `AWS_REGION`. `CACHE_DIRECTORY` should be set up by [systemd](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#RuntimeDirectory=)
 
     [Service]
     CacheDirectory=s3fs
@@ -2143,53 +2143,34 @@ Please remember to set `S3_BUCKET`, `PATH`, `AWS_REGION`. `CACHE_DIRECTORY` shou
     Options=iam_role,endpoint=${AWS_REGION},use_xattr,listobjectsv2,del_cache,use_cache=${CACHE_DIRECTORY}
     # `iam_role` assumes inside EC2, if not, Use `profile=` instead
 
-For more examples, please see the <a href="podman-quadlet-basic-usage.7.html" class="reference internal">podman-quadlet-basic-usage.7</a>.
+For more examples, please see the [podman-quadlet-basic-usage.7](https://docs.podman.io/en/latest/markdown/podman-quadlet-basic-usage.7.html).
 
 # SEE ALSO
 
-- **<a href="podman-auto-update.1.html" class="reference internal">podman-auto-update(1)</a>**
+- **[podman-auto-update(1)](https://docs.podman.io/en/latest/markdown/podman-auto-update.1.html)**
 
-- **<a href="podman-build.unit.5.html" class="reference internal">podman-build.unit(5)</a>,**
+- **[podman-build.unit(5)](https://docs.podman.io/en/latest/markdown/podman-build.unit.5.html),**
 
-- **<a href="podman-container.unit.5.html" class="reference internal">podman-container.unit(5)</a>,**
+- **[podman-container.unit(5)](https://docs.podman.io/en/latest/markdown/podman-container.unit.5.html),**
 
-- **<a href="podman-image.unit.5.html" class="reference internal">podman-image.unit(5)</a>,**
+- **[podman-image.unit(5)](https://docs.podman.io/en/latest/markdown/podman-image.unit.5.html),**
 
-- **<a href="podman-kube.unit.5.html" class="reference internal">podman-kube.unit(5)</a>,**
+- **[podman-kube.unit(5)](https://docs.podman.io/en/latest/markdown/podman-kube.unit.5.html),**
 
-- **<a href="podman-network-create.1.html" class="reference internal">podman-network-create(1)</a>**,
+- **[podman-network-create(1)](https://docs.podman.io/en/latest/markdown/podman-network-create.1.html)**,
 
-- **<a href="podman-network.unit.5.html" class="reference internal">podman-network.unit(5)</a>,**
+- **[podman-network.unit(5)](https://docs.podman.io/en/latest/markdown/podman-network.unit.5.html),**
 
-- **<a href="podman-pod.unit.5.html" class="reference internal">podman-pod.unit(5)</a>,**
+- **[podman-pod.unit(5)](https://docs.podman.io/en/latest/markdown/podman-pod.unit.5.html),**
 
-- **<a href="podman-quadlet-basic-usage.7.html" class="reference internal">podman-quadlet-basic-usage.7</a>,**
+- **[podman-quadlet-basic-usage.7](https://docs.podman.io/en/latest/markdown/podman-quadlet-basic-usage.7.html),**
 
-- **<a href="podman-run.1.html" class="reference internal">podman-run(1)</a>**,
+- **[podman-run(1)](https://docs.podman.io/en/latest/markdown/podman-run.1.html)**,
 
-- **<a href="podman-volume.unit.5.html" class="reference internal">podman-volume.unit(5)</a>,**
+- **[podman-volume.unit(5)](https://docs.podman.io/en/latest/markdown/podman-volume.unit.5.html),**
 
-- **<a href="https://www.freedesktop.org/software/systemd/man/latest/systemd-analyze.html" class="reference external">systemd-analyze(1)</a>**,
+- **[systemd-analyze(1)](https://www.freedesktop.org/software/systemd/man/latest/systemd-analyze.html)**,
 
-- **<a href="https://www.freedesktop.org/software/systemd/man/systemd.service.html" class="reference external">systemd.service(5)</a>**,
+- **[systemd.service(5)](https://www.freedesktop.org/software/systemd/man/systemd.service.html)**,
 
-- **<a href="https://www.freedesktop.org/software/systemd/man/systemd.unit.html" class="reference external">systemd.unit(5)</a>**
-
-# [Podman](../index.html)
-
-### Navigation
-
-Contents:
-
-- <a href="../Introduction.html" class="reference internal">Introduction</a>
-- <a href="../Commands.html" class="reference internal">Commands</a>
-- <a href="../Reference.html" class="reference internal">Reference</a>
-- <a href="../Tutorials.html" class="reference internal">Tutorials</a>
-- <a href="../Search.html" class="reference internal">Search</a>
-- <a href="https://podman-py.readthedocs.io/en/latest/" class="reference external">Podman Python</a>
-
-### Related Topics
-
-- [Documentation overview](../index.html)
-
-©2019, team. \| Powered by [Sphinx 9.2.0](https://www.sphinx-doc.org/) & [Alabaster 1.0.0](https://alabaster.readthedocs.io) \| <a href="../_sources/markdown/podman-systemd.unit.5.md.txt" rel="nofollow">Page source</a>
+- **[systemd.unit(5)](https://www.freedesktop.org/software/systemd/man/systemd.unit.html)**

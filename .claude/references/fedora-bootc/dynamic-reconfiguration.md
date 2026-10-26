@@ -12,7 +12,7 @@ By default, the `/etc` directory is persistent, and changes made via tools such 
 
 |  |  |
 |----|----|
-|  | It is also possible to configure the `/etc` directory to be transient as well. For more, see <a href="../filesystem/" class="xref page">Filesystem</a>. |
+|  | It is also possible to configure the `/etc` directory to be transient as well. For more, see [Filesystem](https://docs.fedoraproject.org/en-US/bootc/filesystem/). |
 
 ## The `/run` directory
 
@@ -44,7 +44,7 @@ The `nmcli connection modify` command by default writes persistent changes; ther
 
 ### podman
 
-The default for `podman run` is to create a container that will persist across system reboots. The `--rm` flag can be used for transient containers. For more on this, see <a href="../running-containers/" class="xref page">Running containers</a> as well as the [Podman documentation](https://podman.io/).
+The default for `podman run` is to create a container that will persist across system reboots. The `--rm` flag can be used for transient containers. For more on this, see [Running containers](https://docs.fedoraproject.org/en-US/bootc/running-containers/) as well as the [Podman documentation](https://podman.io/).
 
 ## Injecting code dynamically
 

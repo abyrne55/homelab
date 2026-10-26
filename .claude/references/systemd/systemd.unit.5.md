@@ -1,4 +1,4 @@
-[Index](index.html) · [Directives](systemd.directives.html) systemd 262
+[Index](https://www.freedesktop.org/software/systemd/man/latest/index.html) · [Directives](https://www.freedesktop.org/software/systemd/man/latest/systemd.directives.html) systemd 262
 
 ------------------------------------------------------------------------
 
@@ -51,11 +51,11 @@ systemd.unit — Unit configuration
 
 ## Description
 
-A unit file is a plain text ini-style file that encodes information about a service, a socket, a device, a mount point, an automount point, a swap file or partition, a start-up target, a watched file system path, a timer controlled and supervised by [systemd(1)](systemd.html#), a resource management slice or a group of externally created processes. See [systemd.syntax(7)](systemd.syntax.html#) for a general description of the syntax.
+A unit file is a plain text ini-style file that encodes information about a service, a socket, a device, a mount point, an automount point, a swap file or partition, a start-up target, a watched file system path, a timer controlled and supervised by [systemd(1)](https://www.freedesktop.org/software/systemd/man/latest/systemd.html), a resource management slice or a group of externally created processes. See [systemd.syntax(7)](https://www.freedesktop.org/software/systemd/man/latest/systemd.syntax.html) for a general description of the syntax.
 
 This man page lists the common configuration options of all the unit types. These options need to be configured in the \[Unit\] or \[Install\] sections of the unit files.
 
-In addition to the generic \[Unit\] and \[Install\] sections described here, each unit may have a type-specific section, e.g. \[Service\] for a service unit. See the respective man pages for more information: [systemd.service(5)](systemd.service.html#), [systemd.socket(5)](systemd.socket.html#), [systemd.device(5)](systemd.device.html#), [systemd.mount(5)](systemd.mount.html#), [systemd.automount(5)](systemd.automount.html#), [systemd.swap(5)](systemd.swap.html#), [systemd.target(5)](systemd.target.html#), [systemd.path(5)](systemd.path.html#), [systemd.timer(5)](systemd.timer.html#), [systemd.slice(5)](systemd.slice.html#), [systemd.scope(5)](systemd.scope.html#).
+In addition to the generic \[Unit\] and \[Install\] sections described here, each unit may have a type-specific section, e.g. \[Service\] for a service unit. See the respective man pages for more information: [systemd.service(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html), [systemd.socket(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.socket.html), [systemd.device(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.device.html), [systemd.mount(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.mount.html), [systemd.automount(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.automount.html), [systemd.swap(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.swap.html), [systemd.target(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.target.html), [systemd.path(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.path.html), [systemd.timer(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.timer.html), [systemd.slice(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.slice.html), [systemd.scope(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.scope.html).
 
 Unit files are loaded from a set of paths determined during compilation, described in the next section.
 
@@ -71,7 +71,7 @@ Aliases obey the following restrictions: a unit of a certain type ("`.service`",
 
 Unit files may specify aliases through the `Alias=` directive in the \[Install\] section. When the unit is enabled, symlinks will be created for those names, and removed when the unit is disabled. For example, `reboot.target` specifies `Alias=ctrl-alt-del.target`, so when enabled, the symlink `/etc/systemd/system/ctrl-alt-del.target` pointing to the `reboot.target` file will be created, and when **Ctrl**+**Alt**+**Del** is invoked, **systemd** will look for `ctrl-alt-del.target`, follow the symlink to `reboot.target`, and execute `reboot.service` as part of that target. **systemd** does not look at the \[Install\] section at all during normal operation, so any directives in that section only have an effect through the symlinks created during enablement.
 
-Along with a unit file `foo.service`, the directory `foo.service.wants/` may exist. All unit files symlinked from such a directory are implicitly added as dependencies of type `Wants=` to the unit. Similar functionality exists for `Requires=` type dependencies as well, the directory suffix is `.requires/` in this case. This functionality is useful to hook units into the start-up of other units, without having to modify their unit files. For details about the semantics of `Wants=` and `Requires=`, see below. The preferred way to create symlinks in the `.wants/` or `.requires/` directories is by specifying the dependency in \[Install\] section of the target unit, and creating the symlink in the file system with the **enable** or **preset** commands of [systemctl(1)](systemctl.html#). The target can be a normal unit (either plain or a specific instance of a template unit). In case when the source unit is a template, the target can also be a template, in which case the instance will be "propagated" to the target unit to form a valid unit instance. The target of symlinks in `.wants/` or `.requires/` must thus point to a valid unit file location, i.e. the symlink target name must satisfy the described requirements, and the destination path must be in one of the unit search paths, see UNIT FILE LOAD PATH section below for more details. Note that the target file might not exist, i.e. the symlink may be dangling.
+Along with a unit file `foo.service`, the directory `foo.service.wants/` may exist. All unit files symlinked from such a directory are implicitly added as dependencies of type `Wants=` to the unit. Similar functionality exists for `Requires=` type dependencies as well, the directory suffix is `.requires/` in this case. This functionality is useful to hook units into the start-up of other units, without having to modify their unit files. For details about the semantics of `Wants=` and `Requires=`, see below. The preferred way to create symlinks in the `.wants/` or `.requires/` directories is by specifying the dependency in \[Install\] section of the target unit, and creating the symlink in the file system with the **enable** or **preset** commands of [systemctl(1)](https://www.freedesktop.org/software/systemd/man/latest/systemctl.html). The target can be a normal unit (either plain or a specific instance of a template unit). In case when the source unit is a template, the target can also be a template, in which case the instance will be "propagated" to the target unit to form a valid unit instance. The target of symlinks in `.wants/` or `.requires/` must thus point to a valid unit file location, i.e. the symlink target name must satisfy the described requirements, and the destination path must be in one of the unit search paths, see UNIT FILE LOAD PATH section below for more details. Note that the target file might not exist, i.e. the symlink may be dangling.
 
 Along with a unit file `foo.service`, a "drop-in" directory `foo.service.d/` may exist. All files with the suffix "`.conf`" from this directory will be merged in the alphanumeric order and parsed after the main unit file itself has been parsed. This is useful to alter or add configuration settings for a unit, without having to modify unit files. Each drop-in file must contain appropriate section headers. For instantiated units, this logic will first look for the instance "`.d/`" subdirectory (e.g. "`foo@bar.service.d/`") and read its "`.conf`" files, followed by the template "`.d/`" subdirectory (e.g. "`foo@.service.d/`") and the "`.conf`" files there. Moreover, for unit names containing dashes ("`-`"), the set of directories generated by repeatedly truncating the unit name after all dashes is searched too. Specifically, for a unit name `foo-bar-baz.service` not only the regular drop-in directory `foo-bar-baz.service.d/` is searched but also both `foo-bar-.service.d/` and `foo-.service.d/`. This is useful for defining common drop-ins for a set of related units, whose names begin with a common prefix. This scheme is particularly useful for mount, automount and slice units, whose systematic naming structure is built around dashes as component separators. Note that equally named drop-in files further down the prefix hierarchy override those further up, i.e. `foo-bar-.service.d/10-override.conf` overrides `foo-.service.d/10-override.conf`.
 
@@ -103,7 +103,7 @@ The escaping algorithm operates as follows: given a string, any "`/`" character 
 
 When the input qualifies as absolute file system path, this algorithm is extended slightly: the path to the root directory "`/`" is encoded as single dash "`-`". In addition, any leading, trailing or duplicate "`/`" characters are removed from the string before transformation. Example: `/foo//bar/baz/` becomes "`foo-bar-baz`".
 
-This escaping is fully reversible, as long as it is known whether the escaped string was a path (the unescaping results are different for paths and non-path strings). The [systemd-escape(1)](systemd-escape.html#) command may be used to apply and reverse escaping on arbitrary strings. Use **systemd-escape --path** to escape path strings, and **systemd-escape** without `--path` otherwise.
+This escaping is fully reversible, as long as it is known whether the escaped string was a path (the unescaping results are different for paths and non-path strings). The [systemd-escape(1)](https://www.freedesktop.org/software/systemd/man/latest/systemd-escape.html) command may be used to apply and reverse escaping on arbitrary strings. Use **systemd-escape --path** to escape path strings, and **systemd-escape** without `--path` otherwise.
 
 ## Automatic dependencies
 
@@ -111,13 +111,13 @@ This escaping is fully reversible, as long as it is known whether the escaped st
 
 A number of unit dependencies are implicitly established, depending on unit type and unit configuration. These implicit dependencies can make unit configuration file cleaner. For the implicit dependencies in each unit type, please refer to section "Implicit Dependencies" in respective man pages.
 
-For example, service units with `Type=dbus` automatically acquire dependencies of type `Requires=` and `After=` on `dbus.socket`. See [systemd.service(5)](systemd.service.html#) for details.
+For example, service units with `Type=dbus` automatically acquire dependencies of type `Requires=` and `After=` on `dbus.socket`. See [systemd.service(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html) for details.
 
 ### Default Dependencies
 
 Default dependencies are similar to implicit dependencies, but can be turned on and off by setting `DefaultDependencies=` to `yes` (the default) and `no`, while implicit dependencies are always in effect. See section "Default Dependencies" in respective man pages for the effect of enabling `DefaultDependencies=` in each unit types.
 
-For example, target units will complement all configured dependencies of type `Wants=` or `Requires=` with dependencies of type `After=`. See [systemd.target(5)](systemd.target.html#) for details. Note that this behavior can be opted out by setting `DefaultDependencies=no` in the specified units, or it can be selectively overridden via an explicit `Before=` dependency.
+For example, target units will complement all configured dependencies of type `Wants=` or `Requires=` with dependencies of type `After=`. See [systemd.target(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.target.html) for details. Note that this behavior can be opted out by setting `DefaultDependencies=no` in the specified units, or it can be selectively overridden via an explicit `Before=` dependency.
 
 ## Unit File Load Path
 
@@ -150,7 +150,7 @@ When the variable `$SYSTEMD_UNIT_PATH` is set, the contents of this variable ove
 </tr>
 <tr>
 <td><code class="filename">/run/systemd/generator.early</code></td>
-<td>Generated units with high priority (see <em><code>early-dir</code></em> in <a href="systemd.generator.html#">systemd.generator(7)</a>)</td>
+<td>Generated units with high priority (see <em><code>early-dir</code></em> in <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.generator.html">systemd.generator(7)</a>)</td>
 </tr>
 <tr>
 <td><code class="filename">/etc/systemd/system</code></td>
@@ -162,7 +162,7 @@ When the variable `$SYSTEMD_UNIT_PATH` is set, the contents of this variable ove
 </tr>
 <tr>
 <td><code class="filename">/run/systemd/generator</code></td>
-<td>Generated units with medium priority (see <em><code>normal-dir</code></em> in <a href="systemd.generator.html#">systemd.generator(7)</a>)</td>
+<td>Generated units with medium priority (see <em><code>normal-dir</code></em> in <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.generator.html">systemd.generator(7)</a>)</td>
 </tr>
 <tr>
 <td><code class="filename">/usr/local/lib/systemd/system</code></td>
@@ -174,7 +174,7 @@ When the variable `$SYSTEMD_UNIT_PATH` is set, the contents of this variable ove
 </tr>
 <tr>
 <td><code class="filename">/run/systemd/generator.late</code></td>
-<td>Generated units with low priority (see <em><code>late-dir</code></em> in <a href="systemd.generator.html#">systemd.generator(7)</a>)</td>
+<td>Generated units with low priority (see <em><code>late-dir</code></em> in <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.generator.html">systemd.generator(7)</a>)</td>
 </tr>
 </tbody>
 </table>
@@ -206,7 +206,7 @@ When the variable `$SYSTEMD_UNIT_PATH` is set, the contents of this variable ove
 </tr>
 <tr>
 <td><code class="filename">$XDG_RUNTIME_DIR/systemd/generator.early</code></td>
-<td>Generated units with high priority (see <em><code>early-dir</code></em> in <a href="systemd.generator.html#">systemd.generator(7)</a>)</td>
+<td>Generated units with high priority (see <em><code>early-dir</code></em> in <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.generator.html">systemd.generator(7)</a>)</td>
 </tr>
 <tr>
 <td><code class="filename">$XDG_CONFIG_HOME/systemd/user</code> or <code class="filename">$HOME/.config/systemd/user</code></td>
@@ -230,7 +230,7 @@ When the variable `$SYSTEMD_UNIT_PATH` is set, the contents of this variable ove
 </tr>
 <tr>
 <td><code class="filename">$XDG_RUNTIME_DIR/systemd/generator</code></td>
-<td>Generated units with medium priority (see <em><code>normal-dir</code></em> in <a href="systemd.generator.html#">systemd.generator(7)</a>)</td>
+<td>Generated units with medium priority (see <em><code>normal-dir</code></em> in <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.generator.html">systemd.generator(7)</a>)</td>
 </tr>
 <tr>
 <td><code class="filename">$XDG_DATA_HOME/systemd/user</code> or <code class="filename">$HOME/.local/share/systemd/user</code></td>
@@ -254,20 +254,20 @@ When the variable `$SYSTEMD_UNIT_PATH` is set, the contents of this variable ove
 </tr>
 <tr>
 <td><code class="filename">$XDG_RUNTIME_DIR/systemd/generator.late</code></td>
-<td>Generated units with low priority (see <em><code>late-dir</code></em> in <a href="systemd.generator.html#">systemd.generator(7)</a>)</td>
+<td>Generated units with low priority (see <em><code>late-dir</code></em> in <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.generator.html">systemd.generator(7)</a>)</td>
 </tr>
 </tbody>
 </table>
 
 \
 
-The set of load paths for the user manager instance may be augmented or changed using various environment variables. And environment variables may in turn be set using environment generators, see [systemd.environment-generator(7)](systemd.environment-generator.html#). In particular, `$XDG_DATA_HOME` and `$XDG_DATA_DIRS` may be easily set using [systemd-environment-d-generator(8)](systemd-environment-d-generator.html#). Thus, directories listed here are just the defaults. To see the actual list that would be used based on compilation options and current environment use
+The set of load paths for the user manager instance may be augmented or changed using various environment variables. And environment variables may in turn be set using environment generators, see [systemd.environment-generator(7)](https://www.freedesktop.org/software/systemd/man/latest/systemd.environment-generator.html). In particular, `$XDG_DATA_HOME` and `$XDG_DATA_DIRS` may be easily set using [systemd-environment-d-generator(8)](https://www.freedesktop.org/software/systemd/man/latest/systemd-environment-d-generator.html). Thus, directories listed here are just the defaults. To see the actual list that would be used based on compilation options and current environment use
 
 ``` programlisting
 systemd-analyze --user unit-paths
 ```
 
-Moreover, additional units might be loaded into systemd from directories not on the unit load path by creating a symlink pointing to a unit file in the directories. You can use **systemctl link** for this; see [systemctl(1)](systemctl.html#). The file system where the linked unit files are located must be accessible when systemd is started (e.g. anything underneath `/home/` or `/var/` is not allowed, unless those directories are located on the root file system).
+Moreover, additional units might be loaded into systemd from directories not on the unit load path by creating a symlink pointing to a unit file in the directories. You can use **systemctl link** for this; see [systemctl(1)](https://www.freedesktop.org/software/systemd/man/latest/systemctl.html). The file system where the linked unit files are located must be accessible when systemd is started (e.g. anything underneath `/home/` or `/var/` is not allowed, unless those directories are located on the root file system).
 
 It is important to distinguish "linked unit files" from "unit file aliases": any symlink where the symlink *target* is within the unit load path becomes an alias: the source name and the target file name must satisfy specific constraints listed above in the discussion of aliases, but the symlink target does not have to exist, and in fact the symlink target path is not used, except to check whether the target is within the unit load path. In contrast, a symlink which goes outside of the unit load path signifies a linked unit file. The symlink is followed when loading the file, but the destination name is otherwise unused (and may even not be a valid unit file name). For example, symlinks `/etc/systemd/system/alias1.service` → `service1.service`, `/etc/systemd/system/alias2.service` → `/usr/lib/systemd/service1.service`, `/etc/systemd/system/alias3.service` → `/etc/systemd/system/service1.service` are all valid aliases and `service1.service` will have four names, even if the unit file is located at `/run/systemd/system/service1.service`. In contrast, a symlink `/etc/systemd/system/link1.service` → `../link1_service_file` means that `link1.service` is a "linked unit" and the contents of `/etc/systemd/link1_service_file` provide its configuration.
 
@@ -402,7 +402,7 @@ A space-separated list of one or more units to which stop requests from this uni
 Added in version 249.
 
 `JoinsNamespaceOf=`
-For units that start processes (such as service units), lists one or more other units whose network and/or temporary file namespace to join. If this is specified on a unit (say, `a.service` has `JoinsNamespaceOf=b.service`), then the inverse dependency (`JoinsNamespaceOf=a.service` for b.service) is implied. This only applies to unit types which support the `PrivateNetwork=`, `NetworkNamespacePath=`, `PrivateIPC=`, `IPCNamespacePath=`, and `PrivateTmp=` directives (see [systemd.exec(5)](systemd.exec.html#) for details). If a unit that has this setting set is started, its processes will see the same `/tmp/`, `/var/tmp/`, IPC namespace and network namespace as one listed unit that is started. If multiple listed units are already started and these do not share their namespace, then it is not defined which namespace is joined. Note that this setting only has an effect if `PrivateNetwork=`/`NetworkNamespacePath=`, `PrivateIPC=`/`IPCNamespacePath=` and/or `PrivateTmp=` is enabled for both the unit that joins the namespace and the unit whose namespace is joined.
+For units that start processes (such as service units), lists one or more other units whose network and/or temporary file namespace to join. If this is specified on a unit (say, `a.service` has `JoinsNamespaceOf=b.service`), then the inverse dependency (`JoinsNamespaceOf=a.service` for b.service) is implied. This only applies to unit types which support the `PrivateNetwork=`, `NetworkNamespacePath=`, `PrivateIPC=`, `IPCNamespacePath=`, and `PrivateTmp=` directives (see [systemd.exec(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html) for details). If a unit that has this setting set is started, its processes will see the same `/tmp/`, `/var/tmp/`, IPC namespace and network namespace as one listed unit that is started. If multiple listed units are already started and these do not share their namespace, then it is not defined which namespace is joined. Note that this setting only has an effect if `PrivateNetwork=`/`NetworkNamespacePath=`, `PrivateIPC=`/`IPCNamespacePath=` and/or `PrivateTmp=` is enabled for both the unit that joins the namespace and the unit whose namespace is joined.
 
 Added in version 209.
 
@@ -419,7 +419,7 @@ Same as `RequiresMountsFor=`, but adds dependencies of type `Wants=` instead of 
 Added in version 256.
 
 `OnSuccessJobMode=`, `OnFailureJobMode=`
-Takes a value of "`fail`", "`replace`", "`replace-irreversibly`", "`isolate`", "`flush`", "`ignore-dependencies`" or "`ignore-requirements`". "`OnFailureJobMode=`" defaults to "`replace`", "`OnSuccessJobMode=`" defaults to "`fail`". Specifies how the units listed in `OnSuccess=`/`OnFailure=` will be enqueued. See [systemctl(1)](systemctl.html#)'s `--job-mode=` option for details on the possible values. If this is set to "`isolate`", only a single unit may be listed in `OnSuccess=`/`OnFailure=`.
+Takes a value of "`fail`", "`replace`", "`replace-irreversibly`", "`isolate`", "`flush`", "`ignore-dependencies`" or "`ignore-requirements`". "`OnFailureJobMode=`" defaults to "`replace`", "`OnSuccessJobMode=`" defaults to "`fail`". Specifies how the units listed in `OnSuccess=`/`OnFailure=` will be enqueued. See [systemctl(1)](https://www.freedesktop.org/software/systemd/man/latest/systemctl.html)'s `--job-mode=` option for details on the possible values. If this is set to "`isolate`", only a single unit may be listed in `OnSuccess=`/`OnFailure=`.
 
 Added in version 209.
 
@@ -463,7 +463,7 @@ Added in version 236.
 `FailureAction=`, `SuccessAction=`
 Configure the action to take when the unit stops and enters a failed state or inactive state. Takes one of `none`, `reboot`, `reboot-force`, `reboot-immediate`, `poweroff`, `poweroff-force`, `poweroff-immediate`, `exit`, `exit-force`, `soft-reboot`, `soft-reboot-force`, `kexec`, `kexec-force`, `halt`, `halt-force` and `halt-immediate`. In system mode, all options are allowed. In user mode, only `none`, `exit`, and `exit-force` are allowed. Both options default to `none`.
 
-These actions are tied to the unit's state transitions and fire only when the unit actually transitions out of an `active` or `activating` state. As a consequence, `Condition…=` and `Assert…=` directives that fail do *not* trigger `SuccessAction=` or `FailureAction=`: they prevent activation in the first place, so no state transition occurs. By contrast, the `ExecCondition=` directive in [systemd.service(5)](systemd.service.html#) runs as part of activation, so an `ExecCondition=` skip *will* trigger `SuccessAction=`.
+These actions are tied to the unit's state transitions and fire only when the unit actually transitions out of an `active` or `activating` state. As a consequence, `Condition…=` and `Assert…=` directives that fail do *not* trigger `SuccessAction=` or `FailureAction=`: they prevent activation in the first place, so no state transition occurs. By contrast, the `ExecCondition=` directive in [systemd.service(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html) runs as part of activation, so an `ExecCondition=` skip *will* trigger `SuccessAction=`.
 
 If `none` is set, no action will be triggered. `reboot` causes a reboot following the normal shutdown procedure (i.e. equivalent to **systemctl reboot**). `reboot-force` causes a forced reboot which will terminate all processes forcibly but should cause no dirty file systems on reboot (i.e. equivalent to **systemctl reboot -f**) and `reboot-immediate` causes immediate execution of the [reboot(2)](https://man7.org/linux/man-pages/man2/reboot.2.html) system call, which might result in data loss (i.e. equivalent to **systemctl reboot -ff**). Similarly, `poweroff`, `poweroff-force`, `poweroff-immediate`, `kexec`, `kexec-force`, `halt`, `halt-force` and `halt-immediate` have the effect of powering down the system, executing kexec, and halting the system respectively with similar semantics. `exit` causes the manager to exit following the normal shutdown procedure, and `exit-force` causes it terminate without shutting down services. When `exit` or `exit-force` is used by default the exit status of the main process of the unit (if this applies) is returned from the service manager. If there is no such status, `FailureAction=` returns 255 instead, while `SuccessAction=` leaves the exit status unchanged. However, this may be overridden with `FailureActionExitStatus=`/`SuccessActionExitStatus=`, see below. `soft-reboot` will trigger a userspace reboot operation. `soft-reboot-force` does that too, but does not go through the shutdown transaction beforehand.
 
@@ -477,7 +477,7 @@ Added in version 240.
 `JobTimeoutSec=`, `JobRunningTimeoutSec=`
 `JobTimeoutSec=` specifies a timeout for the whole job that starts running when the job is queued. `JobRunningTimeoutSec=` specifies a timeout that starts running when the queued job is actually started. If either limit is reached, the job will be cancelled, the unit however will not change state or even enter the "`failed`" mode.
 
-Both settings take a time span with the default unit of seconds, but other units may be specified, see [systemd.time(7)](systemd.time.html#). The default is "`infinity`" (job timeouts disabled), except for device units where `JobRunningTimeoutSec=` defaults to `DefaultDeviceTimeoutSec=`.
+Both settings take a time span with the default unit of seconds, but other units may be specified, see [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/latest/systemd.time.html). The default is "`infinity`" (job timeouts disabled), except for device units where `JobRunningTimeoutSec=` defaults to `DefaultDeviceTimeoutSec=`.
 
 Note: these timeouts are independent from any unit-specific timeouts (for example, the timeout set with `TimeoutStartSec=` in service units). The job timeout has no effect on the unit itself. Or in other words: unit-specific timeouts are useful to abort unit state changes, and revert them. The job timeout set with this option however is useful to abort only the job waiting for the unit state to change.
 
@@ -493,9 +493,9 @@ Added in version 240.
 `StartLimitIntervalSec=`*`interval`*, `StartLimitBurst=`*`burst`*
 Configure unit start rate limiting. Units which are started more than *`burst`* times within an *`interval`* time span are not permitted to start any more. Use `StartLimitIntervalSec=` to configure the checking interval and `StartLimitBurst=` to configure how many starts per interval are allowed.
 
-*`interval`* is a time span with the default unit of seconds, but other units may be specified, see [systemd.time(7)](systemd.time.html#). The special value "`infinity`" can be used to limit the total number of start attempts, even if they happen at large time intervals. Defaults to `DefaultStartLimitIntervalSec=` in manager configuration file, and may be set to 0 to disable any kind of rate limiting. *`burst`* is a number and defaults to `DefaultStartLimitBurst=` in manager configuration file.
+*`interval`* is a time span with the default unit of seconds, but other units may be specified, see [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/latest/systemd.time.html). The special value "`infinity`" can be used to limit the total number of start attempts, even if they happen at large time intervals. Defaults to `DefaultStartLimitIntervalSec=` in manager configuration file, and may be set to 0 to disable any kind of rate limiting. *`burst`* is a number and defaults to `DefaultStartLimitBurst=` in manager configuration file.
 
-These configuration options are particularly useful in conjunction with the service setting `Restart=` (see [systemd.service(5)](systemd.service.html#)); however, they apply to all kinds of starts (including manual), not just those triggered by the `Restart=` logic.
+These configuration options are particularly useful in conjunction with the service setting `Restart=` (see [systemd.service(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html)); however, they apply to all kinds of starts (including manual), not just those triggered by the `Restart=` logic.
 
 Note that units which are configured for `Restart=`, and which reach the start limit are not attempted to be restarted anymore; however, they may still be restarted manually or from a timer or socket at a later point, after the *`interval`* has passed. From that point on, the restart logic is activated again. **systemctl reset-failed** will cause the restart rate counter for a service to be flushed, which is useful if the administrator wants to manually start a unit and the start limit interferes with that. Rate-limiting is enforced after any unit condition checks are executed, and hence unit activations with failing conditions do not count towards the rate limit.
 
@@ -530,14 +530,14 @@ The `AssertArchitecture=`, `AssertVirtualization=`, … options are similar to c
 
 Note that neither assertion nor condition expressions result in unit state changes. Also note that both are checked at the time the job is to be executed, i.e. long after depending jobs and it itself were queued. Thus, neither condition nor assertion expressions are suitable for conditionalizing unit dependencies.
 
-The **condition** verb of [systemd-analyze(1)](systemd-analyze.html#) can be used to test condition and assert expressions.
+The **condition** verb of [systemd-analyze(1)](https://www.freedesktop.org/software/systemd/man/latest/systemd-analyze.html) can be used to test condition and assert expressions.
 
 Except for `ConditionPathIsSymbolicLink=`, all path checks follow symlinks.
 
 `ConditionArchitecture=`
 Check whether the system is running on a specific architecture. Takes one of "`x86`", "`x86-64`", "`ppc`", "`ppc-le`", "`ppc64`", "`ppc64-le`", "`ia64`", "`parisc`", "`parisc64`", "`s390`", "`s390x`", "`sparc`", "`sparc64`", "`mips`", "`mips-le`", "`mips64`", "`mips64-le`", "`alpha`", "`arm`", "`arm-be`", "`arm64`", "`arm64-be`", "`sh`", "`sh64`", "`m68k`", "`tilegx`", "`cris`", "`arc`", "`arc-be`", or "`native`".
 
-Use [systemd-analyze(1)](systemd-analyze.html#) for the complete list of known architectures.
+Use [systemd-analyze(1)](https://www.freedesktop.org/software/systemd/man/latest/systemd-analyze.html) for the complete list of known architectures.
 
 The architecture is determined from the information returned by [uname(2)](https://man7.org/linux/man-pages/man2/uname.2.html) and is thus subject to [personality(2)](https://man7.org/linux/man-pages/man2/personality.2.html). Note that a `Personality=` setting in the same unit file has no effect on this condition. A special architecture name "`native`" is mapped to the architecture the system manager itself is compiled for. The test may be negated by prepending an exclamation mark.
 
@@ -557,17 +557,17 @@ Check whether the system's firmware is of a certain type. The following values a
 Added in version 249.
 
 `ConditionVirtualization=`
-Check whether the system is executed in a virtualized environment and optionally test whether it is a specific implementation. Takes either boolean value to check if being executed in any virtualized environment, or one of "`vm`" and "`container`" to test against a generic type of virtualization solution, or one of "`qemu`", "`kvm`", "`amazon`", "`zvm`", "`vmware`", "`microsoft`", "`oracle`", "`powervm`", "`xen`", "`bochs`", "`uml`", "`bhyve`", "`qnx`", "`apple`", "`sre`", "`openvz`", "`lxc`", "`lxc-libvirt`", "`systemd-nspawn`", "`docker`", "`podman`", "`rkt`", "`wsl`", "`proot`", "`pouch`", "`acrn`" to test against a specific implementation, or "`private-users`" to check whether we are running in a user namespace. See [systemd-detect-virt(1)](systemd-detect-virt.html#) for a full list of known virtualization technologies and their identifiers. If multiple virtualization technologies are nested, only the innermost is considered. The test may be negated by prepending an exclamation mark.
+Check whether the system is executed in a virtualized environment and optionally test whether it is a specific implementation. Takes either boolean value to check if being executed in any virtualized environment, or one of "`vm`" and "`container`" to test against a generic type of virtualization solution, or one of "`qemu`", "`kvm`", "`amazon`", "`zvm`", "`vmware`", "`microsoft`", "`oracle`", "`powervm`", "`xen`", "`bochs`", "`uml`", "`bhyve`", "`qnx`", "`apple`", "`sre`", "`openvz`", "`lxc`", "`lxc-libvirt`", "`systemd-nspawn`", "`docker`", "`podman`", "`rkt`", "`wsl`", "`proot`", "`pouch`", "`acrn`" to test against a specific implementation, or "`private-users`" to check whether we are running in a user namespace. See [systemd-detect-virt(1)](https://www.freedesktop.org/software/systemd/man/latest/systemd-detect-virt.html) for a full list of known virtualization technologies and their identifiers. If multiple virtualization technologies are nested, only the innermost is considered. The test may be negated by prepending an exclamation mark.
 
 Added in version 244.
 
 `ConditionHost=`
-`ConditionHost=` may be used to match against the hostname, machine ID, boot ID or product UUID of the host. This either takes a hostname string (optionally with shell style globs) which is tested against the locally set hostname as returned by [gethostname(2)](https://man7.org/linux/man-pages/man2/gethostname.2.html), or a 128bit ID or UUID, formatted as string. The latter is compared against machine ID, boot ID and the firmware product UUID if there is any. See [machine-id(5)](machine-id.html#) for details about the machine ID. The test may be negated by prepending an exclamation mark.
+`ConditionHost=` may be used to match against the hostname, machine ID, boot ID or product UUID of the host. This either takes a hostname string (optionally with shell style globs) which is tested against the locally set hostname as returned by [gethostname(2)](https://man7.org/linux/man-pages/man2/gethostname.2.html), or a 128bit ID or UUID, formatted as string. The latter is compared against machine ID, boot ID and the firmware product UUID if there is any. See [machine-id(5)](https://www.freedesktop.org/software/systemd/man/latest/machine-id.html) for details about the machine ID. The test may be negated by prepending an exclamation mark.
 
 Added in version 244.
 
 `ConditionFraction=`
-`ConditionFraction=` may be used to enable a unit on a stable, pseudo-random subset of a fleet of machines. It is primarily useful for staged rollouts: the same unit (or drop-in) is distributed to every machine in a fleet, but only the configured fraction of them will actually have it enabled. The decision is derived locally from the machine ID (see [machine-id(5)](machine-id.html#)), so it requires no central coordination and is stable over time: a given machine always lands on the same side of the threshold.
+`ConditionFraction=` may be used to enable a unit on a stable, pseudo-random subset of a fleet of machines. It is primarily useful for staged rollouts: the same unit (or drop-in) is distributed to every machine in a fleet, but only the configured fraction of them will actually have it enabled. The decision is derived locally from the machine ID (see [machine-id(5)](https://www.freedesktop.org/software/systemd/man/latest/machine-id.html)), so it requires no central coordination and is stable over time: a given machine always lands on the same side of the threshold.
 
 The argument consists of an optional *`tag`* followed by a percentage, separated by whitespace, for example "`30%`" or "`myrollout 30%`". The percentage may include up to two decimal places (e.g. "`0.5%`"). The condition is satisfied on approximately the configured percentage of all machines; "`0%`" matches no machine and "`100%`" matches every machine.
 
@@ -655,12 +655,12 @@ Added in version 246.
 </tr>
 <tr>
 <td>measured-uki</td>
-<td>Unified Kernel Image with PCR 11 Measurements, as per <a href="systemd-stub.html#">systemd-stub(7)</a>.
+<td>Unified Kernel Image with PCR 11 Measurements, as per <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd-stub.html">systemd-stub(7)</a>.
 <p>Added in version 255.</p></td>
 </tr>
 <tr>
 <td>measured-os</td>
-<td>OS PCR measurements enabled. This is typically equivalent to <code class="varname">measured-uki</code>, however may also be set explicitly via the <code class="varname">systemd.tpm2_measured_os=</code> kernel command line switch, see <a href="kernel-command-line.html#">kernel-command-line(7)</a> for details. The various system services doing boot and runtime measurements are conditioned on this flag.
+<td>OS PCR measurements enabled. This is typically equivalent to <code class="varname">measured-uki</code>, however may also be set explicitly via the <code class="varname">systemd.tpm2_measured_os=</code> kernel command line switch, see <a href="https://www.freedesktop.org/software/systemd/man/latest/kernel-command-line.html">kernel-command-line(7)</a> for details. The various system services doing boot and runtime measurements are conditioned on this flag.
 <p>Added in version 261.</p></td>
 </tr>
 </tbody>
@@ -683,7 +683,7 @@ Check whether the system has AC power, or is exclusively battery powered at the 
 Added in version 244.
 
 `ConditionNeedsUpdate=`
-Takes one of `/var/` or `/etc/` as argument, possibly prefixed with a "`!`" (to invert the condition). This condition may be used to conditionalize units on whether the specified directory requires an update because `/usr/`'s modification time is newer than the stamp file `.updated` in the specified directory. This is useful to implement offline updates of the vendor operating system resources in `/usr/` that require updating of `/etc/` or `/var/` on the next following boot. Units making use of this condition should order themselves before [systemd-update-done.service(8)](systemd-update-done.service.html#), to make sure they run before the stamp file's modification time gets reset indicating a completed update.
+Takes one of `/var/` or `/etc/` as argument, possibly prefixed with a "`!`" (to invert the condition). This condition may be used to conditionalize units on whether the specified directory requires an update because `/usr/`'s modification time is newer than the stamp file `.updated` in the specified directory. This is useful to implement offline updates of the vendor operating system resources in `/usr/` that require updating of `/etc/` or `/var/` on the next following boot. Units making use of this condition should order themselves before [systemd-update-done.service(8)](https://www.freedesktop.org/software/systemd/man/latest/systemd-update-done.service.html), to make sure they run before the stamp file's modification time gets reset indicating a completed update.
 
 If the `systemd.condition_needs_update=` option is specified on the kernel command line (taking a boolean), it will override the result of this condition check, taking precedence over any file modification time checks. If the kernel command line option is used, `systemd-update-done.service` will not have immediate effect on any following `ConditionNeedsUpdate=` checks, until the system is rebooted where the kernel command line option is not specified anymore.
 
@@ -694,11 +694,11 @@ Also note that if the update method includes a call to execute appropriate post-
 Added in version 244.
 
 `ConditionFirstBoot=`
-Takes a boolean argument. This condition may be used to conditionalize units on whether the system is booting up for the first time. This roughly means that `/etc/` was unpopulated when the system started booting (for details, see "First Boot Semantics" in [machine-id(5)](machine-id.html#)). First Boot is considered finished (this condition will evaluate as false) after the manager has finished the startup phase.
+Takes a boolean argument. This condition may be used to conditionalize units on whether the system is booting up for the first time. This roughly means that `/etc/` was unpopulated when the system started booting (for details, see "First Boot Semantics" in [machine-id(5)](https://www.freedesktop.org/software/systemd/man/latest/machine-id.html)). First Boot is considered finished (this condition will evaluate as false) after the manager has finished the startup phase.
 
 This condition may be used to populate `/etc/` on the first boot after factory reset, or when a new system instance boots up for the first time.
 
-Note that the service manager itself will perform setup steps during First Boot: it will initialize [machine-id(5)](machine-id.html#) and preset all units, enabling or disabling them according to the [systemd.preset(5)](systemd.preset.html#) settings. Additional setup may be performed via units with `ConditionFirstBoot=yes`.
+Note that the service manager itself will perform setup steps during First Boot: it will initialize [machine-id(5)](https://www.freedesktop.org/software/systemd/man/latest/machine-id.html) and preset all units, enabling or disabling them according to the [systemd.preset(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.preset.html) settings. Additional setup may be performed via units with `ConditionFirstBoot=yes`.
 
 For robustness, units with `ConditionFirstBoot=yes` should order themselves before `first-boot-complete.target` and pull in this passive target with `Wants=`. This ensures that in a case of an aborted first boot, these units will be re-run during the next system startup.
 
@@ -776,7 +776,7 @@ Check whether given cgroup controllers (e.g. "`cpu`") are available for use on t
 
 Multiple controllers may be passed with a space separating them; in this case, the condition will only pass if all listed controllers are available for use. Controllers unknown to systemd are ignored. Valid controllers are "`cpu`", "`io`", "`memory`", and "`pids`". Even if available in the kernel, a particular controller may not be available if it was disabled on the kernel command line with `cgroup_disable=controller`.
 
-Alternatively, two special strings "`v1`" and "`v2`" may be specified (without any controller names). "`v2`" will pass if the unified v2 cgroup hierarchy is used, and "`v1`" will pass if the legacy v1 hierarchy or the hybrid hierarchy are used. Note that legacy or hybrid hierarchies have been deprecated. See [systemd(1)](systemd.html#) for more information.
+Alternatively, two special strings "`v1`" and "`v2`" may be specified (without any controller names). "`v2`" will pass if the unified v2 cgroup hierarchy is used, and "`v1`" will pass if the legacy v1 hierarchy or the hybrid hierarchy are used. Note that legacy or hybrid hierarchies have been deprecated. See [systemd(1)](https://www.freedesktop.org/software/systemd/man/latest/systemd.html) for more information.
 
 Added in version 244.
 
@@ -802,7 +802,7 @@ On architectures other than x86 and arm64, it is assumed that the CPU does not s
 Added in version 248.
 
 `ConditionOSRelease=`
-Verify that a specific "`key=value`" pair is set in the host's [os-release(5)](os-release.html#).
+Verify that a specific "`key=value`" pair is set in the host's [os-release(5)](https://www.freedesktop.org/software/systemd/man/latest/os-release.html).
 
 Other than exact string matching (with "`=`" and "`!=`"), relative comparisons are supported for versioned parameters (e.g. "`VERSION_ID`"; with "`<`", "`<=`", "`==`", "`<>`", "`>=`", "`>`"), and shell-style wildcard comparisons ("`*`", "`?`", "`[]`") are supported with the "`$=`" (match) and "`!$=`" (non-match).
 
@@ -811,9 +811,9 @@ If the given key is not found in the file, the match is done against an empty va
 Added in version 249.
 
 `ConditionMachineTag=`
-`ConditionMachineTag=` may be used to match against the tags assigned to the local machine. Machine tags are short labels that classify and group machines for management purposes; they are configured in the `TAGS=` field of [machine-info(5)](machine-info.html#) and may be queried and changed with the **tags** command of [hostnamectl(1)](hostnamectl.html#). The argument is a single tag pattern, which is compared against each of the configured tags using shell-style globbing ("`*`", "`?`", "`[]`"). The condition is satisfied if at least one of the configured tags matches the pattern. The test may be negated by prepending an exclamation mark, in which case it is satisfied if none of the configured tags matches.
+`ConditionMachineTag=` may be used to match against the tags assigned to the local machine. Machine tags are short labels that classify and group machines for management purposes; they are configured in the `TAGS=` field of [machine-info(5)](https://www.freedesktop.org/software/systemd/man/latest/machine-info.html) and may be queried and changed with the **tags** command of [hostnamectl(1)](https://www.freedesktop.org/software/systemd/man/latest/hostnamectl.html). The argument is a single tag pattern, which is compared against each of the configured tags using shell-style globbing ("`*`", "`?`", "`[]`"). The condition is satisfied if at least one of the configured tags matches the pattern. The test may be negated by prepending an exclamation mark, in which case it is satisfied if none of the configured tags matches.
 
-Tags may be parameterized with a value in the form "*`key`*`=`*`value`*"; the "`=`" and the value are part of the tag and thus part of the string the pattern is matched against. Hence "`ConditionMachineTag=role=webserver`" matches the tag "`role=webserver`" exactly, "`ConditionMachineTag=role=*`" matches any value assigned to the "`role`" key, and "`ConditionMachineTag=role`" (without "`=`") does *not* match "`role=webserver`". See [machine-info(5)](machine-info.html#) for the precise syntax of machine tags.
+Tags may be parameterized with a value in the form "*`key`*`=`*`value`*"; the "`=`" and the value are part of the tag and thus part of the string the pattern is matched against. Hence "`ConditionMachineTag=role=webserver`" matches the tag "`role=webserver`" exactly, "`ConditionMachineTag=role=*`" matches any value assigned to the "`role`" key, and "`ConditionMachineTag=role`" (without "`=`") does *not* match "`role=webserver`". See [machine-info(5)](https://www.freedesktop.org/software/systemd/man/latest/machine-info.html) for the precise syntax of machine tags.
 
 Added in version 261.
 
@@ -940,13 +940,13 @@ Note: `WantedBy=`, `RequiredBy=`, and `UpheldBy=` are used in the \[Install\] se
 
 Note: `ConsistsOf=`, `BoundBy=`, `RequisiteOf=`, `ConflictedBy=` are created implicitly along with their reverses and cannot be specified directly.
 
-Note: `Triggers=` is created implicitly between a socket, path unit, or an automount unit, and the unit they activate. By default, a unit with the same name is triggered, but this can be overridden using `Sockets=`, `Service=`, and `Unit=` settings. See [systemd.service(5)](systemd.service.html#), [systemd.socket(5)](systemd.socket.html#), [systemd.path(5)](systemd.path.html#), and [systemd.automount(5)](systemd.automount.html#) for details. `TriggeredBy=` is created implicitly on the triggered unit.
+Note: `Triggers=` is created implicitly between a socket, path unit, or an automount unit, and the unit they activate. By default, a unit with the same name is triggered, but this can be overridden using `Sockets=`, `Service=`, and `Unit=` settings. See [systemd.service(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html), [systemd.socket(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.socket.html), [systemd.path(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.path.html), and [systemd.automount(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.automount.html) for details. `TriggeredBy=` is created implicitly on the triggered unit.
 
 Note: `Following=` is used to group device aliases and points to the "primary" device unit that systemd is using to track device state, usually corresponding to a sysfs path. It does not show up in the "target" unit.
 
 ## \[Install\] Section Options
 
-Unit files may include an \[Install\] section, which carries installation information for the unit. This section is not interpreted by [systemd(1)](systemd.html#) during runtime; it is used by the **enable** and **disable** commands of the [systemctl(1)](systemctl.html#) tool during installation of a unit.
+Unit files may include an \[Install\] section, which carries installation information for the unit. This section is not interpreted by [systemd(1)](https://www.freedesktop.org/software/systemd/man/latest/systemd.html) during runtime; it is used by the **enable** and **disable** commands of the [systemctl(1)](https://www.freedesktop.org/software/systemd/man/latest/systemctl.html) tool during installation of a unit.
 
 `Alias=`
 A space-separated list of additional names this unit shall be installed under. The names listed here must have the same suffix (i.e. type) as the unit filename. This option may be specified more than once, in which case all listed names are used. At installation time, **systemctl enable** will create symlinks from these names to the unit filename. Note that not all unit types support such alias names, and this setting is not supported for them. Specifically, mount, slice, swap, and automount units do not support aliasing.
@@ -983,11 +983,11 @@ Many settings resolve specifiers which may be used to write generic unit files r
 | Specifier | Meaning | Details |
 |:---|:---|:---|
 | "`%a`" | Architecture | A short string identifying the architecture of the local system. A string such as `x86`, `x86-64` or `arm64`. See the architectures defined for `ConditionArchitecture=` above for a full list. |
-| "`%A`" | Operating system image version | The operating system image version identifier of the running system, as read from the `IMAGE_VERSION=` field of `/etc/os-release`. If not set, resolves to an empty string. See [os-release(5)](os-release.html#) for more information. |
+| "`%A`" | Operating system image version | The operating system image version identifier of the running system, as read from the `IMAGE_VERSION=` field of `/etc/os-release`. If not set, resolves to an empty string. See [os-release(5)](https://www.freedesktop.org/software/systemd/man/latest/os-release.html) for more information. |
 | "`%b`" | Boot ID | The boot ID of the running system, formatted as string. See [random(4)](https://man7.org/linux/man-pages/man4/random.4.html) for more information. |
-| "`%B`" | Operating system build ID | The operating system build identifier of the running system, as read from the `BUILD_ID=` field of `/etc/os-release`. If not set, resolves to an empty string. See [os-release(5)](os-release.html#) for more information. |
+| "`%B`" | Operating system build ID | The operating system build identifier of the running system, as read from the `BUILD_ID=` field of `/etc/os-release`. If not set, resolves to an empty string. See [os-release(5)](https://www.freedesktop.org/software/systemd/man/latest/os-release.html) for more information. |
 | "`%C`" | Cache directory root | This is either `/var/cache` (for the system manager) or the path "`$XDG_CACHE_HOME`" resolves to (for user managers). |
-| "`%d`" | Credentials directory | This is the value of the "`$CREDENTIALS_DIRECTORY`" environment variable if available. See section "Credentials" in [systemd.exec(5)](systemd.exec.html#) for more information. |
+| "`%d`" | Credentials directory | This is the value of the "`$CREDENTIALS_DIRECTORY`" environment variable if available. See section "Credentials" in [systemd.exec(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html) for more information. |
 | "`%D`" | Shared data directory | This is either `/usr/share/` (for the system manager) or the path "`$XDG_DATA_HOME`" resolves to (for user managers). |
 | "`%E`" | Configuration directory root | This is either `/etc/` (for the system manager) or the path "`$XDG_CONFIG_HOME`" resolves to (for user managers). |
 | "`%f`" | Unescaped filename | This is either the unescaped instance name (if applicable) with `/` prepended (if applicable), or the unescaped prefix name prepended with `/`. This implements unescaping according to the rules for escaping absolute file system paths discussed above. |
@@ -1001,14 +1001,14 @@ Many settings resolve specifiers which may be used to write generic unit files r
 | "`%J`" | Unescaped final component of the prefix | Same as "`%j`", but with escaping undone. |
 | "`%l`" | Short host name | The hostname of the running system at the point in time the unit configuration is loaded, truncated at the first dot to remove any domain component. |
 | "`%L`" | Log directory root | This is either `/var/log` (for the system manager) or the path `$XDG_STATE_HOME` resolves to with `/log` appended (for user managers). |
-| "`%m`" | Machine ID | The machine ID of the running system, formatted as string. See [machine-id(5)](machine-id.html#) for more information. |
-| "`%M`" | Operating system image identifier | The operating system image identifier of the running system, as read from the `IMAGE_ID=` field of `/etc/os-release`. If not set, resolves to an empty string. See [os-release(5)](os-release.html#) for more information. |
+| "`%m`" | Machine ID | The machine ID of the running system, formatted as string. See [machine-id(5)](https://www.freedesktop.org/software/systemd/man/latest/machine-id.html) for more information. |
+| "`%M`" | Operating system image identifier | The operating system image identifier of the running system, as read from the `IMAGE_ID=` field of `/etc/os-release`. If not set, resolves to an empty string. See [os-release(5)](https://www.freedesktop.org/software/systemd/man/latest/os-release.html) for more information. |
 | "`%n`" | Full unit name |   |
 | "`%N`" | Full unit name | Same as "`%n`", but with the type suffix removed. |
-| "`%o`" | Operating system ID | The operating system identifier of the running system, as read from the `ID=` field of `/etc/os-release`. See [os-release(5)](os-release.html#) for more information. |
+| "`%o`" | Operating system ID | The operating system identifier of the running system, as read from the `ID=` field of `/etc/os-release`. See [os-release(5)](https://www.freedesktop.org/software/systemd/man/latest/os-release.html) for more information. |
 | "`%p`" | Prefix name | For instantiated units, this refers to the string before the first "`@`" character of the unit name. For non-instantiated units, same as "`%N`". |
 | "`%P`" | Unescaped prefix name | Same as "`%p`", but with escaping undone. |
-| "`%q`" | Pretty host name | The pretty hostname of the running system at the point in time the unit configuration is loaded, as read from the `PRETTY_HOSTNAME=` field of `/etc/machine-info`. If not set, resolves to the short hostname. See [machine-info(5)](machine-info.html#) for more information. |
+| "`%q`" | Pretty host name | The pretty hostname of the running system at the point in time the unit configuration is loaded, as read from the `PRETTY_HOSTNAME=` field of `/etc/machine-info`. If not set, resolves to the short hostname. See [machine-info(5)](https://www.freedesktop.org/software/systemd/man/latest/machine-info.html) for more information. |
 | "`%s`" | User shell | This is the shell of the user running the service manager instance. |
 | "`%S`" | State directory root | This is either `/var/lib` (for the system manager) or the path `$XDG_STATE_HOME` resolves to (for user managers). |
 | "`%t`" | Runtime directory root | This is either `/run/` (for the system manager) or the path "`$XDG_RUNTIME_DIR`" resolves to (for user managers). |
@@ -1017,8 +1017,8 @@ Many settings resolve specifiers which may be used to write generic unit files r
 | "`%U`" | User UID | This is the numeric UID of the *user running the service manager instance*. In case of the system manager this resolves to "`0`". Note that this setting is *not* influenced by the `User=` setting configurable in the \[Service\] section of the service unit. |
 | "`%v`" | Kernel release | Identical to **uname -r** output. |
 | "`%V`" | Directory for larger and persistent temporary files | This is either `/var/tmp` or the path "`$TMPDIR`", "`$TEMP`" or "`$TMP`" are set to. (Note that the directory may be specified without a trailing slash.) |
-| "`%w`" | Operating system version ID | The operating system version identifier of the running system, as read from the `VERSION_ID=` field of `/etc/os-release`. If not set, resolves to an empty string. See [os-release(5)](os-release.html#) for more information. |
-| "`%W`" | Operating system variant ID | The operating system variant identifier of the running system, as read from the `VARIANT_ID=` field of `/etc/os-release`. If not set, resolves to an empty string. See [os-release(5)](os-release.html#) for more information. |
+| "`%w`" | Operating system version ID | The operating system version identifier of the running system, as read from the `VERSION_ID=` field of `/etc/os-release`. If not set, resolves to an empty string. See [os-release(5)](https://www.freedesktop.org/software/systemd/man/latest/os-release.html) for more information. |
+| "`%W`" | Operating system variant ID | The operating system variant identifier of the running system, as read from the `VARIANT_ID=` field of `/etc/os-release`. If not set, resolves to an empty string. See [os-release(5)](https://www.freedesktop.org/software/systemd/man/latest/os-release.html) for more information. |
 | "`%y`" | The path to the fragment | This is the path where the main part of the unit file is located. For linked unit files, the real path outside of the unit search directories is used. For units that do not have a fragment file, this specifier will raise an error. |
 | "`%Y`" | The directory of the fragment | This is the directory part of "`%y`". |
 | "`%%`" | Single percent sign | Use "`%%`" in place of "`%`" to specify a single percent sign. |
@@ -1074,7 +1074,7 @@ Nice=5
 WantedBy=multi-user.target
 ```
 
-Now one wants to change some settings as an administrator: firstly, in the local setup, `/srv/webserver` might not exist, because the HTTP server is configured to use `/srv/www` instead. Secondly, the local configuration makes the HTTP server also depend on a memory cache service, `memcached.service`, that should be pulled in (`Requires=`) and also be ordered appropriately (`After=`). Thirdly, in order to harden the service a bit more, the administrator would like to set the `PrivateTmp=` setting (see [systemd.exec(5)](systemd.exec.html#) for details). And lastly, the administrator would like to reset the niceness of the service to its default value of 0.
+Now one wants to change some settings as an administrator: firstly, in the local setup, `/srv/webserver` might not exist, because the HTTP server is configured to use `/srv/www` instead. Secondly, the local configuration makes the HTTP server also depend on a memory cache service, `memcached.service`, that should be pulled in (`Requires=`) and also be ordered appropriately (`After=`). Thirdly, in order to harden the service a bit more, the administrator would like to set the `PrivateTmp=` setting (see [systemd.exec(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html) for details). And lastly, the administrator would like to reset the niceness of the service to its default value of 0.
 
 The first possibility is to copy the unit file to `/etc/systemd/system/httpd.service` and change the chosen settings:
 
@@ -1154,7 +1154,7 @@ This ensures that if a `failure-handler@.service` instance fails it will not tri
 
 ## See Also
 
-[systemd(1)](systemd.html#), [systemctl(1)](systemctl.html#), [systemd-system.conf(5)](systemd-system.conf.html#), [systemd.special(7)](systemd.special.html#), [systemd.service(5)](systemd.service.html#), [systemd.socket(5)](systemd.socket.html#), [systemd.device(5)](systemd.device.html#), [systemd.mount(5)](systemd.mount.html#), [systemd.automount(5)](systemd.automount.html#), [systemd.swap(5)](systemd.swap.html#), [systemd.target(5)](systemd.target.html#), [systemd.path(5)](systemd.path.html#), [systemd.timer(5)](systemd.timer.html#), [systemd.scope(5)](systemd.scope.html#), [systemd.slice(5)](systemd.slice.html#), [systemd.time(7)](systemd.time.html#), [systemd-analyze(1)](systemd-analyze.html#), [capabilities(7)](https://man7.org/linux/man-pages/man7/capabilities.7.html), [systemd.directives(7)](systemd.directives.html#), [uname(1)](https://man7.org/linux/man-pages/man1/uname.1.html)
+[systemd(1)](https://www.freedesktop.org/software/systemd/man/latest/systemd.html), [systemctl(1)](https://www.freedesktop.org/software/systemd/man/latest/systemctl.html), [systemd-system.conf(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html), [systemd.special(7)](https://www.freedesktop.org/software/systemd/man/latest/systemd.special.html), [systemd.service(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html), [systemd.socket(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.socket.html), [systemd.device(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.device.html), [systemd.mount(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.mount.html), [systemd.automount(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.automount.html), [systemd.swap(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.swap.html), [systemd.target(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.target.html), [systemd.path(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.path.html), [systemd.timer(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.timer.html), [systemd.scope(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.scope.html), [systemd.slice(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.slice.html), [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/latest/systemd.time.html), [systemd-analyze(1)](https://www.freedesktop.org/software/systemd/man/latest/systemd-analyze.html), [capabilities(7)](https://man7.org/linux/man-pages/man7/capabilities.7.html), [systemd.directives(7)](https://www.freedesktop.org/software/systemd/man/latest/systemd.directives.html), [uname(1)](https://man7.org/linux/man-pages/man1/uname.1.html)
 
 \
 

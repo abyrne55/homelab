@@ -126,7 +126,7 @@ There is also an opinionated `bootc-fetch-apply-updates.timer` and corresponding
 service available in upstream for operating systems and distributions
 to enable.
 
-Man page: [bootc-upgrade](man/bootc-upgrade.8.md).
+Man page: [bootc-upgrade](https\:\/\/bootc\-dev\.github\.io\/bootc/man/bootc-upgrade.8.html).
 
 ## Changing the container image source
 
@@ -146,7 +146,7 @@ container image being tracked.
 This will preserve existing state in `/etc` and `/var` - for example,
 host SSH keys and home directories.
 
-Man page: [bootc-switch](man/bootc-switch.8.md).
+Man page: [bootc-switch](https\:\/\/bootc\-dev\.github\.io\/bootc/man/bootc-switch.8.html).
 
 ## Soft reboots
 
@@ -163,7 +163,7 @@ Without `--apply`, `--soft-reboot` prepares the deployment but does not restart
 the system immediately. Without `--soft-reboot`, `--apply` requests a regular
 reboot.
 
-The [composefs backend](bootc-composefs.7.md) currently
+The [composefs backend](https\:\/\/bootc\-dev\.github\.io\/bootc/bootc-composefs.7.html) currently
 differs: both modes fail if systemd lacks soft-reboot support. If the target
 deployment is not soft-reboot capable, `auto` leaves it staged without
 restarting, even with `--apply`; it does not automatically fall back to a
@@ -175,4 +175,4 @@ There is a  `bootc rollback` verb, and associated declarative interface
 accessible to tools via `bootc edit`.  This will swap the bootloader
 ordering to the previous boot entry.
 
-Man page: [bootc-rollback](man/bootc-rollback.8.md).
+Man page: [bootc-rollback](https\:\/\/bootc\-dev\.github\.io\/bootc/man/bootc-rollback.8.html).

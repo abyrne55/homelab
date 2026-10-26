@@ -190,7 +190,7 @@ change a system group's GID, see
 
 ### Machine-local state for users
 
-At this point, it is important to understand the [filesystem](../bootc-filesystem.7.md)
+At this point, it is important to understand the [filesystem](https\:\/\/bootc\-dev\.github\.io\/bootc/bootc-filesystem.7.html)
 layout - the default is up to the base image.
 
 The default Linux concept of a user has data stored in both `/etc` (`/etc/passwd`, `/etc/shadow` and groups)
