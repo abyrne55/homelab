@@ -280,6 +280,8 @@ Use `/add-quadlet [service-name]` for the full step-by-step checklist. The short
 
 > **Note:** CrowdSec runs as a second container under caddy's UID 1051 (like tinyproxy under jellyfin). Caddy writes JSON access logs to the shared named volume `systemd-caddy-logs` (`etc/containers/systemd/users/1051/caddy-logs.volume`), which crowdsec tails read-only — a named volume keeps rotating logs out of the restic backup set. The caddy bouncer plugin authenticates to the LAPI with the `crowdsec-caddy-bouncer-key` secret.
 
+> **Note:** Caddy's data dir (certs, ACME account, local CA) is persisted at `/var/local/lib/caddy/data` (mounted at `/data`, `XDG_DATA_HOME=/data`), so it is covered by restic. ACME DNS-01 uses the `cloudflare-api-token` secret, loaded via the same ExecStartPre env-file pattern as the CrowdSec key and exposed to the Caddyfile as `{env.CLOUDFLARE_API_TOKEN}`. The secret must exist in `homelab-secrets` before an image containing it is deployed, or `caddy.service` (a greenboot `required.d` check) fails to start and triggers a rollback.
+
 New system units (not quadlets) must also be appended to the `RUN systemctl enable` line in `Containerfile`.
 
 ## Skills
