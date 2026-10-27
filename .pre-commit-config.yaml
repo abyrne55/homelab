@@ -1,5 +1,6 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
+default_install_hook_types: [pre-commit, commit-msg]
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -33,3 +34,14 @@ repos:
     rev: v0.11.0.1-1
     hooks:
     -   id: shellcheck
+-   repo: local
+    hooks:
+    -   id: block-string-files
+        name: block string in files
+        entry: '\x2e\x61\x62\x79\x72\x6e\x65\x2e\x6d\x65'
+        language: pygrep
+    -   id: block-string-commit-msg
+        name: block string in commit message
+        entry: '\x2e\x61\x62\x79\x72\x6e\x65\x2e\x6d\x65'
+        language: pygrep
+        stages: [commit-msg]
