@@ -10,14 +10,15 @@ After=crowdsec.service
 [Service]
 ExecStartPre=/usr/bin/cosign verify --certificate-identity-regexp='https://github.com/abyrne55/caddy-homelab/.*' --certificate-oidc-issuer='https://token.actions.githubusercontent.com' ghcr.io/abyrne55/caddy-homelab:main
 ExecStartPre=/bin/bash -c 'printf "CROWDSEC_API_KEY=%%s\n" "$(tr -d "[:space:]" < "${CREDENTIALS_DIRECTORY}/crowdsec-caddy-bouncer-key")" > "${RUNTIME_DIRECTORY}/crowdsec.env"'
+ExecStartPre=/bin/bash -c 'printf "CLOUDFLARE_API_TOKEN=%%s\n" "$(tr -d "[:space:]" < "${CREDENTIALS_DIRECTORY}/cloudflare-api-token")" > "${RUNTIME_DIRECTORY}/cloudflare.env"'
 LoadCredential=crowdsec-caddy-bouncer-key:/run/systemd-age-creds.sock
+LoadCredential=cloudflare-api-token:/run/systemd-age-creds.sock
 RuntimeDirectory=caddy
 Restart=on-failure
 RestartSec=30
 TimeoutStartSec=5min
 
 [Container]
-ContainerName=caddy
 ReloadCmd=/usr/bin/caddy reload --config /etc/caddy/Caddyfile
 Image=ghcr.io/abyrne55/caddy-homelab:main
 AutoUpdate=registry
@@ -38,7 +39,14 @@ Volume=/var/local/lib/mealie/static:/srv/static-mealie:ro
 # non-root caddy process can create/write access.log — without it the volume
 # stays root-of-userns-owned and Caddy fails to start with "permission denied".
 Volume=caddy-logs.volume:/var/log/caddy:z,U
+# Persist Caddy's data dir (certs, ACME account, local CA) so restarts don't
+# re-issue certs and burn Let's Encrypt rate limits. XDG_DATA_HOME=/data puts
+# AppDataDir at /data/caddy. ,U chowns the dir to caddy's in-container UID (65532).
+Volume=/var/local/lib/caddy/data:/data:z,U
+Environment=XDG_DATA_HOME=/data
 EnvironmentFile=%t/caddy/crowdsec.env
+# Cloudflare API token for ACME DNS-01 (acme_dns in the Caddyfile).
+EnvironmentFile=%t/caddy/cloudflare.env
 PublishPort=20510:8080
 PublishPort=20511:8443
 
