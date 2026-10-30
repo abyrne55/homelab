@@ -1,0 +1,35 @@
+[Unit]
+Description=MaxMind GeoLite2 database update (for Caddy's maxmind_geolocation matcher)
+
+[Container]
+# No ExecStartPre cosign verify: MaxMind does not sign its images.
+Image=ghcr.io/maxmind/geoipupdate:v8.0.0@sha256:51e70dd6f16cd3e4d845ac02d09940b10772a75b9d741427d235a78570923c1d
+NoNewPrivileges=true
+DropCapability=all
+ReadOnly=true
+# entry.sh writes its log to /tmp/geoipupdate
+ReadOnlyTmpfs=true
+# HealthCmd/Notify=healthy intentionally omitted: oneshot run, exits when done.
+# Container root maps to host caddy (1051), which already owns this dir.
+Volume=/var/local/lib/caddy/geoip:/usr/share/GeoIP:z
+# Mount host credentials directory into the container so GEOIPUPDATE_CONF_FILE resolves
+Volume=%d:/run/credentials:ro,z
+# A conf file makes entry.sh skip its account/license env-var checks
+Environment=GEOIPUPDATE_CONF_FILE=/run/credentials/maxmind-license-config
+# Overrides EditionIDs in the conf file; Country is all the geofence needs
+Environment=GEOIPUPDATE_EDITION_IDS=GeoLite2-Country
+# GEOIPUPDATE_FREQUENCY unset: run once and exit (re-run by geoipupdate.timer)
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
+TimeoutStartSec=5min
+LoadCredential=maxmind-license-config:/run/systemd-age-creds.sock
+# maxmind_geolocation opens the mmdb at provision time, so Caddy needs a reload
+# to pick up a new DB. --no-block: at boot caddy.service is ordered After= this
+# unit, so a blocking reload would wait on us forever. Leading dash: caddy may
+# not be running.
+ExecStartPost=-/usr/bin/systemctl --user --no-block reload caddy.service
+
+[Install]
+WantedBy=default.target

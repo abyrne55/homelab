@@ -1,0 +1,13 @@
+[Unit]
+Description=Daily MaxMind GeoLite2 database update
+ConditionUser=caddy
+
+[Timer]
+# GeoLite2 is published twice weekly; account limit is 30 downloads/day
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=1h
+Unit=geoipupdate.service
+
+[Install]
+WantedBy=timers.target
