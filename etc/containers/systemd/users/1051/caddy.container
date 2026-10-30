@@ -6,6 +6,10 @@ ConditionPathExists=/var/lib/homelab-config/caddy/Caddyfile
 # required.d greenboot check that must not hinge on crowdsec's health.
 Wants=crowdsec.service
 After=crowdsec.service
+# Fetch the GeoLite2 DB before first start on a fresh /var. Soft: a failed
+# download must not block caddy (an existing DB keeps working).
+Wants=geoipupdate.service
+After=geoipupdate.service
 
 [Service]
 ExecStartPre=/usr/bin/cosign verify --certificate-identity-regexp='https://github.com/abyrne55/caddy-homelab/.*' --certificate-oidc-issuer='https://token.actions.githubusercontent.com' ghcr.io/abyrne55/caddy-homelab:main
@@ -44,6 +48,8 @@ Volume=caddy-logs.volume:/var/log/caddy:z,U
 # AppDataDir at /data/caddy. ,U chowns the dir to caddy's in-container UID (65532).
 Volume=/var/local/lib/caddy/data:/data:z,U
 Environment=XDG_DATA_HOME=/data
+# GeoLite2 DBs written by geoipupdate.container (maxmind_geolocation db_path)
+Volume=/var/local/lib/caddy/geoip:/usr/share/GeoIP:ro,z
 EnvironmentFile=%t/caddy/crowdsec.env
 # Cloudflare API token for ACME DNS-01 (acme_dns in the Caddyfile).
 EnvironmentFile=%t/caddy/cloudflare.env
