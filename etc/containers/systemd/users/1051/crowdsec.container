@@ -5,7 +5,7 @@ Description=CrowdSec agent + Local API (threat detection for Caddy)
 ConditionPathIsDirectory=/var/lib/homelab-config/crowdsec/acquis.d
 
 [Container]
-Image=docker.io/crowdsecurity/crowdsec:v1.7.8@sha256:2f527c9bb8b367120eb08b82890aa912ce96bfa1ada93dda0721700e4b4e0dde
+Image=docker.io/crowdsecurity/crowdsec:v1.8.2@sha256:65b74942f7e7ed5c60fde4ac15fc4ba715904c398c8b16dd451f4907d90347d4
 NoNewPrivileges=true
 DropCapability=all
 # ReadOnly=true intentionally omitted: the entrypoint (docker_start.sh) writes
