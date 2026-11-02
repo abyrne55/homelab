@@ -5,6 +5,10 @@ ConditionPathExists=/var/local/lib/mealie/static-mealie/api-key
 
 [Container]
 Image=ghcr.io/abyrne55/static-mealie:main
+# Oneshot: never running when podman-auto-update.timer fires, so auto-update
+# never sees it. Check the registry on each run instead (falls back to the
+# cached image if the pull fails).
+Pull=newer
 Pod=mealie.pod
 Volume=/var/local/lib/mealie/static-mealie/api-key:/run/secrets/static-mealie-token:ro,Z
 Volume=/var/local/lib/mealie/static:/output:z,U
