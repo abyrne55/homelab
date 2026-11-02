@@ -7,7 +7,7 @@ Wants=network-online.target
 
 [Container]
 # renovate: datasource=docker depName=ghcr.io/ggml-org/llama.cpp
-Image=ghcr.io/ggml-org/llama.cpp:server-b9128
+Image=ghcr.io/ggml-org/llama.cpp:server-b12033
 PublishPort=20600:8080
 Volume=/var/local/lib/llm/models:/models:Z
 Memory=6G
