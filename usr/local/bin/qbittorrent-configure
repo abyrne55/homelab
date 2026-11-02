@@ -18,12 +18,14 @@ if [ -z "$TEMP_PASS" ]; then
 fi
 
 echo "Temporary password detected; logging in..."
-RESPONSE=$(curl -sf -c "$COOKIE_JAR" -X POST "$QBIT_URL/api/v2/auth/login" \
+# qBittorrent >= 5.3 returns 204 (empty body) on success and 401 on bad
+# credentials; older versions returned 200 "Ok."/"Fails.". Check the status code.
+HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' -c "$COOKIE_JAR" -X POST "$QBIT_URL/api/v2/auth/login" \
   --data-urlencode "username=admin" \
-  --data-urlencode "password=$TEMP_PASS")
+  --data-urlencode "password=$TEMP_PASS") || HTTP_CODE="000"
 
-if [ "$RESPONSE" != "Ok." ]; then
-  echo "Login failed: $RESPONSE" >&2
+if [[ "$HTTP_CODE" != 2?? ]]; then
+  echo "Login failed (HTTP $HTTP_CODE)" >&2
   exit 1
 fi
 
