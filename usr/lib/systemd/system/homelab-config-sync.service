@@ -37,8 +37,10 @@ ProcSubset=pid
 # Set Git SSH command to use the generated key and known_hosts
 Environment="GIT_SSH_COMMAND=ssh -i /var/lib/git-ssh/id_ed25519 -o IdentitiesOnly=yes -o UserKnownHostsFile=/var/lib/git-ssh/known_hosts -o StrictHostKeyChecking=yes"
 
-# This clone is expected to fail after the first run
-ExecStartPre=-/usr/bin/git clone git@github.com:abyrne55/homelab-config.git /var/lib/homelab-config
+# Clone on first run only. Guarded on .git rather than the directory, since
+# the directory may already exist empty. No '-' prefix, so a real clone
+# failure is reported as such.
+ExecStartPre=/bin/sh -c 'test -d /var/lib/homelab-config/.git || exec /usr/bin/git clone git@github.com:abyrne55/homelab-config.git /var/lib/homelab-config'
 
 # Always hard-reset to remote state, discarding any local changes
 ExecStart=/usr/bin/git -C /var/lib/homelab-config/ fetch --all
