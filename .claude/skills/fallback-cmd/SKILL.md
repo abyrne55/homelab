@@ -2,6 +2,7 @@
 name: fallback-cmd
 description: Reveals the raw shell commands underlying preferred tools like 'ssh nook', 'vsh', and 'hl'. Use this skill ONLY if a preferred tool is unavailable or unable to complete a certain task.
 argument-hint: [tool-name]
+model: haiku
 ---
 
 # Fallback Commands
