@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: reviewdog/action-misspell@3467363dab5b42db2b1372c5fd2b1771fea2ea48 # v1.30.3
+      - uses: reviewdog/action-misspell@840bfbe9f804da9afb0bd739dc4689012f3fdd2d # v1.30.4
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-pr-check
