@@ -65,7 +65,8 @@ Quick file-level index — consult this before exploring the repo.
 | home-assistant | 1058 | 20580, 20589 | 689824 | 20581 |
 | mealie | 1059 | 20590, 20599 | 755360 | 20591 |
 | llm | 1060 | 20600, 20609 | 820896 | 20601 |
-| **next slot** | **1061** | **20610** | **886432** | — |
+| tixme | 1061 | 20610, 20619 | 886432 | 20611 |
+| **next slot** | **1062** | **20620** | **951968** | — |
 
 > **Note:** Port X9 (last in each user's 10-port block) is reserved for `prometheus-podman-exporter` — a localhost-only metrics endpoint scraped by Netdata. No firewalld changes needed for these ports.
 >
@@ -277,8 +278,12 @@ Use `/add-quadlet [service-name]` for the full step-by-step checklist. The short
 | mealie (exporter) | 1059 | 20599 (localhost only) | — | No — Netdata scrape only |
 | llm | 1060 | 20600 | 8080 | No — via Caddy only |
 | llm (exporter) | 1060 | 20609 (localhost only) | — | No — Netdata scrape only |
+| tixme | 1061 | 20610 | 3000 | Yes — via Caddy only |
+| tixme (exporter) | 1061 | 20619 (localhost only) | — | No — Netdata scrape only |
 
 > **Note:** CrowdSec runs as a second container under caddy's UID 1051 (like tinyproxy under jellyfin). Caddy writes JSON access logs to the shared named volume `systemd-caddy-logs` (`etc/containers/systemd/users/1051/caddy-logs.volume`), which crowdsec tails read-only — a named volume keeps rotating logs out of the restic backup set. The caddy bouncer plugin authenticates to the LAPI with the `crowdsec-caddy-bouncer-key` secret.
+
+> **Note:** `tixme` (Chobble Tickets) runs on an `Internal=true` network and has its own tinyproxy under UID 1061 (like jellyfin), whose filter in `homelab-config/tinyproxy-tixme/` allows only SumUp's API. Use `hl ... -u tixme tinyproxy` for the proxy. The upstream image is amd64-only, so `tixme.container` has `ConditionArchitecture=x86-64` (skipped on the arm64 dev VM). Its `HealthCmd` uses a Nix-store path to the image's Deno binary; when Renovate bumps the image digest, re-read that path and update it in the same PR.
 
 > **Note:** `geoipupdate` is a third container under caddy's UID 1051: a oneshot quadlet (`etc/containers/systemd/users/1051/geoipupdate.container`) run at boot and daily by `usr/lib/systemd/user/geoipupdate.timer`. It writes the GeoLite2-Country DB to `/var/local/lib/caddy/geoip`, which caddy mounts read-only at `/usr/share/GeoIP` for its `maxmind_geolocation` matcher, then reloads caddy. Its MaxMind account config is the `maxmind-license-config` secret (an encrypted `GeoIP.conf`), mounted via `%d` and selected with `GEOIPUPDATE_CONF_FILE`. caddy only soft-depends on it (`Wants=`/`After=`), but a Caddyfile that references a missing mmdb fails provisioning, and caddy is a greenboot `required.d` check. Make sure the DB exists on the target before you deploy a Caddyfile that uses it.
 

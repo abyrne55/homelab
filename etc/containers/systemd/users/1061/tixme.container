@@ -1,0 +1,49 @@
+[Unit]
+Description=Chobble Tickets
+After=tinyproxy.service
+# Upstream image is amd64-only; the arm64 dev VM skips this unit (like llm).
+ConditionArchitecture=x86-64
+
+[Container]
+# Pinned by digest; Renovate bumps it. No AutoUpdate. When the digest changes,
+# re-check the Deno store path used in HealthCmd below.
+Image=ghcr.io/chobbledotcom/tickets:latest@sha256:cf4e38be77e7a791994cb6d5789a995d28bf7ebc6cc236982faddd5ecc7be2a6
+PublishPort=20610:3000
+# Internal network: the only route to the internet is the tinyproxy (SumUp only)
+Network=tixme.network
+Volume=/var/local/lib/tixme/data:/data:Z,U
+# start.sh's root branch does chown/setpriv, which needs CAP_CHOWN/CAP_SETUID
+# (dropped below). Run as the image's app user instead; :U chowns /data to it.
+User=1000:1000
+Environment=DB_URL=file:/data/tickets.db
+Environment=HTTP_PROXY=http://systemd-tinyproxy:8888
+Environment=HTTPS_PROXY=http://systemd-tinyproxy:8888
+Environment=NO_PROXY=127.0.0.1,localhost
+# DB_ENCRYPTION_KEY, written by ExecStartPre (read by Podman, not the container)
+EnvironmentFile=%t/tixme/tix.env
+NoNewPrivileges=true
+DropCapability=all
+ReadOnly=true
+ReadOnlyTmpfs=true
+# The image has no shell/curl and no PATH entry for deno, so the health check
+# uses the Nix store path of the image's Deno build. When Renovate bumps the
+# image digest, re-read the path (podman run --rm --entrypoint /bin/ls <image>
+# /nix/store | grep deno) and update it in the same PR.
+HealthCmd=CMD /nix/store/qwj37rwdqgs2qyyyn636zspncvypdk2k-deno-2.5.6/bin/deno eval "const r = await fetch('http://127.0.0.1:3000/health'); if (!r.ok) Deno.exit(1);"
+HealthStartPeriod=30s
+HealthInterval=30s
+HealthRetries=5
+HealthOnFailure=kill
+Notify=healthy
+
+[Service]
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=5min
+LoadCredential=tixme-db-encryption-key:/run/systemd-age-creds.sock
+RuntimeDirectory=tixme
+# echo, not printf: %s is a systemd specifier
+ExecStartPre=/bin/bash -c 'echo "DB_ENCRYPTION_KEY=$(tr -d "[:space:]" < "${CREDENTIALS_DIRECTORY}/tixme-db-encryption-key")" > "${RUNTIME_DIRECTORY}/tix.env"'
+
+[Install]
+WantedBy=default.target

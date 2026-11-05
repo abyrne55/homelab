@@ -1,0 +1,30 @@
+[Unit]
+Description=Tinyproxy forward proxy (internet bridge for tixme, SumUp only)
+ConditionPathIsDirectory=/var/lib/homelab-config/tinyproxy-tixme
+
+[Container]
+Image=ghcr.io/abyrne55/tinyproxy-homelab:main
+AutoUpdate=registry
+NoNewPrivileges=true
+ReadOnly=true
+ReadOnlyTmpfs=true
+DropCapability=all
+Network=tixme.network
+Network=proxynet.network
+Volume=/var/lib/homelab-config/tinyproxy-tixme:/etc/tinyproxy:ro,z
+ReloadSignal=SIGUSR1
+HealthCmd=CMD /bin/curl -sf -x http://127.0.0.1:8888 http://tinyproxy.stats/
+HealthStartPeriod=20s
+HealthInterval=30s
+HealthRetries=5
+HealthOnFailure=kill
+Notify=healthy
+
+[Service]
+ExecStartPre=/usr/bin/cosign verify --certificate-identity-regexp='https://github.com/abyrne55/tinyproxy-homelab/.*' --certificate-oidc-issuer='https://token.actions.githubusercontent.com' ghcr.io/abyrne55/tinyproxy-homelab:main
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=5min
+
+[Install]
+WantedBy=default.target

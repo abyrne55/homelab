@@ -31,6 +31,9 @@ dump_db() {
     fi
 }
 
+# Chobble Tickets (libsql file DB; skipped if absent)
+dump_db tixme /var/local/lib/tixme/data/tickets.db
+
 # CrowdSec
 dump_db crowdsec /var/local/lib/crowdsec/data/crowdsec.db
 
