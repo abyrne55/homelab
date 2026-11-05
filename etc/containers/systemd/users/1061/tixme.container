@@ -29,7 +29,9 @@ ReadOnlyTmpfs=true
 # uses the Nix store path of the image's Deno build. When Renovate bumps the
 # image digest, re-read the path (podman run --rm --entrypoint /bin/ls <image>
 # /nix/store | grep deno) and update it in the same PR.
-HealthCmd=CMD /nix/store/qwj37rwdqgs2qyyyn636zspncvypdk2k-deno-2.5.6/bin/deno eval "const r = await fetch('http://127.0.0.1:3000/health'); if (!r.ok) Deno.exit(1);"
+# The JS is one whitespace- and quote-free argument: Podman splits the CMD
+# string on spaces without honoring quotes.
+HealthCmd=CMD /nix/store/qwj37rwdqgs2qyyyn636zspncvypdk2k-deno-2.5.6/bin/deno eval fetch(`http://127.0.0.1:3000/health`).then(r=>{if(!r.ok)Deno.exit(1)})
 HealthStartPeriod=30s
 HealthInterval=30s
 HealthRetries=5
