@@ -56,8 +56,9 @@ ExecStartPost=/usr/bin/chcon -Rt container_file_t /var/lib/homelab-config/
 ExecStartPost=-/usr/bin/systemctl --user -M caddy@.host reload-or-restart crowdsec.service
 # Start Caddy if not running, or hot-reload it if already active
 ExecStartPost=-/usr/bin/systemctl --user -M caddy@.host reload-or-restart caddy.service
-# Reload Tinyproxy via SIGUSR1, or start it if not running (ReloadSignal=SIGUSR1 in quadlet)
+# Reload each Tinyproxy (jellyfin, tixme) via SIGUSR1, or start it if not running (ReloadSignal=SIGUSR1 in quadlet)
 ExecStartPost=-/usr/bin/systemctl --user -M jellyfin@.host reload-or-restart tinyproxy.service
+ExecStartPost=-/usr/bin/systemctl --user -M tixme@.host reload-or-restart tinyproxy.service
 # Home Assistant is disabled (no linger, see #136). When re-enabling it, restore:
 #   ExecStartPost=-/usr/bin/systemctl --user -M home-assistant@.host restart home-assistant.service
 
