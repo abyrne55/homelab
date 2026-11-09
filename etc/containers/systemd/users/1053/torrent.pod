@@ -2,6 +2,10 @@
 Description=Torrent stack pod (Gluetun VPN + qBittorrent)
 
 [Pod]
+# IPv4 only: gluetun v3.41.3 aborts at startup ("checking for IPv6 support:
+# finding link corresponding to route") when the host has multipath (ECMP)
+# IPv6 RA routes. Mullvad WireGuard here runs fine over IPv4.
+Network=pasta:--ipv4-only
 # WebUI port published on the pod, not on individual containers
 PublishPort=20530:20530
 
