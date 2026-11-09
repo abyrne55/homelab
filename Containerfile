@@ -35,7 +35,14 @@ COPY usr/ /usr/
 
 # Copy SELinux policy
 COPY selinux/systemd_age_creds.cil selinux/container_tun.cil selinux/mealie_static_volume.cil /tmp/
-RUN semodule -i /tmp/systemd_age_creds.cil /tmp/container_tun.cil /tmp/mealie_static_volume.cil && rm /tmp/systemd_age_creds.cil /tmp/container_tun.cil /tmp/mealie_static_volume.cil
+# The trailing `semodule -N --refresh` mirrors what ostree runs on every deployment
+# at finalize time (after the /etc merge). The first refresh rewrites the compiled
+# policy produced by `semodule -i` into a different (but stable) binary, so without
+# it the staged image's policy never matches the booted deployment's, and bootc
+# refuses `--soft-reboot` on SELinux policy mismatch.
+RUN semodule -i /tmp/systemd_age_creds.cil /tmp/container_tun.cil /tmp/mealie_static_volume.cil && \
+    semodule -N --refresh && \
+    rm /tmp/systemd_age_creds.cil /tmp/container_tun.cil /tmp/mealie_static_volume.cil
 
 # Enable services and suppress upstream services that don't apply to our setup:
 # - rpm-ostree-fix-shadow-mode.service: pre-create its stamp file so it knows the fix is
