@@ -60,5 +60,8 @@ RUN mkdir -p /usr/lib/ostree && \
     SOURCE_DATE_EPOCH=$(stat -c %Y /usr/lib/dracut/dracut-functions.sh) \
     dracut -f /usr/lib/modules/$kver/initramfs.img $kver
 
+LABEL containers.bootc 1
+LABEL ostree.bootable 1
+
 # It's recommended for bootc containers to set CMD /sbin/init
 CMD ["/sbin/init"]
