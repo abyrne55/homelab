@@ -48,10 +48,16 @@ RUN systemctl enable firewalld podman-image-prune.timer bootc-fetch-apply-update
 RUN bootc container lint --fatal-warnings --no-truncate
 
 # Enable transient /etc (reset on every boot, config comes from image)
+# SOURCE_DATE_EPOCH must be exported so the systemd-sysusers run inside dracut
+# doesn't stamp today's date into the initramfs /etc/shadow. Otherwise every
+# day's build gets a unique initramfs, which changes the ostree bootcsum and
+# makes `bootc upgrade --soft-reboot` refuse. Fedora's dracut-108 computes this
+# value but doesn't export it (fixed upstream in dracut-ng); we mirror its logic.
 RUN mkdir -p /usr/lib/ostree && \
     echo -e '[etc]\ntransient = true' >> /usr/lib/ostree/prepare-root.conf && \
     mkdir -p /var/roothome && \
     kver=$(cd /usr/lib/modules && echo *) && \
+    SOURCE_DATE_EPOCH=$(stat -c %Y /usr/lib/dracut/dracut-functions.sh) \
     dracut -f /usr/lib/modules/$kver/initramfs.img $kver
 
 # It's recommended for bootc containers to set CMD /sbin/init
