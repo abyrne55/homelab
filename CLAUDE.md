@@ -185,6 +185,7 @@ The Makefile allows you to build container images locally or via GitHub Actions 
 **Dev (QEMU VM):**
 
 1. Commit your changes to a non-main branch and push to origin
+
 2. Trigger a bootc upgrade inside the running VM:
 
    ```bash
@@ -196,6 +197,7 @@ The Makefile allows you to build container images locally or via GitHub Actions 
 **Production (nook):**
 
 1. Commit, push, and (when ready) merge to main
+
 2. Wait for the build, then upgrade nook:
 
    ```bash
